@@ -12,7 +12,7 @@ import Autoplay from 'embla-carousel-autoplay';
 
 // --- FIXED VARIANTS ---
 
-export const fadeInUp: Variants = {
+const fadeInUp: Variants = {
     hidden: { opacity: 0, y: 40 },
     visible: {
         opacity: 1,
@@ -24,7 +24,7 @@ export const fadeInUp: Variants = {
     }
 };
 
-export const staggerContainer: Variants = {
+const staggerContainer: Variants = {
     hidden: { opacity: 0 },
     visible: {
         opacity: 1,
