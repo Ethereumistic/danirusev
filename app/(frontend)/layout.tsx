@@ -8,6 +8,7 @@ import { Navbar } from "@/components/layout/navbar";
 import localFont from "next/font/local";
 import { Suspense } from "react";
 import { Footer } from "@/components/layout/footer";
+import { OrganizationSchema } from "@/components/seo/structured-data";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -92,6 +93,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${gagalin.variable} antialiased min-h-screen flex flex-col`}
       >
+        <OrganizationSchema />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

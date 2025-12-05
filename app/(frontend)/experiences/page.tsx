@@ -3,6 +3,24 @@ import { getPayloadClient } from '@/lib/get-payload';
 import { ExperiencesPageClient } from './client-page';
 import { Experience } from '@/payload-types';
 import { ExperiencesPageSkeleton } from '@/components/experiences/experiences-page-skeleton';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Екстремни Преживявания | Дрифт, Рали, Писта',
+  description: 'Разгледайте нашите екстремни автомобилни преживявания - дрифт обучение, рали каране, управление на спортни коли на писта. Подарете незабравимо изживяване!',
+  keywords: 'дрифт преживяване, рали преживяване, писта каране, екстремни преживявания, автомобилни преживявания, подарък ваучер, дрифт обучение, рали кола, спортни коли',
+  openGraph: {
+    title: 'Екстремни Автомобилни Преживявания | Dani Rusev 11',
+    description: 'Изберете от най-добрите автомобилни преживявания в България. Дрифт, рали и каране на писта с професионални инструктори.',
+    url: `${process.env.NEXT_PUBLIC_SERVER_URL}/experiences`,
+    siteName: 'Dani Rusev 11',
+    type: 'website',
+    locale: 'bg_BG',
+  },
+  alternates: {
+    canonical: `${process.env.NEXT_PUBLIC_SERVER_URL}/experiences`,
+  },
+};
 
 async function ExperiencesLoader() {
   const payload = await getPayloadClient();
