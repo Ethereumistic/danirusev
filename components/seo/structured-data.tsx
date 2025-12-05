@@ -7,20 +7,22 @@ interface ProductSchemaProps {
 }
 
 export function ProductSchema({ product, url }: ProductSchemaProps) {
-  const categoryName = typeof product.category === 'object' ? product.category.title : ''
+  const categoryName = typeof product.category === 'object' && product.category ? product.category.name : ''
   const productImage = product.images?.[0]?.image
-  const imageUrl = productImage ? getMediaUrl(productImage.url) : null
+  const imageUrl = productImage && typeof productImage === 'object' && 'url' in productImage
+    ? getMediaUrl(productImage.url)
+    : null
 
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'Product',
-    name: product.title,
-    description: product.description,
+    name: product.name,
+    description: typeof product.description === 'string' ? product.description : '',
     image: imageUrl ? [imageUrl] : [],
     category: categoryName,
     brand: {
       '@type': 'Brand',
-      name: product.brand || 'Dani Rusev 11',
+      name: 'Dani Rusev 11',
     },
     offers: {
       '@type': 'Offer',
@@ -28,17 +30,12 @@ export function ProductSchema({ product, url }: ProductSchemaProps) {
       priceCurrency: 'BGN',
       price: product.price,
       priceValidUntil: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
-      availability: product.inventory > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      availability: 'https://schema.org/InStock',
       seller: {
         '@type': 'Organization',
         name: 'Dani Rusev 11',
       },
     },
-    aggregateRating: product.rating ? {
-      '@type': 'AggregateRating',
-      ratingValue: product.rating,
-      reviewCount: product.reviewCount || 1,
-    } : undefined,
   }
 
   return (
@@ -181,4 +178,4 @@ export function FAQSchema({ faqs }: FAQSchemaProps) {
       dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
     />
   )
-} 
+}

@@ -11,17 +11,17 @@ async function getProduct(slug: string): Promise<Product | null> {
       `${process.env.NEXT_PUBLIC_SERVER_URL}/api/products?where[slug][equals]=${slug}&depth=2`,
       { next: { revalidate: 3600 } } // Cache for 1 hour
     )
-    
+
     if (!res.ok) {
       console.error('Failed to fetch product:', await res.text())
       return null
     }
-    
+
     const data = await res.json()
     if (!data.docs || data.docs.length === 0) {
       return null
     }
-    
+
     return data.docs[0]
   } catch (error) {
     console.error('Error fetching product:', error)
@@ -36,12 +36,12 @@ async function getRelatedProducts(categoryId: string, productId: string): Promis
       `${process.env.NEXT_PUBLIC_SERVER_URL}/api/products?where[category][equals]=${categoryId}&where[id][not_equals]=${productId}&limit=4&depth=1`,
       { next: { revalidate: 3600 } } // Cache for 1 hour
     )
-    
+
     if (!res.ok) {
       console.error('Failed to fetch related products:', await res.text())
       return []
     }
-    
+
     const data = await res.json()
     return data.docs || []
   } catch (error) {
@@ -76,30 +76,30 @@ export async function generateMetadata(
 
   // Get the parent metadata to merge with
   const previousImages = (await parent).openGraph?.images || []
-  
-  // Get product image URL
+
+  // Get product image URL - safely handle the image relationship
   const productImage = product.images?.[0]?.image
-  const imageUrl = productImage ? getMediaUrl(productImage.url) : null
-  
+  const imageUrl = productImage && typeof productImage === 'object' && 'url' in productImage
+    ? getMediaUrl(productImage.url)
+    : null
+
   // Build comprehensive keywords
-  const categoryName = typeof product.category === 'object' ? product.category.title : ''
+  const categoryName = typeof product.category === 'object' && product.category ? product.category.name : ''
   const keywords = [
-    product.title,
+    product.name,
     categoryName,
     'екстремни преживявания',
     'подарък',
     'ваучер',
-    product.brand || '',
-    ...(product.tags || []).map(tag => tag.tag)
   ].filter(Boolean).join(', ')
 
   return {
-    title: `${product.title} | ${categoryName}`,
-    description: product.description || `Купете ${product.title} - ${categoryName}. Уникално преживяване с адреналин. Перфектен подарък за всеки повод.`,
+    title: `${product.name} | ${categoryName}`,
+    description: product.metadata?.description || `Купете ${product.name} - ${categoryName}. Уникално преживяване с адреналин. Перфектен подарък за всеки повод.`,
     keywords,
     openGraph: {
-      title: product.title,
-      description: product.description || `${product.title} - Екстремно преживяване`,
+      title: product.metadata?.title || product.name,
+      description: product.metadata?.description || `${product.name} - Екстремно преживяване`,
       url: `${process.env.NEXT_PUBLIC_SERVER_URL}/products/${slug}`,
       siteName: 'Dani Rusev 11',
       images: imageUrl ? [
@@ -107,7 +107,7 @@ export async function generateMetadata(
           url: imageUrl,
           width: 1200,
           height: 630,
-          alt: productImage.alt || product.title,
+          alt: typeof productImage === 'object' && 'alt' in productImage ? productImage.alt : product.name,
         }
       ] : previousImages,
       type: 'website',
@@ -115,8 +115,8 @@ export async function generateMetadata(
     },
     twitter: {
       card: 'summary_large_image',
-      title: product.title,
-      description: product.description,
+      title: product.metadata?.title || product.name,
+      description: product.metadata?.description,
       images: imageUrl ? [imageUrl] : undefined,
     },
     alternates: {
@@ -140,40 +140,43 @@ export default async function ProductPage({ params, searchParams }: Args) {
   const resolvedParams = await params
   const slug = resolvedParams.slug
   const product = await getProduct(slug)
-  
+
   if (!product) {
     notFound()
   }
-  
+
   // Fetch related products from the same category
-  const relatedProducts = await getRelatedProducts(
-    typeof product.category === 'object' ? product.category.id : product.category,
-    product.id
-  )
-  
+  const categoryId = typeof product.category === 'object' && product.category ? product.category.id : product.category
+  const relatedProducts = await getRelatedProducts(categoryId as string, product.id)
+
   // Process product images
   const productImages = product.images?.map((img) => {
-    return {
-      url: getMediaUrl(img.image.url),
-      alt: img.image.alt
+    const image = img.image
+    if (typeof image === 'object' && 'url' in image && 'alt' in image) {
+      return {
+        url: getMediaUrl(image.url),
+        alt: image.alt
+      }
     }
+    return { url: '/placeholder.svg', alt: product.name }
   }) || []
-  
+
   const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'https://danirusev.vercel.app'
-  const categoryName = typeof product.category === 'object' ? product.category.title : ''
-  
+  const categoryName = typeof product.category === 'object' && product.category ? product.category.name : ''
+  const categorySlug = typeof product.category === 'object' && product.category ? product.category.slug : ''
+
   return (
     <>
       <ProductSchema product={product} url={`${baseUrl}/products/${slug}`} />
-      <BreadcrumbSchema 
+      <BreadcrumbSchema
         items={[
           { name: 'Начало', url: baseUrl },
           { name: 'Продукти', url: `${baseUrl}/products` },
-          { name: categoryName, url: `${baseUrl}/categories/${typeof product.category === 'object' ? product.category.slug : ''}` },
-          { name: product.title, url: `${baseUrl}/products/${slug}` }
-        ]} 
+          { name: categoryName, url: `${baseUrl}/categories/${categorySlug}` },
+          { name: product.name, url: `${baseUrl}/products/${slug}` }
+        ]}
       />
       <ProductDetailContent product={product} relatedProducts={relatedProducts} productImages={productImages} />
     </>
   )
-} 
+}

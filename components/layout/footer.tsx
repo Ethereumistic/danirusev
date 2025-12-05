@@ -7,6 +7,8 @@ export function Footer() {
   const navItems = [
     { label: 'Начало', href: '/' },
     { label: 'Преживявания', href: '/experiences' },
+    { label: 'Магазин 🔒', href: '/shop', locked: true },
+    { label: 'Абонамент 🔒', href: '/subscription', locked: true },
     { label: 'Контакти', href: '/contact' },
   ];
 
@@ -39,10 +41,23 @@ export function Footer() {
                   <h3 className="text-sm font-semibold tracking-wider uppercase">Навигация</h3>
                   <ul role="list" className="mt-4 space-y-4">
                     {navItems.map((item) => (
-                      <li key={item.label}>
-                        <Link href={item.href} className="text-base text-muted-foreground hover:text-alt dark:hover:text-main">
-                          {item.label}
-                        </Link>
+                      <li key={item.href}>
+                        {item.locked ? (
+                          <span
+                            className="text-muted-foreground  cursor-not-allowed px-2 py-1"
+                            aria-disabled="true"
+                            tabIndex={-1}
+                          >
+                            {item.label}
+                          </span>
+                        ) : (
+                          <Link
+                            href={item.href}
+                            className="hover:text-alt dark:hover:text-main text-muted-foreground transition-colors px-2 py-1"
+                          >
+                            {item.label}
+                          </Link>
+                        )}
                       </li>
                     ))}
                   </ul>

@@ -7,7 +7,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Get all products
   const { docs: products } = await payload.find({
-    collection: 'products',
+    collection: 'products' as any,
     limit: 1000,
     select: {
       slug: true,
@@ -27,7 +27,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Get all categories
   const { docs: categories } = await payload.find({
-    collection: 'categories',
+    collection: 'categories' as any,
     limit: 100,
     select: {
       slug: true,
@@ -70,7 +70,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]
 
   // Product pages
-  const productPages = products.map((product) => ({
+  const productPages = (products as any[]).map((product: any) => ({
     url: `${baseUrl}/products/${product.slug}`,
     lastModified: new Date(product.updatedAt),
     changeFrequency: 'weekly' as const,
@@ -78,7 +78,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }))
 
   // Experience individual pages (if you have them)
-  const experiencePages = experiences.map((experience) => ({
+  const experiencePages = (experiences as any[]).map((experience: any) => ({
     url: `${baseUrl}/experiences#${experience.id}`,
     lastModified: new Date(experience.updatedAt),
     changeFrequency: 'weekly' as const,
@@ -86,7 +86,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }))
 
   // Category pages (if you have category pages)
-  const categoryPages = categories.map((category) => ({
+  const categoryPages = (categories as any[]).map((category: any) => ({
     url: `${baseUrl}/categories/${category.slug}`,
     lastModified: new Date(category.updatedAt),
     changeFrequency: 'weekly' as const,
@@ -94,4 +94,4 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }))
 
   return [...staticPages, ...productPages, ...experiencePages, ...categoryPages]
-} 
+}
