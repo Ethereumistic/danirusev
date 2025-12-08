@@ -5,6 +5,7 @@ import { getPayloadClient } from '@/lib/get-payload'
 import { Experience } from '@/payload-types'
 import { DriftExperienceCardSkeleton } from '@/components/experiences/drift-experience-card-skeleton'
 import { Metadata } from 'next'
+import DriftExperiences from '@/components/drift/drift-cards'
 
 export const metadata: Metadata = {
   title: 'Начало',
@@ -50,9 +51,11 @@ export default function Home() {
   return (
     <main className="min-h-screen">
       <Hero />
-      <Suspense fallback={<DriftExperienceCardSkeleton />}>
+
+      {/* <Suspense fallback={<DriftExperienceCardSkeleton />}>
         <ExperienceCardsLoader />
-      </Suspense>
+      </Suspense> */}
+      <DriftExperiences />
     </main>
   )
 }

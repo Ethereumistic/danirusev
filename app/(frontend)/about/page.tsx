@@ -107,7 +107,7 @@ export default function AboutPage() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-slate-950 text-slate-50 overflow-hidden font-sans selection:bg-red-600 selection:text-white">
+        <div className="min-h-screen bg-slate-950 text-slate-50 overflow-hidden font-sans selection:bg-main selection:text-slate-950">
 
             {/* --- HERO SECTION --- */}
             <section className="relative h-[80vh] flex items-center justify-center overflow-hidden">

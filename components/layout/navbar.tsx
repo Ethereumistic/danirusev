@@ -24,8 +24,8 @@ export function Navbar() {
   const { user, signOut } = useAuth();
 
   const navItems = [
-    { label: 'Начало', href: '/' },
-    { label: 'Преживявания', href: '/experiences' },
+    { label: 'За Нас', href: '/about' },
+    { label: 'Преживявания', href: '/xp' },
     { label: 'Магазин 🔒', href: '/shop', disabled: true },
     { label: 'Абонамент 🔒', href: '/subscription', disabled: true },
     { label: 'Контакти', href: '/contact' },
@@ -77,11 +77,10 @@ export function Navbar() {
                 >
                   <Link
                     href={item.href}
-                    className={`text-md mx-1 font-gagalin transition-colors ${
-                      pathname === item.href
-                        ? 'text-alt dark:text-main dark:hover:text-alt'
-                        : 'text-alt dark:text-main dark:hover:text-alt'
-                    }`}
+                    className={`text-md mx-1 font-gagalin transition-colors ${pathname === item.href
+                      ? 'text-alt dark:text-main dark:hover:text-alt'
+                      : 'text-alt dark:text-main dark:hover:text-alt'
+                      }`}
                   >
                     {item.label}
                   </Link>
@@ -158,11 +157,10 @@ export function Navbar() {
               ) : (
                 <Link
                   href={item.href}
-                  className={`block py-2 text-foreground font-medium transition-colors hover:text-primary ${
-                    pathname === item.href
-                      ? 'text-foreground'
-                      : 'text-muted-foreground'
-                  }`}
+                  className={`block py-2 text-foreground font-medium transition-colors hover:text-primary ${pathname === item.href
+                    ? 'text-foreground'
+                    : 'text-muted-foreground'
+                    }`}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   {item.label}

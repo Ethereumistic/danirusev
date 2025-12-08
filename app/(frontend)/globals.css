@@ -113,7 +113,7 @@
   --destructive: oklch(0.704 0.191 22.216);
   --main: oklch(0.9137 0.214 120.48);
   --alt: oklch(0 0 0);
-  --taxi: oklch(0.9045 0.1526 95.16);
+  --taxi: oklch(0.8442 0.172159 84.9338);
   --rent: oklch(0.741 0.149861 239.5917);
   --mix: oklch(0.9137 0.214 120.48);
   --neon-blue: oklch(0.5703 0.2363 261);
@@ -147,6 +147,7 @@
 .text-outline-sm {
   text-shadow: #000 0.5px 0 10px;
 }
+
 .text-outline-md {
   text-shadow: #000 1px 0 10px;
 }
@@ -155,15 +156,19 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
-} 
+}
 
 @keyframes wiggle {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: rotate(-3deg);
   }
+
   50% {
     transform: rotate(3deg);
   }
@@ -171,4 +176,4 @@
 
 .wiggle {
   animation: wiggle 0.2s ease-in-out 2;
-} 
+}
