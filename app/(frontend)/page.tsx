@@ -6,6 +6,10 @@ import { Experience } from '@/payload-types'
 import { DriftExperienceCardSkeleton } from '@/components/experiences/drift-experience-card-skeleton'
 import { Metadata } from 'next'
 import DriftExperiences from '@/components/drift/drift-cards'
+import { HowItWorks } from '@/components/landing/how-it-works'
+import { TestimonialsCarousel } from '@/components/landing/testimonials-carousel'
+import { UrgencyCTA } from '@/components/landing/urgency-cta'
+import { ExperiencesSection } from '@/components/drift/experiences-section'
 
 export const metadata: Metadata = {
   title: 'Начало',
@@ -49,13 +53,21 @@ async function ExperienceCardsLoader() {
 
 export default function Home() {
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen ">
+      {/* Hero with rotating quotes */}
       <Hero />
 
-      {/* <Suspense fallback={<DriftExperienceCardSkeleton />}>
-        <ExperienceCardsLoader />
-      </Suspense> */}
-      <DriftExperiences />
+      {/* Show how easy it is to book */}
+      <HowItWorks />
+
+      {/* Main drift experiences - the core offering */}
+      <ExperiencesSection />
+
+      {/* Build trust with social proof */}
+      <TestimonialsCarousel />
+
+      {/* Final push with urgency */}
+      <UrgencyCTA />
     </main>
   )
 }
