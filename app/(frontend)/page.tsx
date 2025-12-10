@@ -5,11 +5,11 @@ import { getPayloadClient } from '@/lib/get-payload'
 import { Experience } from '@/payload-types'
 import { DriftExperienceCardSkeleton } from '@/components/experiences/drift-experience-card-skeleton'
 import { Metadata } from 'next'
-import DriftExperiences from '@/components/drift/drift-cards'
 import { HowItWorks } from '@/components/landing/how-it-works'
 import { TestimonialsCarousel } from '@/components/landing/testimonials-carousel'
 import { UrgencyCTA } from '@/components/landing/urgency-cta'
 import { ExperiencesSection } from '@/components/drift/experiences-section'
+import { WhyChooseUs } from '@/components/drift/why-choose-us'
 
 export const metadata: Metadata = {
   title: 'Начало',
@@ -57,6 +57,7 @@ export default function Home() {
       {/* Hero with rotating quotes */}
       <Hero />
 
+      <WhyChooseUs />
       {/* Show how easy it is to book */}
       <HowItWorks />
 

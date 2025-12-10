@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2, XCircle } from "lucide-react";
 import type { DriftExperience } from "@/lib/drift-data";
+import { getTextColor } from "@/lib/utils";
 
 interface DriftIncludedProps {
     included?: { text: string }[];
@@ -11,14 +12,10 @@ interface DriftIncludedProps {
 }
 
 export function DriftIncluded({ included, notIncluded, themeColor }: DriftIncludedProps) {
-    const themeIconClass =
-        themeColor === 'taxi' ? 'text-taxi' :
-            themeColor === 'rent' ? 'text-rent' :
-                themeColor === 'mix' ? 'text-mix' :
-                    'text-main';
+    const themeIconClass = getTextColor(themeColor);
 
     return (
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-4">
             {/* Included */}
             {included && included.length > 0 && (
                 <Card className="border-slate-800 bg-slate-900/50 shadow-sm">

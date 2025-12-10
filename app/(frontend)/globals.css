@@ -162,6 +162,21 @@
   }
 }
 
+/* Custom border style utilities for group-hover */
+@layer utilities {
+  .group:hover .group-hover\:border-dashed {
+    border-style: dashed;
+  }
+
+  .group:hover .group-hover\:border-double {
+    border-style: double;
+  }
+
+  .group:hover .group-hover\:border-dotted {
+    border-style: dotted;
+  }
+}
+
 @keyframes wiggle {
 
   0%,

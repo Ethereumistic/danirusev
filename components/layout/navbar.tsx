@@ -60,7 +60,7 @@ export function Navbar() {
                   key={item.href} // Added key here
                   variant='main'
                   size='sm'
-                  className='text-md mx-1 font-gagalin transition-colors text-alt/90 dark:text-main/90'
+                  className='text-md mx-1 font-black uppercase tracking-tighter italic transition-colors text-alt/90 dark:text-main/90'
                   disabled
                 >
                   <span className='flex items-center'>
@@ -72,12 +72,12 @@ export function Navbar() {
                   key={item.href}
                   variant='main'
                   size='sm'
-                  className='text-md mx-1 font-gagalin transition-colors '
+                  className='text-md mx-1 font-black uppercase tracking-tighter italic transition-colors '
                   asChild
                 >
                   <Link
                     href={item.href}
-                    className={`text-md mx-1 font-gagalin transition-colors ${pathname === item.href
+                    className={`text-md mx-1 font-black uppercase tracking-tighter italic transition-colors ${pathname === item.href
                       ? 'text-alt dark:text-main dark:hover:text-alt'
                       : 'text-alt dark:text-main dark:hover:text-alt'
                       }`}
@@ -134,7 +134,7 @@ export function Navbar() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button variant="main" className='text-alt font-gagalin bg-main mr-3' asChild>
+            <Button variant="main" className='text-alt font-black uppercase tracking-tighter italic bg-main mr-3' asChild>
               <Link href="/sign-in">Вход</Link>
             </Button>
           )}

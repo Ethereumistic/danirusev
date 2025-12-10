@@ -1,8 +1,18 @@
 // lib/drift-data.ts
-import { Car, Trophy, Timer, Gauge, ShieldCheck, Fuel, CarTaxiFront } from "lucide-react";
+import { Car, Trophy, Timer, Gauge, ShieldCheck, Fuel, CarTaxiFront, Smartphone, Gift } from "lucide-react";
 
 export type PatternType = 'taxi-checker' | 'tyre-pattern' | 'none';
 export type ThemeColor = 'taxi' | 'rent' | 'mix' | 'main';
+
+export type AdditionalItem = {
+    id: string;
+    name: string;
+    icon: string; // Lucide icon name
+    price: number;
+    description: string;
+    isLocation?: boolean; // Flag for location items (single choice)
+    isVoucher?: boolean; // Flag for voucher items (single choice)
+};
 
 export type DriftExperience = {
     id: string;
@@ -20,6 +30,7 @@ export type DriftExperience = {
     program: { time: string; activity: string; description: string }[];
     included: string[];
     notIncluded: string[];
+    additionalItems?: AdditionalItem[]; // Optional purchasable add-ons
     iconName: 'CarTaxiFront' | 'Car' | 'Gauge'; // Icon identifier
     pattern: PatternType; // Visual pattern identifier
     themeColor: ThemeColor; // Theme color for this experience
@@ -46,12 +57,22 @@ export const DRIFT_EXPERIENCES: DriftExperience[] = [
 
         ],
         program: [
-            { time: "00:00", activity: "Брифинг", description: "Запознаване с мерките за безопасност и екипировката." },
+            {
+                time: "00:00", activity: "Брифинг", description: "Запознаване с мерките за безопасност и екипировката."
+            },
             { time: "00:15", activity: "Екипиране", description: "Слагане на каска и закопчаване на 4-точковите колани." },
             { time: "00:20", activity: "Drift Session", description: "40 минути интензивно возене на планинско трасе." },
         ],
         included: ["Професионален пилот", "Гориво и Гуми", "Каска и боне", "Видео заснемане (GoPro)"],
         notIncluded: ["Транспорт до пистата", "Храна и напитки"],
+        additionalItems: [
+            { id: "gopro", name: "GoPro Заснемане", icon: "Video", price: 50, description: "Професионално заснемане на цялата сесия" },
+            { id: "extra-tires", name: "Допълнителни Гуми", icon: "Disc", price: 120, description: "2 екстра гуми за по-дълго возене" },
+            { id: "voucher-digital", name: "Ваучер Дигитален", icon: "Smartphone", price: 0, description: "Дигитален ваучер изпратен по имейл", isVoucher: true },
+            { id: "voucher-physical", name: "Ваучер Физически", icon: "Gift", price: 10, description: "Физически ваучер с доставка", isVoucher: true },
+            { id: "location-tryavna", name: "Писта Трявна", icon: "MapPin", price: 0, description: "Обезопасено трасе в близост до град Трявна", isLocation: true },
+            { id: "location-sevlievo", name: "Дрифт Трак Севлиево", icon: "MapPin", price: 0, description: "Професионална писта в Севлиево", isLocation: true },
+        ],
         iconName: 'CarTaxiFront',
         pattern: 'taxi-checker',
         themeColor: 'taxi',
@@ -82,6 +103,14 @@ export const DRIFT_EXPERIENCES: DriftExperience[] = [
         ],
         included: ["Инструктор (Дани Русев)", "Наем на подготвен автомобил", "Гориво и Гуми", "Сертификат"],
         notIncluded: ["Депозит за щети", "Транспорт до пистата"],
+        additionalItems: [
+            { id: "gopro", name: "GoPro Заснемане", icon: "Video", price: 50, description: "Професионално заснемане на цялата сесия" },
+            { id: "extra-tires", name: "Допълнителни Гуми", icon: "Disc", price: 120, description: "2 екстра гуми за по-дълго возене" },
+            { id: "voucher-digital", name: "Ваучер Дигитален", icon: "Smartphone", price: 0, description: "Дигитален ваучер изпратен по имейл", isVoucher: true },
+            { id: "voucher-physical", name: "Ваучер Физически", icon: "Gift", price: 10, description: "Физически ваучер с доставка", isVoucher: true },
+            { id: "location-tryavna", name: "Писта Трявна", icon: "MapPin", price: 0, description: "Обезопасено трасе в близост до град Трявна", isLocation: true },
+            { id: "location-sevlievo", name: "Дрифт Трак Севлиево", icon: "MapPin", price: 0, description: "Професионална писта в Севлиево", isLocation: true },
+        ],
         iconName: 'Car',
         pattern: 'tyre-pattern',
         themeColor: 'rent',
@@ -113,6 +142,14 @@ export const DRIFT_EXPERIENCES: DriftExperience[] = [
         ],
         included: ["Инструктор (Дани Русев)", "Наем на подготвен автомобил", "Гориво и Гуми", "Сертификат"],
         notIncluded: ["Депозит за щети", "Транспорт до пистата"],
+        additionalItems: [
+            { id: "gopro", name: "GoPro Заснемане", icon: "Video", price: 50, description: "Професионално заснемане на цялата сесия" },
+            { id: "extra-tires", name: "Допълнителни Гуми", icon: "Disc", price: 120, description: "2 екстра гуми за по-дълго возене" },
+            { id: "voucher-digital", name: "Ваучер Дигитален", icon: "Smartphone", price: 0, description: "Дигитален ваучер изпратен по имейл", isVoucher: true },
+            { id: "voucher-physical", name: "Ваучер Физически", icon: "Gift", price: 10, description: "Физически ваучер с доставка", isVoucher: true },
+            { id: "location-tryavna", name: "Писта Трявна", icon: "MapPin", price: 0, description: "Обезопасено трасе в близост до град Трявна", isLocation: true },
+            { id: "location-sevlievo", name: "Дрифт Трак Севлиево", icon: "MapPin", price: 0, description: "Професионална писта в Севлиево", isLocation: true },
+        ],
         iconName: 'Car',
         pattern: 'tyre-pattern',
         themeColor: 'mix',

@@ -11,10 +11,11 @@ import { DRIFT_EXPERIENCES, DriftExperience } from "@/lib/drift-data";
 
 // Components
 import { DriftGallery } from "@/components/drift/DriftGallery"; // Reusing Gallery logic
-import { DriftBookingSidebar } from "@/components/drift/drift-booking-sidebar";
 import { DriftStatsGrid } from "@/components/drift/drift-stats-grid";
 import { DriftProgram } from "@/components/drift/drift-program";
 import { DriftIncluded } from "@/components/drift/DriftIncluded"; // Reusing generic Included component
+import { DriftAdditionalItems } from "@/components/drift/DriftAdditionalItems";
+import { DriftBookingSidebar } from "@/components/drift/drift-booking-sidebar";
 
 // Helper function to get the correct icon component
 function getIconComponent(iconName: DriftExperience['iconName'], themeColor: DriftExperience['themeColor']) {
@@ -94,7 +95,7 @@ export default async function DriftExperiencePage({
                     </div>
 
                     {/* RIGHT COLUMN - ALL CONTENT */}
-                    <div className="lg:col-span-5 space-y-6">
+                    <div className="lg:col-span-5 space-y-4">
                         {/* Description - Styled as a Quote */}
                         <div className={`relative bg-gradient-to-br from-slate-900 to-slate-950 p-8 rounded-2xl border-2 ${experience.themeColor === 'taxi' ? 'border-taxi/30' :
                             experience.themeColor === 'rent' ? 'border-rent/30' :
@@ -148,7 +149,7 @@ export default async function DriftExperiencePage({
                                         Условия
                                     </TabsTrigger>
                                     <TabsTrigger
-                                        value="location"
+                                        value="additional"
                                         className={
                                             experience.themeColor === 'taxi' ? 'data-[state=active]:!bg-taxi data-[state=active]:!text-black text-slate-400' :
                                                 experience.themeColor === 'rent' ? 'data-[state=active]:!bg-rent data-[state=active]:!text-black text-slate-400' :
@@ -156,11 +157,11 @@ export default async function DriftExperiencePage({
                                                         'data-[state=active]:!bg-main data-[state=active]:!text-black text-slate-400'
                                         }
                                     >
-                                        Локация
+                                        Допълнения
                                     </TabsTrigger>
                                 </TabsList>
 
-                                <div className="mt-6 space-y-6">
+                                <div className="mt-2">
                                     {/* Tab: Program */}
                                     <TabsContent value="program">
                                         <DriftProgram program={experience.program} themeColor={experience.themeColor} />
@@ -175,28 +176,17 @@ export default async function DriftExperiencePage({
                                         />
                                     </TabsContent>
 
-                                    {/* Tab: Location */}
-                                    <TabsContent value="location">
-                                        <Card className="bg-slate-900 border-slate-800">
-                                            <CardContent className="pt-6">
-                                                <div className="flex items-start gap-4">
-                                                    <div className="bg-slate-800 p-3 rounded-full">
-                                                        <MapPin className={`h-6 w-6 text-${experience.themeColor}`} />
-                                                    </div>
-                                                    <div>
-                                                        <h4 className="text-lg font-bold text-white">Писта Трявна</h4>
-                                                        <p className="text-slate-400 mt-2">
-                                                            Всички дрифт преживявания се провеждат на обезопасено трасе в близост до град Трявна.
-                                                            Локацията предлага перфектна комбинация от технични завои и безопасни зони.
-                                                        </p>
-                                                        <div className="mt-4 h-64 w-full bg-slate-800 rounded-lg flex items-center justify-center text-slate-500">
-                                                            {/* You can embed a Google Map Iframe here */}
-                                                            [Map Placeholder]
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </CardContent>
-                                        </Card>
+                                    {/* Tab: Additional Items */}
+                                    <TabsContent value="additional">
+                                        {experience.additionalItems && experience.additionalItems.length > 0 ? (
+                                            <DriftAdditionalItems
+                                                items={experience.additionalItems}
+                                                themeColor={experience.themeColor}
+                                                experienceId={experience.id}
+                                            />
+                                        ) : (
+                                            <p className="text-slate-400 text-center py-8">Няма налични допълнения за този пакет.</p>
+                                        )}
                                     </TabsContent>
                                 </div>
                             </Tabs>

@@ -1,13 +1,10 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock, Gauge, Disc, Car } from "lucide-react";
 import type { DriftExperience } from "@/lib/drift-data";
+import { getTextColor } from "@/lib/utils";
 
 export function DriftStatsGrid({ experience }: { experience: DriftExperience }) {
-    const iconColorClass =
-        experience.themeColor === 'taxi' ? 'text-taxi' :
-            experience.themeColor === 'rent' ? 'text-rent' :
-                experience.themeColor === 'mix' ? 'text-mix' :
-                    'text-main';
+    const iconColorClass = getTextColor(experience.themeColor);
 
     return (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sq">

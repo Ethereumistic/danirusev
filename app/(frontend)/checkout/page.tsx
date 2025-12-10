@@ -29,9 +29,18 @@ export default async function CheckoutPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-4xl">
-      <h1 className="text-3xl font-bold mb-6 text-center">Информация преди заплащане</h1>
-      <CheckoutForm profile={profile} />
+    <div className="min-h-screen bg-slate-950 py-12 px-4">
+      <div className="container mx-auto max-w-7xl">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tight mb-3">
+            Информация преди заплащане
+          </h1>
+          <p className="text-slate-400 text-lg">
+            Още една крачка до вашето незабравимо преживяване
+          </p>
+        </div>
+        <CheckoutForm profile={profile} />
+      </div>
     </div>
   )
 }
