@@ -3,6 +3,7 @@ export interface Profile {
   id: string;
   updated_at: string | null;
   full_name: string | null;
+  email: string | null;
   address: string | null;
   city: string | null;
   postal_code: string | null;

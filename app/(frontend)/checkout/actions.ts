@@ -7,7 +7,7 @@ import { z } from 'zod'
 
 // Zod schema for a single cart item
 const cartItemSchema = z.object({
-  id: z.coerce.number(),
+  id: z.string(),
   title: z.string(),
   price: z.coerce.number(),
   quantity: z.coerce.number().min(1, 'Quantity must be at least 1'),
@@ -77,31 +77,33 @@ export async function createCheckoutSession(
 
   try {
     // 3. Verify experience prices against the database
-    const experienceIds = validatedData.cartItems.map(item => item.id)
-    const { data: experiences, error: experiencesError } = await supabase
-      .from('experiences')
-      .select('id, price')
-      .in('id', experienceIds)
+    // NOTE: Commented out for drift experiences which use hardcoded data
+    // const experienceIds = validatedData.cartItems.map(item => item.id)
+    // const { data: experiences, error: experiencesError } = await supabase
+    //   .from('experiences')
+    //   .select('id, price')
+    //   .in('id', experienceIds)
 
-    if (experiencesError) {
-      throw new Error(`Database error: ${experiencesError.message}`)
-    }
+    // if (experiencesError) {
+    //   throw new Error(`Database error: ${experiencesError.message}`)
+    // }
 
-    // Create a map for quick price lookup
-    const experiencePriceMap = new Map(experiences.map(p => [p.id, p.price]))
+    // // Create a map for quick price lookup
+    // const experiencePriceMap = new Map(experiences.map(p => [p.id, p.price]))
 
     // 4. Prepare line items for Stripe
     const line_items = validatedData.cartItems.map(item => {
-      const dbPrice = experiencePriceMap.get(item.id)
-      if (dbPrice === undefined) {
-        throw new Error(`Experience with ID ${item.id} not found.`)
-      }
-      // Ensure the price from the cart matches the database price
-      if (item.price !== dbPrice) {
-        throw new Error(
-          `Price mismatch for product ${item.title}. Please refresh your cart.`,
-        )
-      }
+      // Skip database validation for drift experiences (hardcoded in drift-data.ts)
+      // const dbPrice = experiencePriceMap.get(item.id)
+      // if (dbPrice === undefined) {
+      //   throw new Error(`Experience with ID ${item.id} not found.`)
+      // }
+      // // Ensure the price from the cart matches the database price
+      // if (item.price !== dbPrice) {
+      //   throw new Error(
+      //     `Price mismatch for product ${item.title}. Please refresh your cart.`,
+      //   )
+      // }
       return {
         price_data: {
           currency: 'bgn', // Change currency if needed

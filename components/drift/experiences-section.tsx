@@ -43,7 +43,6 @@ export function ExperiencesSection({
                             key={experience.id}
                             experience={experience}
                             index={idx}
-                            popularSlug={popularSlug}
                         />
                     ))}
                 </div>
