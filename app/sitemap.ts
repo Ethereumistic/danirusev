@@ -15,16 +15,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   })
 
-  // Get all experiences
-  const { docs: experiences } = await payload.find({
-    collection: 'experiences',
-    limit: 100,
-    select: {
-      id: true,
-      updatedAt: true,
-    },
-  })
-
   // Get all categories
   const { docs: categories } = await payload.find({
     collection: 'categories' as any,
@@ -44,7 +34,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1,
     },
     {
-      url: `${baseUrl}/experiences`,
+      url: `${baseUrl}/xp`,
       lastModified: new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.9,
@@ -77,9 +67,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }))
 
-  // Experience individual pages (if you have them)
-  const experiencePages = (experiences as any[]).map((experience: any) => ({
-    url: `${baseUrl}/experiences#${experience.id}`,
+  // Experience individual pages
+  const experienceProducts = (products as any[]).filter((product: any) => product.productType === 'experience')
+  const experiencePages = experienceProducts.map((experience: any) => ({
+    url: `${baseUrl}/xp/${experience.slug}`,
     lastModified: new Date(experience.updatedAt),
     changeFrequency: 'weekly' as const,
     priority: 0.7,

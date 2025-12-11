@@ -11,8 +11,6 @@ import { Users } from './collections/Users'
 import { Media } from './collections/Media'
 import { Products } from './collections/Products'
 import { Categories } from './collections/Categories'
-import { Collections } from './collections/Collections'
-import { Experiences } from './collections/Experiences'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -34,7 +32,7 @@ export default buildConfig({
       titleSuffix: '- E-Commerce Admin',
     },
   },
-  collections: [Users, Media, Products, Categories, Collections, Experiences],
+  collections: [Users, Media, Products, Categories],
   editor: lexicalEditor({}),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {

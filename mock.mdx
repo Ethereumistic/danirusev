@@ -1,0 +1,243 @@
+# DR 11 Чаша - Complete Input Guide
+
+## Global Product Fields
+
+### Title
+```
+DR 11 Чаша
+```
+
+### Slug
+```
+(Auto-generated: dr-11-chasha)
+```
+
+### Product Type
+```
+Physical Product
+```
+
+### Price (Base Price)
+```
+14
+```
+💡 This is the starting price. Variants can modify this with price modifiers.
+
+### Compare At Price
+```
+(Leave empty)
+```
+💡 Only fill this if you want to show a "was 20 BGN, now 14 BGN" sale price.
+
+### Stock (Fallback)
+```
+0
+```
+⚠️ **IMPORTANT**: Set this to `0` because you're using variants!
+- Each variant has its own stock
+- This field is ONLY used if you have NO variants (simple product)
+- Since you have Green/Yellow variants, leave this at 0
+
+### Low Stock Threshold
+```
+5
+```
+💡 When any variant has 5 or fewer items, it shows "Only X left!"
+
+### Categories
+```
+Select: Merchandise (or create it if it doesn't exist)
+```
+
+---
+
+## Product Gallery
+
+### Skip This!
+```
+Leave the main Product Gallery EMPTY for variant-based products like mugs.
+```
+💡 **Why?** Each variant (Green/Yellow) will have its own complete gallery. The main gallery is only used as fallback if a variant has no images.
+
+---
+
+## Physical Product Options
+
+### Option Definition #1
+
+**Name:**
+```
+Color
+```
+
+**Values:**
+
+Value 1:
+```
+Green
+```
+
+Value 2:
+```
+Yellow
+```
+
+---
+
+## Variants / Inventory
+
+### Variant #1 (Green Mug)
+
+**Combination:**
+```
+(Leave blank - auto-generated as "Color:Green")
+```
+
+**Options (JSON):**
+```json
+{"Color": "Green"}
+```
+
+**Stock:**
+```
+3
+```
+
+**Price Modifier:**
+```
+0
+```
+
+**SKU:**
+```
+DR11-MUG-GREEN
+```
+
+**Variant Images (Gallery):**
+
+Click "Add Variant Image" for each green mug photo:
+
+Image 1:
+```
+Type: URL
+URL: https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/products/mug_dr_11_green_f.png
+```
+
+Image 2 (Click "Add Variant Image" again):
+```
+Type: URL
+URL: https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/products/mug_dr_11_green_side.png
+```
+
+Image 3:
+```
+Type: URL
+URL: https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/products/mug_dr_11_green_back.png
+```
+
+💡 Add as many images as you want! Each will appear as a clickable thumbnail.
+
+---
+
+### Variant #2 (Yellow Mug)
+
+**Combination:**
+```
+(Leave blank)
+```
+
+**Options (JSON):**
+```json
+{"Color": "Yellow"}
+```
+
+**Stock:**
+```
+2
+```
+
+**Price Modifier:**
+```
+0
+```
+
+**SKU:**
+```
+DR11-MUG-YELLOW
+```
+
+**Variant Images (Gallery):**
+
+Image 1:
+```
+Type: URL
+URL: https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/products/mug_dr_11_yellow_f.png
+```
+
+Image 2:
+```
+Type: URL
+URL: https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/products/mug_dr_11_yellow_side.png
+```
+
+Image 3:
+```
+Type: URL
+URL: https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/products/mug_dr_11_yellow_back.png
+```
+
+---
+
+## How It Works Now
+
+### Image Flow:
+1. User visits product page → sees first image from **Green variant** (or Yellow if no green images)
+2. User clicks "Green" → shows ALL green variant images with thumbnails
+3. User clicks "Yellow" → switches to ALL yellow variant images
+4. User clicks any thumbnail → that image becomes the main image
+5. **No generic gallery needed!** Each variant has its own complete photo set
+
+### Benefits:
+✅ Each color gets its own photo gallery
+✅ Thumbnails are clickable to zoom/change main image
+✅ Selected variant shows a ring indicator
+✅ No confusion with generic vs variant images
+
+---
+
+## How It Works
+
+### Stock Logic:
+- **Product Stock (0)** ← Ignored when you have variants
+- **Green Variant Stock (3)** ← Real stock for green mugs
+- **Yellow Variant Stock (2)** ← Real stock for yellow mugs
+- **Total Available** = 3 + 2 = 5 mugs total
+
+### Image Flow:
+1. User visits product page → sees **Gallery images** (general mug photos)
+2. User clicks "Green" → main image changes to **Green variant image**
+3. User clicks "Yellow" → main image changes to **Yellow variant image**
+4. Gallery thumbnails stay available for clicking
+
+### Price Calculation:
+- Base Price: 14 BGN
+- Green selected: 14 + 0 = **14 BGN**
+- Yellow selected: 14 + 0 = **14 BGN**
+
+If you wanted green to cost more:
+- Green price modifier: `+3`
+- Green final price: 14 + 3 = **17 BGN**
+
+---
+
+## Quick Copy-Paste Checklist
+
+- [x] Title: `DR 11 Чаша`
+- [x] Product Type: `Physical Product`
+- [x] Price: `14`
+- [x] Stock: `0`
+- [x] Low Stock Threshold: `5`
+- [x] Gallery: 2+ general mug images (URLs)
+- [x] Option: Color → Green, Yellow
+- [x] Variant 1: `{"Color": "Green"}`, Stock: `3`, SKU: `DR11-MUG-GREEN`, Image: green_f.png
+- [x] Variant 2: `{"Color": "Yellow"}`, Stock: `2`, SKU: `DR11-MUG-YELLOW`, Image: yellow_f.png

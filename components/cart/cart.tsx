@@ -38,7 +38,7 @@ export function Cart({ closeSheet }: { closeSheet: () => void }) {
 
   // Calculate subtotal including additional items and vouchers
   const subtotal = items.reduce((acc, item) => {
-    let itemTotal = parseFloat(item.price) * item.quantity;
+    let itemTotal = item.price * item.quantity;
 
     // Add additional items prices
     if (item.additionalItems && item.additionalItems.length > 0 && item.experienceSlug) {
@@ -69,7 +69,7 @@ export function Cart({ closeSheet }: { closeSheet: () => void }) {
 
   // Calculate item total price including addons and vouchers (per unit)
   const getItemTotalPrice = (item: any) => {
-    let total = parseFloat(item.price);
+    let total = item.price;
 
     if (item.additionalItems && item.additionalItems.length > 0 && item.experienceSlug) {
       const experience = DRIFT_EXPERIENCES.find(exp => exp.slug === item.experienceSlug);

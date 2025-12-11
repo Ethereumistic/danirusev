@@ -1,0 +1,144 @@
+Master Instruction Plan: E-Commerce Architecture (v2)
+Context & Directive: We are rebuilding the backend for "Dani Rusev" (Rally Driver) using Payload CMS v3, Supabase, and Next.js. CRITICAL: I currently have existing files (Products.ts, Categories.ts, etc.) in my project. Ignore and Overwrite them. They are deprecated. You must generate completely new, robust schemas based on the requirements below.
+
+The Goal:
+
+Build a Physical Shop schema (Merch, Car Parts) with complex variants (Size/Color/Scent) and strict stock management.
+
+Build an Experience schema (Drift Taxi, etc.) that mirrors the data structure of my current drift-data.ts file, allowing me to transition from hardcoded files to CMS data later.
+
+1. The Media Collection
+Slug: media
+
+Purpose: Stores images in Supabase S3.
+
+Fields: Standard Payload upload fields + alt (text).
+
+2. The Categories Collection
+Slug: categories
+
+Fields:
+
+title (Text, required)
+
+slug (Text, auto-generated)
+
+parent (Relationship -> categories, allows hierarchy like Apparel > Hoodies)
+
+3. The Products Collection (The Core Schema)
+Slug: products
+
+Drafts: true (Enabled)
+
+Fields Logic: Use specific Field Groups or Tabs to separate "Physical Goods" logic from "Experience" logic.
+
+A. Global Product Data (All Types)
+title (Text, required)
+
+slug (Text, unique, required)
+
+productType (Select, required): Options: ['physical', 'experience']
+
+price (Number, required) -> Base Price
+
+compareAtPrice (Number) -> For sales
+
+stock (Number) -> Fallback Stock (Used if the product has NO variants, e.g., a simple sticker).
+
+lowStockThreshold (Number, default 5) -> Used to trigger "Only X left!" badges.
+
+categories (Relationship -> categories, hasMany: true)
+
+The Hybrid Image Field:
+
+Create a gallery array.
+
+Inside: type (Select: 'upload' | 'url'), media (Upload relation), url (Text). Reason: Allows quick pasting of external URLs or S3 uploads.
+
+B. Physical Goods Logic (Condition: productType === 'physical')
+Option Definitions (Array):
+
+name (Text) -> e.g., "Size", "Scent".
+
+values (Array of Text) -> e.g., ["S", "M", "L"] or ["Vanilla", "New Car"].
+
+Variants / Inventory (Array):
+
+This is the source of truth for stock.
+
+combination (Text, read-only) -> e.g., "Size:S|Color:Red"
+
+options (JSON/Array) -> Key-value pairs of the selection.
+
+stock (Number, required, default 0) -> CRITICAL: This allows us to disable the "Add to Cart" button if 0.
+
+priceModifier (Number) -> e.g., +$5 for XL.
+
+sku (Text)
+
+variantImage (Relationship -> media) -> To swap the main image when color changes.
+
+C. Experience Logic (Condition: productType === 'experience')
+Design this to match drift-data.ts exactly.
+
+subtitle (Text)
+
+duration (Text) -> e.g., "60 min"
+
+location (Select or Text) -> e.g., "Tundzha", "Sofia"
+
+Tech Specs Group: carModel (Text), horsePower (Number), tiresBurned (Number).
+
+Visuals:
+
+iconName (Text/Select) -> Lucide icon name.
+
+themeColor (Select) -> Options: ['taxi', 'rent', 'mix', 'main'].
+
+pattern (Select) -> Options: ['taxi-checker', 'tyre-pattern', 'none'].
+
+The Program (Array):
+
+Fields: time (Text), activity (Text), description (Textarea).
+
+Included/Excluded:
+
+included (Array of Text).
+
+notIncluded (Array of Text).
+
+Additional Items / Addons (Array):
+
+Matches additionalItems from drift-data.ts
+
+name (Text), price (Number), description (Text), icon (Text).
+
+type (Select): Options ['standard', 'location', 'voucher']. Logic: Replaces isLocation/isVoucher booleans.
+
+4. Implementation Logic (Instructions for AI Generator)
+1. Stock Management Logic:
+
+Create a React utility/hook for the frontend: useProductStock(product, selectedVariant).
+
+Logic:
+
+If product has variants: currentStock = selectedVariant.stock.
+
+If product has no variants: currentStock = product.stock.
+
+UI States:
+
+If currentStock === 0 -> Disable "Add to Cart", Text: "Out of Stock".
+
+If currentStock > 0 && currentStock <= product.lowStockThreshold -> Show Badge: "Low Stock: Only {x} left!".
+
+2. Image Rendering:
+
+Create a helper resolveImage(imageField) that handles the logic: if (imageField.type === 'url') return imageField.url; else return imageField.media.url;
+
+3. Frontend Structure:
+
+Generate the Typescript Interfaces (Experience, Product, Variant) to match the Payload generated types, ensuring the frontend is type-safe.
+
+Action:
+Generate the complete Products.ts Collection Config code now, ensuring all imports (Fields, Blocks) are correct for Payload v3.

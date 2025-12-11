@@ -7,10 +7,17 @@ import { type ThemeColor } from '@/lib/utils'
 export interface CartItem {
   id: string;
   title: string;
-  price: string;
-  icon: string;
+  price: number; // Changed to number for consistency
+  icon?: string; // Made optional for physical products
   quantity: number;
-  whatYouGet: string[]; // Added to store details
+  whatYouGet?: string[]; // Made optional
+
+  // Physical product specific fields
+  selectedVariant?: {
+    options: Record<string, string>;
+    sku?: string;
+  };
+
   // Drift experience specific fields
   additionalItems?: string[]; // IDs of selected additional items
   selectedLocation?: string | null; // Selected location ID

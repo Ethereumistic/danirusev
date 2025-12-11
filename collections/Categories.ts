@@ -1,72 +1,28 @@
 import type { CollectionConfig } from 'payload'
-import { isAdmin } from '../access/isAdmin';
+import { slugField } from '../fields/slug'
 
 export const Categories: CollectionConfig = {
   slug: 'categories',
   admin: {
-    useAsTitle: 'name',
-    defaultColumns: ['name', 'parent', 'products'],
-    group: 'Shop',
+    useAsTitle: 'title',
   },
   access: {
     read: () => true,
-    create: isAdmin,
-    update: isAdmin,
-    delete: isAdmin,
   },
   fields: [
     {
-      name: 'name',
+      name: 'title',
       type: 'text',
       required: true,
-      unique: true,
     },
-    {
-      name: 'description',
-      type: 'textarea',
-    },
+    slugField(),
     {
       name: 'parent',
       type: 'relationship',
-      relationTo: 'categories' as any,
-      hasMany: false,
+      relationTo: 'categories',
       admin: {
-        description: 'Parent category if this is a subcategory',
-      },
-    },
-    {
-      name: 'image',
-      type: 'upload',
-      relationTo: 'media',
-      admin: {
-        description: 'Category thumbnail image',
-      },
-    },
-    {
-      name: 'metadata',
-      type: 'group',
-      fields: [
-        {
-          name: 'title',
-          type: 'text',
-          label: 'Meta Title',
-        },
-        {
-          name: 'description',
-          type: 'textarea',
-          label: 'Meta Description',
-        },
-      ],
-    },
-    {
-      name: 'slug',
-      type: 'text',
-      required: true,
-      unique: true,
-      admin: {
-        position: 'sidebar',
+        description: 'Parent category for hierarchical structure (e.g., Apparel > Hoodies)',
       },
     },
   ],
-  timestamps: true,
-}; 
+}

@@ -1,4 +1,4 @@
-import { Product } from '@/types/payload-types'
+import { Product, ExperienceProduct, Category, Media, isExperienceProduct } from '@/types/payload-types'
 import { getMediaUrl } from '@/lib/utils'
 
 interface ProductSchemaProps {
@@ -7,17 +7,37 @@ interface ProductSchemaProps {
 }
 
 export function ProductSchema({ product, url }: ProductSchemaProps) {
-  const categoryName = typeof product.category === 'object' && product.category ? product.category.name : ''
-  const productImage = product.images?.[0]?.image
-  const imageUrl = productImage && typeof productImage === 'object' && 'url' in productImage
-    ? getMediaUrl(productImage.url)
-    : null
+  // Get first category name
+  const firstCategory = product.categories?.[0]
+  const categoryName = firstCategory && typeof firstCategory === 'object'
+    ? firstCategory.title
+    : ''
+
+  // Get first gallery image
+  const firstGalleryItem = product.gallery?.[0]
+  let imageUrl: string | null = null
+
+  if (firstGalleryItem) {
+    if (firstGalleryItem.type === 'upload' && firstGalleryItem.media) {
+      const media = firstGalleryItem.media
+      if (typeof media === 'object' && 'url' in media) {
+        imageUrl = getMediaUrl(media.url)
+      }
+    } else if (firstGalleryItem.type === 'url' && firstGalleryItem.url) {
+      imageUrl = firstGalleryItem.url
+    }
+  }
+
+  // Get description (only available for experience products)
+  const description = isExperienceProduct(product) && product.description
+    ? product.description
+    : ''
 
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'Product',
-    name: product.name,
-    description: typeof product.description === 'string' ? product.description : '',
+    name: product.title,
+    description: description,
     image: imageUrl ? [imageUrl] : [],
     category: categoryName,
     brand: {
@@ -108,21 +128,32 @@ export function OrganizationSchema() {
 }
 
 interface ExperienceSchemaProps {
-  experience: {
-    title: string
-    description: string
-    price: string
-    duration: string
-    location?: string
-  }
+  experience: ExperienceProduct
+  url?: string
 }
 
-export function ExperienceSchema({ experience }: ExperienceSchemaProps) {
+export function ExperienceSchema({ experience, url }: ExperienceSchemaProps) {
+  // Get first gallery image
+  const firstGalleryItem = experience.gallery?.[0]
+  let imageUrl: string | null = null
+
+  if (firstGalleryItem) {
+    if (firstGalleryItem.type === 'upload' && firstGalleryItem.media) {
+      const media = firstGalleryItem.media
+      if (typeof media === 'object' && 'url' in media) {
+        imageUrl = getMediaUrl(media.url)
+      }
+    } else if (firstGalleryItem.type === 'url' && firstGalleryItem.url) {
+      imageUrl = firstGalleryItem.url
+    }
+  }
+
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: experience.title,
-    description: experience.description,
+    description: experience.description || experience.subtitle || '',
+    image: imageUrl ? [imageUrl] : [],
     category: 'Automotive Experience',
     brand: {
       '@type': 'Brand',
@@ -130,6 +161,7 @@ export function ExperienceSchema({ experience }: ExperienceSchemaProps) {
     },
     offers: {
       '@type': 'Offer',
+      url: url,
       priceCurrency: 'BGN',
       price: experience.price,
       availability: 'https://schema.org/InStock',

@@ -153,7 +153,7 @@ export function CheckoutForm({ profile }: CheckoutFormProps) {
   // Calculate subtotal including additional items and vouchers
   const subtotal = useMemo(() => {
     return items.reduce((acc, item) => {
-      let itemTotal = parseFloat(item.price) * item.quantity
+      let itemTotal = getItemTotalPrice(item) * item.quantity
 
       // Add additional items prices
       if (item.additionalItems && item.additionalItems.length > 0 && item.experienceSlug) {

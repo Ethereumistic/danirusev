@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "generate:types": "tsx payload.config.ts --payload-config payload.config.ts --local generate:types"
+    "generate:types": "node scripts/generate-payload-types.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",

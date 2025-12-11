@@ -48,7 +48,7 @@ export function DriftBookingSidebar({ experience }: DriftBookingSidebarProps) {
         addItem({
             id: `${experience.id}-${Date.now()}`, // Unique ID for each cart entry
             title: experience.title,
-            price: totalPrice.toString(),
+            price: totalPrice,
             icon: experience.iconName,
             whatYouGet,
             additionalItems: selections.additionalItems,
