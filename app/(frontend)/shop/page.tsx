@@ -28,12 +28,39 @@ export default async function ShopPage() {
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {products.map((product: any) => {
-                            // Priority: main gallery → first color gallery → first variant gallery → null
-                            const firstImage =
-                                product.gallery?.[0] ||
-                                product.colorGalleries?.[0]?.images?.[0] ||
-                                product.variants?.[0]?.variantGallery?.[0]
+                            // Priority: option value images → gallery → variant images
+                            let firstImage = null
+
+                            // Check option definitions for images (e.g., Color option)
+                            if (product.optionDefinitions && product.optionDefinitions.length > 0) {
+                                for (const optDef of product.optionDefinitions) {
+                                    if (optDef.values && optDef.values.length > 0) {
+                                        for (const val of optDef.values) {
+                                            if (val.images && val.images.length > 0) {
+                                                firstImage = val.images[0]
+                                                break
+                                            }
+                                        }
+                                        if (firstImage) break
+                                    }
+                                }
+                            }
+
+                            // Fallback to gallery then variant images
+                            if (!firstImage) {
+                                firstImage =
+                                    product.gallery?.[0] ||
+                                    product.variants?.[0]?.images?.[0]
+                            }
+
                             const imageUrl = firstImage ? resolveImage(firstImage) : null
+
+                            // Calculate total stock from variants or use simple stock
+                            const hasVariants = product.variants && product.variants.length > 0
+                            const totalStock = hasVariants
+                                ? product.variants.reduce((sum: number, v: any) => sum + (v.stock || 0), 0)
+                                : product.stock || 0
+                            const lowStockThreshold = product.lowStockThreshold || 5
 
                             return (
                                 <Link
@@ -77,17 +104,17 @@ export default async function ShopPage() {
                                             </div>
 
                                             {/* Stock indicator */}
-                                            {product.variants && product.variants.length > 0 ? (
+                                            {hasVariants ? (
                                                 <p className="text-sm text-muted-foreground mt-2">
                                                     Multiple options available
                                                 </p>
-                                            ) : product.stock === 0 ? (
+                                            ) : totalStock === 0 ? (
                                                 <p className="text-sm text-destructive mt-2">
                                                     Out of Stock
                                                 </p>
-                                            ) : product.stock <= (product.lowStockThreshold || 5) ? (
+                                            ) : totalStock <= lowStockThreshold ? (
                                                 <p className="text-sm text-amber-600 mt-2">
-                                                    Only {product.stock} left!
+                                                    Only {totalStock} left!
                                                 </p>
                                             ) : (
                                                 <p className="text-sm text-green-600 mt-2">In Stock</p>

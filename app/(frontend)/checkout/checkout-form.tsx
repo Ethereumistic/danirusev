@@ -121,8 +121,8 @@ export function CheckoutForm({ profile }: CheckoutFormProps) {
   const [isLoadingPayment, setIsLoadingPayment] = useState(false)
 
   // Calculate item total price including addons and vouchers (per unit)
-  const getItemTotalPrice = (item: any) => {
-    let total = parseFloat(item.price)
+  const getItemTotalPrice = (item: any): number => {
+    let total = parseFloat(item.price) || 0 // Ensure we start with a valid number
 
     if (item.additionalItems && item.additionalItems.length > 0 && item.experienceSlug) {
       const experience = DRIFT_EXPERIENCES.find(exp => exp.slug === item.experienceSlug)

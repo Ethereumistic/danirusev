@@ -1,144 +1,154 @@
-Master Instruction Plan: E-Commerce Architecture (v2)
-Context & Directive: We are rebuilding the backend for "Dani Rusev" (Rally Driver) using Payload CMS v3, Supabase, and Next.js. CRITICAL: I currently have existing files (Products.ts, Categories.ts, etc.) in my project. Ignore and Overwrite them. They are deprecated. You must generate completely new, robust schemas based on the requirements below.
+Optimization Plan: The "Matrix" Architecture
+Context: The current Products schema is functional but inefficient for products with multiple variants (e.g., Size + Color + Scent). The user experiences "inhumane" data entry friction. We need to implement a "Smart Variant System" that automates SKU generation, allows "Option-Level" image assignment (assign image to "Red" once, not 4 times), and uses a 2D-style Bulk Editor.
 
-The Goal:
+Core Objective: Minimize clicks. If a user adds "Color: Red" and "Size: S, M, L", they should only upload the Red image once.
 
-Build a Physical Shop schema (Merch, Car Parts) with complex variants (Size/Color/Scent) and strict stock management.
+1. Schema Architecture Refinements (Products.ts)
+We need to modify the data structure to support "Smart Inheritance".
 
-Build an Experience schema (Drift Taxi, etc.) that mirrors the data structure of my current drift-data.ts file, allowing me to transition from hardcoded files to CMS data later.
+A. "Smart" Stock Field (Conditional Logic)
+Goal: Hide the global stock field when variants exist to prevent confusion.
 
-1. The Media Collection
-Slug: media
+Implementation:
 
-Purpose: Stores images in Supabase S3.
+Move the top-level stock field into a conditional visibility rule.
 
-Fields: Standard Payload upload fields + alt (text).
+admin: { condition: (data) => !data.options || data.options.length === 0 }
 
-2. The Categories Collection
-Slug: categories
+B. Enhanced options Array (The Key to Speed)
+Goal: Allow defining metadata (Images, Hex Colors) at the definition level, not just the variant level.
 
-Fields:
+Change: Convert the simple values array into an object array with metadata.
 
-title (Text, required)
+New Structure:
 
-slug (Text, auto-generated)
+TypeScript
 
-parent (Relationship -> categories, allows hierarchy like Apparel > Hoodies)
+{
+  name: 'options',
+  type: 'array',
+  fields: [
+    { name: 'name', type: 'text' }, // e.g. "Color"
+    {
+      name: 'values',
+      type: 'array',
+      fields: [
+        { name: 'label', type: 'text', required: true }, // e.g. "Red"
+        { name: 'valueMetadata', type: 'group', fields: [
+            { name: 'image', type: 'upload', relationTo: 'media' }, // "Red" image
+            { name: 'hexColor', type: 'text' }, // Swatch color #FF0000
+        ]}
+      ]
+    }
+  ]
+}
+Why this wins: When the variants are generated, the system checks options.values. If "Red" has an image, all variants containing "Red" automatically inherit that image unless manually overridden.
 
-3. The Products Collection (The Core Schema)
-Slug: products
+C. The variants Field (The Bulk Editor)
+Goal: Replace the standard Payload Array UI with a Custom Component (VariantManager).
 
-Drafts: true (Enabled)
+Config:
 
-Fields Logic: Use specific Field Groups or Tabs to separate "Physical Goods" logic from "Experience" logic.
+TypeScript
 
-A. Global Product Data (All Types)
-title (Text, required)
+{
+  name: 'variants',
+  type: 'array',
+  admin: {
+    components: {
+      Field: '/components/VariantManager' // Custom React Component
+    }
+  },
+  fields: [ ... ] // Keep existing fields (sku, stock, price, etc.)
+}
+2. The VariantManager Custom Component (React)
+This is the most critical part of the build. Instruct the AI to build a component with these specific features:
 
-slug (Text, unique, required)
+Auto-Generation State:
 
-productType (Select, required): Options: ['physical', 'experience']
+Watch the options field.
 
-price (Number, required) -> Base Price
+Compute the Cartesian Product (Option 1 x Option 2 x Option 3).
 
-compareAtPrice (Number) -> For sales
+Example: [Red, Blue] x [S, M] = 4 Rows.
 
-stock (Number) -> Fallback Stock (Used if the product has NO variants, e.g., a simple sticker).
+Compare with existing variants. If new combinations exist, append them. If options are removed, flag/remove invalid variants.
 
-lowStockThreshold (Number, default 5) -> Used to trigger "Only X left!" badges.
+The "Data Grid" UI:
 
-categories (Relationship -> categories, hasMany: true)
+Render a table, not a list of collapsible drawers.
 
-The Hybrid Image Field:
+Columns:
 
-Create a gallery array.
+Variant Name (Read-only, e.g., "Red / S")
 
-Inside: type (Select: 'upload' | 'url'), media (Upload relation), url (Text). Reason: Allows quick pasting of external URLs or S3 uploads.
+Price (Input - defaults to Product Base Price)
 
-B. Physical Goods Logic (Condition: productType === 'physical')
-Option Definitions (Array):
+Stock (Input)
 
-name (Text) -> e.g., "Size", "Scent".
+SKU (Input - displays auto-generated value placeholder)
 
-values (Array of Text) -> e.g., ["S", "M", "L"] or ["Vanilla", "New Car"].
+Image (Thumbnail + Edit button)
 
-Variants / Inventory (Array):
+Visual Logic:
 
-This is the source of truth for stock.
+The Image cell should show the "Inherited" image from the Option Definition (e.g., the Red Shirt) with an opacity marker. If the user uploads a specific image for this variant (e.g., Red/S has a specific logo), it overrides the inherited one and shows at full opacity.
 
-combination (Text, read-only) -> e.g., "Size:S|Color:Red"
+Bulk Actions Toolbar:
 
-options (JSON/Array) -> Key-value pairs of the selection.
+"Apply Price to All"
 
-stock (Number, required, default 0) -> CRITICAL: This allows us to disable the "Add to Cart" button if 0.
+"Apply Stock to All"
 
-priceModifier (Number) -> e.g., +$5 for XL.
+"Regenerate SKUs"
 
-sku (Text)
+3. Automation Hooks (The "Robot")
+Implement these beforeChange hooks in Products.ts to handle the data processing silently.
 
-variantImage (Relationship -> media) -> To swap the main image when color changes.
-
-C. Experience Logic (Condition: productType === 'experience')
-Design this to match drift-data.ts exactly.
-
-subtitle (Text)
-
-duration (Text) -> e.g., "60 min"
-
-location (Select or Text) -> e.g., "Tundzha", "Sofia"
-
-Tech Specs Group: carModel (Text), horsePower (Number), tiresBurned (Number).
-
-Visuals:
-
-iconName (Text/Select) -> Lucide icon name.
-
-themeColor (Select) -> Options: ['taxi', 'rent', 'mix', 'main'].
-
-pattern (Select) -> Options: ['taxi-checker', 'tyre-pattern', 'none'].
-
-The Program (Array):
-
-Fields: time (Text), activity (Text), description (Textarea).
-
-Included/Excluded:
-
-included (Array of Text).
-
-notIncluded (Array of Text).
-
-Additional Items / Addons (Array):
-
-Matches additionalItems from drift-data.ts
-
-name (Text), price (Number), description (Text), icon (Text).
-
-type (Select): Options ['standard', 'location', 'voucher']. Logic: Replaces isLocation/isVoucher booleans.
-
-4. Implementation Logic (Instructions for AI Generator)
-1. Stock Management Logic:
-
-Create a React utility/hook for the frontend: useProductStock(product, selectedVariant).
-
+A. Auto-SKU Generator
 Logic:
 
-If product has variants: currentStock = selectedVariant.stock.
+If sku is empty, generate it.
 
-If product has no variants: currentStock = product.stock.
+Format: SLUG-OPT1-OPT2.
 
-UI States:
+Example: Product Slug: dr-11-beanie, Variant: Red/L -> SKU: DR-11-BEANIE-RED-L.
 
-If currentStock === 0 -> Disable "Add to Cart", Text: "Out of Stock".
+Sanitize: Uppercase, replace spaces with dashes.
 
-If currentStock > 0 && currentStock <= product.lowStockThreshold -> Show Badge: "Low Stock: Only {x} left!".
+B. Image Inheritance Resolution
+Logic:
 
-2. Image Rendering:
+Iterate through variants.
 
-Create a helper resolveImage(imageField) that handles the logic: if (imageField.type === 'url') return imageField.url; else return imageField.media.url;
+If variant.image is empty, look up the options.
 
-3. Frontend Structure:
+Find the matching Option Value (e.g., "Red").
 
-Generate the Typescript Interfaces (Experience, Product, Variant) to match the Payload generated types, ensuring the frontend is type-safe.
+If "Red" has a valueMetadata.image, save that ID into variant.image.
 
-Action:
-Generate the complete Products.ts Collection Config code now, ensuring all imports (Fields, Blocks) are correct for Payload v3.
+Result: The frontend doesn't need complex logic; the DB always has the correct image reference on the variant itself.
+
+We are optimizing the 'Products' collection in Payload CMS v3.
+Currently, the 'variants' array requires manual entry which is too slow.
+
+Task: Implement a "Smart Variant System" with the following changes:
+
+1. SCHEMA CHANGE (Products.ts):
+   - Modify 'options.values' to be an array of objects: { label: string, image?: Upload, hex?: string }. This allows setting an image for "Red" once.
+   - Make the global 'stock' field conditional: hidden if options.length > 0.
+   - Add a 'lowStockThreshold' (number) field.
+
+2. CUSTOM COMPONENT (VariantManager.tsx):
+   - Create a React component to replace the default Array UI for 'variants'.
+   - It should calculate the Cartesian product of 'options' to auto-generate rows.
+   - Render a simplified Data Grid (Table) for quick entry of Stock and Price.
+   - Logic: If a variant is "Red / S" and the user assigned an image to the "Red" option, this variant should visually inherit that image.
+
+3. HOOKS (beforeChange):
+   - Auto-generate SKUs for variants using the pattern: {PRODUCT_SLUG}-{OPT1}-{OPT2} (uppercase).
+   - If a variant has no specific image set, copy the image from the matching Option Value (e.g. Color) into the variant's image field so the API response is complete.
+
+4. FRONTEND TYPE SAFETY:
+   - Update the Product interface to reflect that 'stock' might be on the parent OR the variant.
+   - Update 'useProductStock' hook to handle these two sources of truth.

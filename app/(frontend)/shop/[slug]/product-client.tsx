@@ -19,24 +19,53 @@ export default function ProductClient({ product }: ProductClientProps) {
     const [quantity, setQuantity] = useState(1)
     const [selectedImageIndex, setSelectedImageIndex] = useState(0)
 
-    // Auto-select first variant on mount
+    // Auto-select first option values on mount
     useEffect(() => {
-        if (!product.variants || product.variants.length === 0) return
-        if (Object.keys(selectedOptions).length > 0) return // Don't override user selection
+        if (Object.keys(selectedOptions).length > 0) return
 
-        const firstVariant = product.variants[0]
-        if (firstVariant?.options) {
-            setSelectedOptions(firstVariant.options)
+        // Try to get initial selection from first variant
+        if (product.variants && product.variants.length > 0) {
+            const firstVariant = product.variants[0]
+            if (firstVariant?.options) {
+                const options = typeof firstVariant.options === 'string'
+                    ? JSON.parse(firstVariant.options)
+                    : firstVariant.options
+                setSelectedOptions(options)
+                return
+            }
         }
-    }, [product.variants]) // Only run once when component mounts
+
+        // Fallback: build selection from optionDefinitions (first value of each option)
+        if (product.optionDefinitions && product.optionDefinitions.length > 0) {
+            const initialOptions: Record<string, string> = {}
+            for (const optDef of product.optionDefinitions) {
+                if (optDef.values && optDef.values.length > 0) {
+                    initialOptions[optDef.name] = optDef.values[0].value
+                }
+            }
+            if (Object.keys(initialOptions).length > 0) {
+                setSelectedOptions(initialOptions)
+            }
+        }
+    }, [product.variants, product.optionDefinitions])
 
     // Find the variant that matches selected options
-    const selectedVariant = product.variants?.find((variant: any) => {
-        if (!selectedOptions || Object.keys(selectedOptions).length === 0) return false
-        return Object.entries(selectedOptions).every(
-            ([key, value]) => variant.options[key] === value
-        )
-    })
+    const selectedVariant = useMemo(() => {
+        if (!product.variants || product.variants.length === 0) return null
+        if (!selectedOptions || Object.keys(selectedOptions).length === 0) return null
+
+        return product.variants.find((variant: any) => {
+            if (!variant.options) return false
+
+            const variantOptions = typeof variant.options === 'string'
+                ? JSON.parse(variant.options)
+                : variant.options
+
+            return Object.entries(selectedOptions).every(
+                ([key, value]) => variantOptions[key] === value
+            )
+        }) || null
+    }, [product.variants, selectedOptions])
 
     // Use stock management hook
     const { currentStock, isOutOfStock, isLowStock, stockMessage } = useProductStock(
@@ -46,31 +75,37 @@ export default function ProductClient({ product }: ProductClientProps) {
 
     const addToCart = useCartStore((state) => state.addItem)
 
-    // Determine which images to display with priority chain (reactive to color selection)
+    /**
+     * Determine which images to display
+     * Priority chain (simplified):
+     * 1. Selected variant's images (if any)
+     * 2. Option value's image for selected color (if exists)
+     * 3. Main product gallery
+     */
     const displayImages = useMemo(() => {
-        // 1. Check for color-specific gallery (for multi-option products like t-shirts)
-        if (product.colorGalleries && product.colorGalleries.length > 0) {
-            // Support both English 'Color' and Bulgarian 'Цвят' option names
-            const selectedColor = selectedOptions['Color'] || selectedOptions['Цвят']
-
-            if (selectedColor) {
-                const colorGallery = product.colorGalleries.find(
-                    (cg: any) => cg.colorName === selectedColor
-                )
-                if (colorGallery?.images && colorGallery.images.length > 0) {
-                    return colorGallery.images
-                }
-            }
-
-            // If no color selected yet, show first color gallery
-            if (product.colorGalleries[0]?.images) {
-                return product.colorGalleries[0].images
-            }
+        // 1. Check selected variant's images
+        if (selectedVariant?.images && selectedVariant.images.length > 0) {
+            return selectedVariant.images
         }
 
-        // 2. Fallback to variant-specific gallery (for single-option products like mugs)
-        if (selectedVariant?.variantGallery && selectedVariant.variantGallery.length > 0) {
-            return selectedVariant.variantGallery
+        // 2. Check for option value images (Color option)
+        if (product.optionDefinitions) {
+            // Support both English 'Color' and Bulgarian 'Цвят'
+            const colorOption = product.optionDefinitions.find(
+                (opt: any) => opt.name === 'Color' || opt.name === 'Цвят'
+            )
+            const selectedColor = selectedOptions['Color'] || selectedOptions['Цвят']
+
+            if (colorOption?.values && selectedColor) {
+                const colorValue = colorOption.values.find(
+                    (val: any) => val.value === selectedColor
+                )
+                // Check if this option value has images
+                if (colorValue?.images && colorValue.images.length > 0) {
+                    // Return option value images, followed by main gallery
+                    return [...colorValue.images, ...(product.gallery || [])].filter(Boolean)
+                }
+            }
         }
 
         // 3. Fallback to main product gallery
@@ -81,7 +116,6 @@ export default function ProductClient({ product }: ProductClientProps) {
         // 4. No images available
         return []
     }, [product, selectedOptions, selectedVariant])
-
 
     // Handle option selection
     const handleOptionSelect = (optionName: string, value: string) => {
@@ -113,7 +147,9 @@ export default function ProductClient({ product }: ProductClientProps) {
             themeColor: 'main',
             selectedVariant: selectedVariant
                 ? {
-                    options: selectedVariant.options,
+                    options: typeof selectedVariant.options === 'string'
+                        ? JSON.parse(selectedVariant.options)
+                        : selectedVariant.options,
                     sku: selectedVariant.sku,
                 }
                 : undefined,
@@ -140,7 +176,7 @@ export default function ProductClient({ product }: ProductClientProps) {
                             {displayImages[selectedImageIndex] ? (
                                 <Image
                                     src={resolveImage(displayImages[selectedImageIndex]) || ''}
-                                    alt={`${product.title} -${selectedImageIndex + 1}`}
+                                    alt={`${product.title} - ${selectedImageIndex + 1}`}
                                     fill
                                     className="object-cover"
                                     priority
@@ -220,32 +256,78 @@ export default function ProductClient({ product }: ProductClientProps) {
                         {/* Variant Options */}
                         {product.optionDefinitions && product.optionDefinitions.length > 0 && (
                             <div className="space-y-4">
-                                {product.optionDefinitions.map((optionDef: any) => (
-                                    <div key={optionDef.name}>
-                                        <label className="block text-sm font-medium mb-2">
-                                            {optionDef.name}
-                                            {selectedOptions[optionDef.name] && (
-                                                <span className="text-muted-foreground ml-2">
-                                                    - {selectedOptions[optionDef.name]}
-                                                </span>
-                                            )}
-                                        </label>
-                                        <div className="flex flex-wrap gap-2">
-                                            {optionDef.values.map((val: any) => (
-                                                <button
-                                                    key={val.value}
-                                                    onClick={() => handleOptionSelect(optionDef.name, val.value)}
-                                                    className={`px-4 py-2 border rounded-lg transition-colors ${selectedOptions[optionDef.name] === val.value
-                                                        ? 'border-primary bg-primary text-primary-foreground'
-                                                        : 'border-border hover:border-primary'
-                                                        }`}
-                                                >
-                                                    {val.value}
-                                                </button>
-                                            ))}
+                                {product.optionDefinitions.map((optionDef: any) => {
+                                    return (
+                                        <div key={optionDef.name}>
+                                            <label className="block text-sm font-medium mb-2">
+                                                {optionDef.name}
+                                                {selectedOptions[optionDef.name] && (
+                                                    <span className="text-muted-foreground ml-2">
+                                                        - {selectedOptions[optionDef.name]}
+                                                    </span>
+                                                )}
+                                            </label>
+                                            <div className="flex flex-wrap gap-2">
+                                                {optionDef.values.map((val: any) => {
+                                                    const hasPrimaryColor = val.primaryColorHex
+                                                    const hasSecondaryColor = val.secondaryColorHex
+                                                    const isSelected = selectedOptions[optionDef.name] === val.value
+
+                                                    // Render color swatch if primaryColorHex exists
+                                                    if (hasPrimaryColor) {
+                                                        // Create split-circle style for dual colors
+                                                        const swatchStyle = hasSecondaryColor
+                                                            ? {
+                                                                background: `conic-gradient(
+                                                                    ${val.primaryColorHex} 0deg 180deg,
+                                                                    ${val.secondaryColorHex} 180deg 360deg
+                                                                )`,
+                                                            }
+                                                            : { backgroundColor: val.primaryColorHex }
+
+                                                        return (
+                                                            <button
+                                                                key={val.value}
+                                                                onClick={() => handleOptionSelect(optionDef.name, val.value)}
+                                                                className={`relative w-10 h-10 rounded-full transition-all flex items-center justify-center ${isSelected
+                                                                    ? 'ring-2 ring-primary ring-offset-2'
+                                                                    : 'hover:scale-110'
+                                                                    }`}
+                                                                style={swatchStyle}
+                                                                title={val.value}
+                                                            >
+                                                                {val.emoji && (
+                                                                    <span
+                                                                        className="text-lg select-none"
+                                                                        style={{
+                                                                            textShadow: '0 1px 2px rgba(0,0,0,0.3), 0 0px 4px rgba(255,255,255,0.5)'
+                                                                        }}
+                                                                    >
+                                                                        {val.emoji}
+                                                                    </span>
+                                                                )}
+                                                            </button>
+                                                        )
+                                                    }
+
+                                                    // Fallback: text badge (no color)
+                                                    return (
+                                                        <button
+                                                            key={val.value}
+                                                            onClick={() => handleOptionSelect(optionDef.name, val.value)}
+                                                            className={`px-4 py-2 border rounded-lg transition-colors ${isSelected
+                                                                ? 'border-primary bg-primary text-primary-foreground'
+                                                                : 'border-border hover:border-primary'
+                                                                }`}
+                                                        >
+                                                            {val.value}
+                                                        </button>
+                                                    )
+                                                })}
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    )
+                                })}
                             </div>
                         )}
 

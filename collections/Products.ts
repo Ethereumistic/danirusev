@@ -1,6 +1,58 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig, CollectionBeforeChangeHook } from 'payload'
 import { slugField } from '../fields/slug'
 
+/**
+ * Helper: Format string for SKU (uppercase, spaces to dashes, remove special chars)
+ */
+const formatForSku = (str: string): string => {
+  return str
+    .toUpperCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^A-Z0-9А-Я-]/g, '')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
+/**
+ * beforeChange hook: Auto-generate SKUs for variants
+ */
+const beforeChangeHook: CollectionBeforeChangeHook = async ({ data, operation }) => {
+  if (!data || data.productType !== 'physical') return data
+
+  const productSlug = (data.slug as string) || 'product'
+  const variants = data.variants as any[] | undefined
+
+  if (variants && variants.length > 0) {
+    for (const variant of variants) {
+      // Auto-generate SKU if missing
+      if (!variant.sku && variant.options) {
+        const options =
+          typeof variant.options === 'string' ? JSON.parse(variant.options) : variant.options
+
+        const optionParts = Object.values(options)
+          .map((v) => formatForSku(String(v)))
+          .filter((part) => part.length > 0)
+          .join('-')
+
+        const slugPart = formatForSku(productSlug)
+        variant.sku = optionParts ? `${slugPart}-${optionParts}` : slugPart
+      }
+    }
+  }
+
+  return data
+}
+
+/**
+ * Products Collection - Shopify-like Architecture
+ *
+ * Supports two product types:
+ * - Physical: Products with variants (size, color, etc.)
+ * - Experience: Drift experiences and events
+ *
+ * Image Handling:
+ * - All image fields support BOTH upload (Supabase S3) OR CDN URL
+ */
 export const Products: CollectionConfig = {
   slug: 'products',
   admin: {
@@ -12,6 +64,9 @@ export const Products: CollectionConfig = {
   },
   versions: {
     drafts: true,
+  },
+  hooks: {
+    beforeChange: [beforeChangeHook],
   },
   fields: [
     // ========================================
@@ -51,25 +106,14 @@ export const Products: CollectionConfig = {
       type: 'number',
       min: 0,
       admin: {
-        description: 'Original price for sale comparison',
+        description: 'Original price for sale comparison (optional)',
       },
     },
     {
-      name: 'stock',
-      type: 'number',
-      min: 0,
-      defaultValue: 0,
+      name: 'description',
+      type: 'textarea',
       admin: {
-        description: 'Fallback stock for simple products without variants',
-      },
-    },
-    {
-      name: 'lowStockThreshold',
-      type: 'number',
-      min: 0,
-      defaultValue: 5,
-      admin: {
-        description: 'Threshold to trigger "Only X left!" badges',
+        description: 'Product description',
       },
     },
     {
@@ -81,28 +125,24 @@ export const Products: CollectionConfig = {
         position: 'sidebar',
       },
     },
-    {
-      name: 'description',
-      type: 'textarea',
-      admin: {
-        description: 'Optional product description (supports both physical and experience products)',
-      },
-    },
     // ========================================
-    // HYBRID IMAGE FIELD
+    // HYBRID IMAGE GALLERY (Upload OR URL)
     // ========================================
     {
       name: 'gallery',
       type: 'array',
       label: 'Product Gallery',
+      admin: {
+        description: 'Main product images. Choose to upload or paste a CDN URL.',
+      },
       fields: [
         {
           name: 'type',
           type: 'select',
           required: true,
           options: [
-            { label: 'Upload', value: 'upload' },
-            { label: 'URL', value: 'url' },
+            { label: 'Upload Image', value: 'upload' },
+            { label: 'CDN URL', value: 'url' },
           ],
           defaultValue: 'upload',
         },
@@ -110,23 +150,30 @@ export const Products: CollectionConfig = {
           name: 'media',
           type: 'upload',
           relationTo: 'media',
-          required: true,
           admin: {
             condition: (data, siblingData) => siblingData?.type === 'upload',
+            description: 'Upload an image to Supabase S3',
           },
         },
         {
           name: 'url',
           type: 'text',
-          required: true,
           admin: {
             condition: (data, siblingData) => siblingData?.type === 'url',
+            description: 'Paste a CDN URL (e.g., https://cdn.example.com/image.jpg)',
+          },
+        },
+        {
+          name: 'alt',
+          type: 'text',
+          admin: {
+            description: 'Alt text for accessibility (optional)',
           },
         },
       ],
     },
     // ========================================
-    // PHYSICAL GOODS LOGIC
+    // PHYSICAL PRODUCT OPTIONS & VARIANTS
     // ========================================
     {
       type: 'collapsible',
@@ -135,12 +182,37 @@ export const Products: CollectionConfig = {
         condition: (data) => data?.productType === 'physical',
       },
       fields: [
+        // Simple stock for products without variants
+        {
+          name: 'stock',
+          type: 'number',
+          min: 0,
+          defaultValue: 0,
+          admin: {
+            description:
+              'Stock for simple products. If you have variants, stock is managed per-variant below.',
+            condition: (data) => !data?.optionDefinitions || data.optionDefinitions.length === 0,
+          },
+        },
+        {
+          name: 'lowStockThreshold',
+          type: 'number',
+          min: 0,
+          defaultValue: 5,
+          admin: {
+            description: 'Show "Only X left!" when stock falls below this number',
+          },
+        },
+        // ----------------------------------------
+        // OPTION DEFINITIONS (Size, Color, etc.)
+        // ----------------------------------------
         {
           name: 'optionDefinitions',
           type: 'array',
           label: 'Product Options',
           admin: {
-            description: 'Define option types (Size, Color, Scent, etc.)',
+            description:
+              'Define product options like Size, Color, Material. Each option has a list of values.',
           },
           fields: [
             {
@@ -148,102 +220,127 @@ export const Products: CollectionConfig = {
               type: 'text',
               required: true,
               admin: {
-                description: 'e.g., "Size", "Color", "Scent"',
+                placeholder: 'e.g., Size, Color, Material',
+                description: 'Option name (will be shown to customers)',
               },
             },
             {
               name: 'values',
               type: 'array',
               required: true,
+              label: 'Option Values',
               admin: {
-                description: 'e.g., ["S", "M", "L"] or ["Vanilla", "New Car"]',
+                description: 'List of values for this option',
               },
               fields: [
                 {
                   name: 'value',
                   type: 'text',
                   required: true,
-                },
-              ],
-            },
-          ],
-        },
-        // Color-specific galleries for multi-option products
-        {
-          name: 'colorGalleries',
-          type: 'array',
-          label: 'Color Galleries (Optional - For Products with Size + Color)',
-          admin: {
-            description: 'Upload images once per color. Eliminates duplication for products with multiple sizes. Leave empty for single-option products (mugs use variant galleries instead).',
-          },
-          fields: [
-            {
-              name: 'colorName',
-              type: 'text',
-              required: true,
-              admin: {
-                description: 'Must match exactly with Color option value (e.g., "Green", "Light Blue")',
-              },
-            },
-            {
-              name: 'images',
-              type: 'array',
-              required: true,
-              admin: {
-                description: 'All images for this color (shared across all sizes)',
-              },
-              fields: [
-                {
-                  name: 'type',
-                  type: 'select',
-                  options: [
-                    { label: 'Upload', value: 'upload' },
-                    { label: 'URL', value: 'url' },
-                  ],
-                  defaultValue: 'url',
-                },
-                {
-                  name: 'media',
-                  type: 'upload',
-                  relationTo: 'media',
                   admin: {
-                    condition: (data, siblingData) => siblingData?.type === 'upload',
+                    placeholder: 'e.g., Small, Red, Cotton',
                   },
                 },
                 {
-                  name: 'url',
+                  name: 'primaryColorHex',
                   type: 'text',
                   admin: {
-                    condition: (data, siblingData) => siblingData?.type === 'url',
-                    description: 'CDN URL for this image',
+                    description: 'Primary hex color for swatch (e.g., #FF0000). Main/background color.',
                   },
+                },
+                {
+                  name: 'secondaryColorHex',
+                  type: 'text',
+                  admin: {
+                    description: 'Secondary hex color for split-circle swatch (optional). Leave empty for solid color.',
+                  },
+                },
+                {
+                  name: 'emoji',
+                  type: 'text',
+                  admin: {
+                    description: 'Optional emoji to display on top of color swatch (e.g., 🍋 for lemon scent).',
+                  },
+                },
+                // Multiple images per option value
+                {
+                  name: 'images',
+                  type: 'array',
+                  label: 'Option Value Images',
+                  admin: {
+                    description: 'Images for this option value (e.g., Red shirt from multiple angles)',
+                    initCollapsed: true,
+                  },
+                  fields: [
+                    {
+                      name: 'type',
+                      type: 'select',
+                      required: true,
+                      options: [
+                        { label: 'Upload Image', value: 'upload' },
+                        { label: 'CDN URL', value: 'url' },
+                      ],
+                      defaultValue: 'upload',
+                    },
+                    {
+                      name: 'media',
+                      type: 'upload',
+                      relationTo: 'media',
+                      admin: {
+                        condition: (data, siblingData) => siblingData?.type === 'upload',
+                      },
+                    },
+                    {
+                      name: 'url',
+                      type: 'text',
+                      admin: {
+                        condition: (data, siblingData) => siblingData?.type === 'url',
+                        description: 'CDN URL for this image',
+                      },
+                    },
+                  ],
                 },
               ],
             },
           ],
         },
+        // ----------------------------------------
+        // VARIANT GENERATOR (Custom UI Component)
+        // ----------------------------------------
+        {
+          name: 'variantGenerator',
+          type: 'ui',
+          admin: {
+            components: {
+              Field: '/components/payload/VariantGenerator',
+            },
+          },
+        },
+        // ----------------------------------------
+        // VARIANTS (Actual purchasable combinations)
+        // ----------------------------------------
         {
           name: 'variants',
           type: 'array',
-          label: 'Variants / Inventory',
+          label: 'Variants',
           admin: {
-            description: 'Source of truth for stock. Each variant combination with its own stock.',
+            description:
+              'Each variant is a purchasable combination (e.g., Size: M + Color: Red). Add stock and price modifier for each.',
           },
           fields: [
-            {
-              name: 'combination',
-              type: 'text',
-              admin: {
-                readOnly: true,
-                description: 'Auto-generated: e.g., "Size:S|Color:Red"',
-              },
-            },
             {
               name: 'options',
               type: 'json',
               required: true,
               admin: {
-                description: 'Key-value pairs of option selections: {"Size": "S", "Color": "Red"}',
+                description: 'Option combination as JSON, e.g., {"Size": "M", "Color": "Red"}',
+              },
+            },
+            {
+              name: 'sku',
+              type: 'text',
+              admin: {
+                description: 'Stock Keeping Unit. Auto-generated if left empty.',
               },
             },
             {
@@ -253,7 +350,7 @@ export const Products: CollectionConfig = {
               min: 0,
               defaultValue: 0,
               admin: {
-                description: 'CRITICAL: Stock for this variant. 0 disables Add to Cart.',
+                description: 'Inventory count for this variant. 0 = out of stock.',
               },
             },
             {
@@ -261,32 +358,28 @@ export const Products: CollectionConfig = {
               type: 'number',
               defaultValue: 0,
               admin: {
-                description: 'Price adjustment: +$5 for XL, -$2 for small',
+                description: 'Price adjustment from base price (e.g., +5 for XL, -2 for small)',
               },
             },
+            // Variant-specific images
             {
-              name: 'sku',
-              type: 'text',
-              admin: {
-                description: 'Stock Keeping Unit for this variant',
-              },
-            },
-            {
-              name: 'variantGallery',
+              name: 'images',
               type: 'array',
               label: 'Variant Images',
               admin: {
-                description: 'Images specific to this variant (e.g., green mug photos). Add multiple images!',
+                description: 'Images specific to this variant (optional)',
+                initCollapsed: true,
               },
               fields: [
                 {
                   name: 'type',
                   type: 'select',
+                  required: true,
                   options: [
-                    { label: 'Upload', value: 'upload' },
-                    { label: 'URL', value: 'url' },
+                    { label: 'Upload Image', value: 'upload' },
+                    { label: 'CDN URL', value: 'url' },
                   ],
-                  defaultValue: 'url',
+                  defaultValue: 'upload',
                 },
                 {
                   name: 'media',
@@ -301,7 +394,6 @@ export const Products: CollectionConfig = {
                   type: 'text',
                   admin: {
                     condition: (data, siblingData) => siblingData?.type === 'url',
-                    description: 'CDN URL for this variant image',
                   },
                 },
               ],
@@ -311,7 +403,7 @@ export const Products: CollectionConfig = {
       ],
     },
     // ========================================
-    // EXPERIENCE LOGIC (matching drift-data.ts)
+    // EXPERIENCE PRODUCT FIELDS
     // ========================================
     {
       type: 'collapsible',
@@ -514,9 +606,6 @@ export const Products: CollectionConfig = {
                 { label: 'Voucher (Single Choice)', value: 'voucher' },
               ],
               defaultValue: 'standard',
-              admin: {
-                description: 'Replaces isLocation/isVoucher boolean flags',
-              },
             },
           ],
         },

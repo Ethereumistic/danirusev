@@ -1,6 +1,6 @@
 /**
  * TypeScript interfaces matching Payload CMS generated types
- * These types align with the Products collection schema
+ * Simplified Shopify-like structure for products
  */
 
 // Base Media type
@@ -27,29 +27,46 @@ export interface Category {
   updatedAt: string
 }
 
-// Hybrid image field
+/**
+ * Hybrid image field - supports both upload and CDN URL
+ */
 export interface HybridImage {
   type: 'upload' | 'url'
   media?: string | Media
   url?: string
+  alt?: string
   id?: string
 }
 
-// Product variant for physical goods
-export interface ProductVariant {
-  combination?: string
-  options: Record<string, string>
-  stock: number
-  priceModifier?: number
-  sku?: string
-  variantImage?: string | Media
+/**
+ * Option value with optional dual colors and multiple images
+ */
+export interface OptionValue {
+  value: string
+  primaryColorHex?: string
+  secondaryColorHex?: string
+  images?: HybridImage[]
   id?: string
 }
 
-// Option definition for physical goods
+/**
+ * Option definition (e.g., Size, Color)
+ */
 export interface OptionDefinition {
   name: string
-  values: Array<{ value: string; id?: string }>
+  values: OptionValue[]
+  id?: string
+}
+
+/**
+ * Product variant - a purchasable combination
+ */
+export interface ProductVariant {
+  options: Record<string, string>
+  sku?: string
+  stock: number
+  priceModifier?: number
+  images?: HybridImage[]
   id?: string
 }
 
@@ -85,7 +102,9 @@ export interface Visuals {
   pattern?: 'taxi-checker' | 'tyre-pattern' | 'none'
 }
 
-// Base Product type
+/**
+ * Base Product type
+ */
 export interface Product {
   id: string
   title: string
@@ -93,22 +112,27 @@ export interface Product {
   productType: 'physical' | 'experience'
   price: number
   compareAtPrice?: number
-  stock?: number
-  lowStockThreshold?: number
+  description?: string
   categories?: Array<string | Category>
   gallery?: HybridImage[]
   createdAt: string
   updatedAt: string
 }
 
-// Physical Product type (extends Product)
+/**
+ * Physical Product type (extends Product)
+ */
 export interface PhysicalProduct extends Product {
   productType: 'physical'
+  stock?: number
+  lowStockThreshold?: number
   optionDefinitions?: OptionDefinition[]
   variants?: ProductVariant[]
 }
 
-// Experience Product type (extends Product)
+/**
+ * Experience Product type (extends Product)
+ */
 export interface ExperienceProduct extends Product {
   productType: 'experience'
   subtitle?: string
@@ -116,7 +140,6 @@ export interface ExperienceProduct extends Product {
   location?: string
   techSpecs?: TechSpecs
   visuals?: Visuals
-  description?: string
   program?: ProgramItem[]
   included?: Array<{ item: string; id?: string }>
   notIncluded?: Array<{ item: string; id?: string }>
