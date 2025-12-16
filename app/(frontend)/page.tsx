@@ -6,6 +6,9 @@ import { TestimonialsCarousel } from '@/components/landing/testimonials-carousel
 import { UrgencyCTA } from '@/components/landing/urgency-cta'
 import { ExperiencesSection } from '@/components/drift/experiences-section'
 import { WhyChooseUs } from '@/components/drift/why-choose-us'
+import { ExperienceSection } from '@/components/experience'
+import type { ExperienceProduct } from "@/types/payload-types"
+import { getProducts } from '@/lib/api/products'
 
 export const metadata: Metadata = {
   title: 'Начало',
@@ -24,9 +27,9 @@ export const metadata: Metadata = {
   },
 }
 
-
-
-export default function Home() {
+export default async function Home() {
+  const products = await getProducts('experience')
+  const experiences = products as ExperienceProduct[]
   return (
     <main className="min-h-screen ">
       {/* Hero with rotating quotes */}
@@ -38,7 +41,10 @@ export default function Home() {
 
       {/* Main drift experiences - the core offering */}
       <ExperiencesSection />
-
+      <ExperienceSection
+        experiences={experiences}
+        linkPrefix="/experience"
+      />
       {/* Build trust with social proof */}
       <TestimonialsCarousel />
 

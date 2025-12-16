@@ -5,12 +5,16 @@ import { type ThemeColor } from '@/lib/utils'
 
 // Define the shape of an item in the cart
 export interface CartItem {
-  id: string;
+  id: string; // Product ID
+  cartItemId: string; // Unique ID for this cart item (includes variant info)
   title: string;
   price: number; // Changed to number for consistency
   icon?: string; // Made optional for physical products
   quantity: number;
   whatYouGet?: string[]; // Made optional
+
+  // Product type discriminator
+  productType: 'physical' | 'experience';
 
   // Physical product specific fields
   selectedVariant?: {
@@ -26,6 +30,33 @@ export interface CartItem {
   imageUrl?: string; // Image URL for display
   themeColor?: ThemeColor; // Theme color for styling
   voucherName?: string; // Recipient name for gift vouchers
+
+  // CMS experience stored addon data (for display without lookup)
+  storedAddons?: {
+    id: string;
+    name: string;
+    price: number;
+    icon?: string;
+    type: 'standard' | 'location' | 'voucher';
+    googleMapsUrl?: string;
+  }[];
+  storedLocationName?: string; // Display name of selected location
+  storedVoucherName?: string; // Display name of selected voucher
+  storedLocationUrl?: string; // Google Maps URL for selected location
+}
+
+// Helper function to generate unique cart item ID
+function generateCartItemId(item: Omit<CartItem, 'quantity' | 'cartItemId'>): string {
+  if (item.productType === 'physical' && item.selectedVariant?.options) {
+    // For physical products, include variant options in the ID
+    const optionsStr = Object.entries(item.selectedVariant.options)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([k, v]) => `${k}:${v}`)
+      .join('|')
+    return `${item.id}__${optionsStr}`
+  }
+  // For experiences or products without variants, just use product ID
+  return item.id
 }
 
 // Define the state and actions for the cart store
@@ -38,17 +69,17 @@ interface CartState {
       selectedLocation: string | null;
     }
   }
-  addItem: (item: Omit<CartItem, 'quantity'>) => void
-  removeItem: (itemId: string) => void
-  increaseQuantity: (itemId: string) => void
-  decreaseQuantity: (itemId: string) => void
+  addItem: (item: Omit<CartItem, 'quantity' | 'cartItemId'>) => void
+  removeItem: (cartItemId: string) => void
+  increaseQuantity: (cartItemId: string) => void
+  decreaseQuantity: (cartItemId: string) => void
   clearCart: () => void
   // Drift experience actions
   updateDriftSelections: (experienceId: string, additionalItems: string[], selectedLocation: string | null) => void
-  toggleCartItemAdditional: (itemId: string, additionalItemId: string) => void
-  updateCartItemLocation: (itemId: string, locationId: string) => void
-  updateCartItemVoucher: (itemId: string, voucherId: string) => void
-  updateCartItemVoucherName: (itemId: string, voucherName: string) => void
+  toggleCartItemAdditional: (cartItemId: string, additionalItemId: string) => void
+  updateCartItemLocation: (cartItemId: string, locationId: string) => void
+  updateCartItemVoucher: (cartItemId: string, voucherId: string) => void
+  updateCartItemVoucherName: (cartItemId: string, voucherName: string) => void
 }
 
 export const useCartStore = create<CartState>()(
@@ -58,33 +89,36 @@ export const useCartStore = create<CartState>()(
       driftSelections: {},
       addItem: (item) => {
         const currentItems = get().items
-        const existingItemIndex = currentItems.findIndex((i) => i.id === item.id)
+        const cartItemId = generateCartItemId(item)
+
+        // Find existing item by cartItemId
+        const existingItemIndex = currentItems.findIndex((i) => i.cartItemId === cartItemId)
 
         if (existingItemIndex !== -1) {
-          // Item exists, just increase quantity
+          // Item exists with same variant, just increase quantity
           const updatedItems = [...currentItems]
           updatedItems[existingItemIndex].quantity += 1
           set({ items: updatedItems })
           toast.success(`Количеството е обновено`)
         } else {
-          // New item, add it with quantity 1
-          set({ items: [...currentItems, { ...item, quantity: 1 }] })
+          // New item or different variant, add it with quantity 1 and generated cartItemId
+          set({ items: [...currentItems, { ...item, cartItemId, quantity: 1 }] })
           toast.success(`Добавено`)
         }
       },
-      removeItem: (itemId) => {
-        set({ items: get().items.filter((item) => item.id !== itemId) })
+      removeItem: (cartItemId) => {
+        set({ items: get().items.filter((item) => item.cartItemId !== cartItemId) })
         toast.info(`Item removed from cart.`)
       },
-      increaseQuantity: (itemId) => {
+      increaseQuantity: (cartItemId) => {
         const updatedItems = get().items.map((item) =>
-          item.id === itemId ? { ...item, quantity: item.quantity + 1 } : item
+          item.cartItemId === cartItemId ? { ...item, quantity: item.quantity + 1 } : item
         )
         set({ items: updatedItems })
       },
-      decreaseQuantity: (itemId) => {
+      decreaseQuantity: (cartItemId) => {
         const updatedItems = get().items.map((item) =>
-          item.id === itemId ? { ...item, quantity: Math.max(1, item.quantity - 1) } : item
+          item.cartItemId === cartItemId ? { ...item, quantity: Math.max(1, item.quantity - 1) } : item
         )
         set({ items: updatedItems })
       },
@@ -97,9 +131,9 @@ export const useCartStore = create<CartState>()(
           }
         })
       },
-      toggleCartItemAdditional: (itemId, additionalItemId) => {
+      toggleCartItemAdditional: (cartItemId, additionalItemId) => {
         const updatedItems = get().items.map((item) => {
-          if (item.id === itemId) {
+          if (item.cartItemId === cartItemId) {
             const currentAdditionals = item.additionalItems || [];
             const isCurrentlySelected = currentAdditionals.includes(additionalItemId);
 
@@ -123,9 +157,9 @@ export const useCartStore = create<CartState>()(
         });
         set({ items: updatedItems });
       },
-      updateCartItemLocation: (itemId, locationId) => {
+      updateCartItemLocation: (cartItemId, locationId) => {
         const updatedItems = get().items.map((item) => {
-          if (item.id === itemId) {
+          if (item.cartItemId === cartItemId) {
             return {
               ...item,
               selectedLocation: locationId
@@ -135,9 +169,9 @@ export const useCartStore = create<CartState>()(
         });
         set({ items: updatedItems });
       },
-      updateCartItemVoucher: (itemId, voucherId) => {
+      updateCartItemVoucher: (cartItemId, voucherId) => {
         const updatedItems = get().items.map((item) => {
-          if (item.id === itemId) {
+          if (item.cartItemId === cartItemId) {
             return {
               ...item,
               selectedVoucher: voucherId
@@ -147,9 +181,9 @@ export const useCartStore = create<CartState>()(
         });
         set({ items: updatedItems });
       },
-      updateCartItemVoucherName: (itemId, voucherName) => {
+      updateCartItemVoucherName: (cartItemId, voucherName) => {
         const updatedItems = get().items.map((item) => {
-          if (item.id === itemId) {
+          if (item.cartItemId === cartItemId) {
             return {
               ...item,
               voucherName: voucherName

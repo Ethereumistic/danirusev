@@ -145,6 +145,7 @@ export default function ProductClient({ product }: ProductClientProps) {
             price: finalPrice,
             imageUrl: resolveImage(displayImages[0]) || '',
             themeColor: 'main',
+            productType: 'physical',
             selectedVariant: selectedVariant
                 ? {
                     options: typeof selectedVariant.options === 'string'

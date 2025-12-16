@@ -34,7 +34,7 @@ export const metadata: Metadata = {
   description: 'Подарете уникално екстремно преживяване! Предлагаме дрифт, рали и шофиране на спортни коли на писта. Перфектният подарък за мъж с ваучер за преживяване.',
   keywords: [
     // Български
-    'дани русев','данаил русев',  'екстремни преживявания', 'автомобилни преживявания', 'рали изживяване', 'дрифт изживяване', 'подарък за мъж', 'подарък с адреналин', 'преживяване с кола', 'каране на спортна кола', 'подарък с рали автомобил', 'подарък за фен на коли', 'дрифт обучение', 'каране на дрифт кола', 'професионален дрифт', 'рали приключение', 'офроуд преживяване', 'управление на рали кола', 'тест драйв на писта', 'ваучер за преживяване', 'екстремен подарък', 'уникален подарък за рожден ден', 'подарък за гадже', 'подарък за съпруг',
+    'дани русев', 'данаил русев', 'екстремни преживявания', 'автомобилни преживявания', 'рали изживяване', 'дрифт изживяване', 'подарък за мъж', 'подарък с адреналин', 'преживяване с кола', 'каране на спортна кола', 'подарък с рали автомобил', 'подарък за фен на коли', 'дрифт обучение', 'каране на дрифт кола', 'професионален дрифт', 'рали приключение', 'офроуд преживяване', 'управление на рали кола', 'тест драйв на писта', 'ваучер за преживяване', 'екстремен подарък', 'уникален подарък за рожден ден', 'подарък за гадже', 'подарък за съпруг',
     // Английски
     'dani rusev', 'danail rusev', 'extreme car experiences', 'rally driving experience', 'drift driving experience', 'adrenaline gift', 'car experiences Bulgaria', 'drive a rally car', 'drive a drift car', 'motorsport experiences', 'racing gift ideas', 'car enthusiast gifts', 'professional drift training', 'drift experience day', 'rally track driving', 'off-road car experience', 'test drive rally car', 'car experience gift', 'unique gift for him', 'birthday experience gift', 'driving gift voucher', 'adventure gifts for men', 'unforgettable car gift'
   ],
@@ -66,7 +66,7 @@ export const metadata: Metadata = {
   //   description: 'Подари адреналин! Дрифт, рали и спортни коли на писта. Разгледай нашите ваучери за преживявания.',
   //   images: ['https://www.danirusev11.com/twitter-image.jpg'], // **ВАЖНО**: Създайте и качете такова изображение!
   // },
-  
+
   // --- Други важни тагове ---
   robots: {
     index: true,
@@ -89,14 +89,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="bg" suppressHydrationWarning> 
+    <html lang="bg" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${gagalin.variable} antialiased min-h-screen flex flex-col`}
       >
         <OrganizationSchema />
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="dark"
           enableSystem
           disableTransitionOnChange
         >

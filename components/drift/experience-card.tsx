@@ -29,11 +29,13 @@ function getIconComponent(iconName: 'CarTaxiFront' | 'Car' | 'Gauge') {
 interface ExperienceCardProps {
     experience: DriftExperience;
     index?: number;
+    linkPrefix?: string; // '/xp' or '/experience'
 }
 
 export function ExperienceCard({
     experience,
     index = 0,
+    linkPrefix = "/xp",
 }: ExperienceCardProps) {
     const IconComponent = getIconComponent(experience.iconName);
 
@@ -57,7 +59,7 @@ export function ExperienceCard({
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: index * 0.1 }}
         >
-            <Link href={`/xp/${experience.slug}`}>
+            <Link href={`${linkPrefix}/${experience.slug}`}>
                 <div
                     className={`group relative h-[550px] rounded-2xl overflow-hidden border hover:border-3 bg-slate-900 transition-all duration-300 hover:scale-[1.01] ${borderStyleClass} ${getBorderColor(experience.themeColor)}`}
                 >

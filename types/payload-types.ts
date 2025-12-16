@@ -73,10 +73,17 @@ export interface ProductVariant {
 // Additional item for experiences
 export interface AdditionalItem {
   name: string
-  price: number
-  description: string
-  icon: string
+  price?: number        // Optional - leave empty for free items
+  description?: string  // Optional
+  icon?: string         // Optional Lucide icon name
   type: 'standard' | 'location' | 'voucher'
+  googleMapsUrl?: string // For location type items
+  id?: string
+}
+
+// Location city for experience cards
+export interface ExperienceLocation {
+  city: string
   id?: string
 }
 
@@ -137,7 +144,7 @@ export interface ExperienceProduct extends Product {
   productType: 'experience'
   subtitle?: string
   duration?: string
-  location?: string
+  locations?: ExperienceLocation[]  // Array of city names
   techSpecs?: TechSpecs
   visuals?: Visuals
   program?: ProgramItem[]

@@ -25,8 +25,8 @@ export function Navbar() {
 
   const navItems = [
     { label: 'За Нас', href: '/about' },
-    { label: 'Преживявания', href: '/xp' },
-    { label: 'Магазин 🔒', href: '/shop', disabled: true },
+    { label: 'Преживявания', href: '/experience' },
+    { label: 'Магазин', href: '/shop', },
     { label: 'Абонамент 🔒', href: '/subscription', disabled: true },
     { label: 'Контакти', href: '/contact' },
   ];

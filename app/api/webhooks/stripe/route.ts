@@ -4,7 +4,7 @@ import { stripe } from '@/lib/stripe'
 import { createClient } from '@supabase/supabase-js'
 import type { Stripe } from 'stripe'
 
-// This client can be used to call the RPC function in the public schema.
+// Supabase client with service role key for database operations
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -16,8 +16,124 @@ const supabase = createClient(
   },
 )
 
+// Helper to reconstruct cart items from split metadata
+function reconstructCartItems(metadata: Record<string, string>): any[] {
+  const itemCount = parseInt(metadata.itemCount || '0')
+  const items: any[] = []
+
+  for (let i = 0; i < itemCount; i++) {
+    const itemJson = metadata[`cart_${i}`]
+    if (itemJson) {
+      try {
+        items.push(JSON.parse(itemJson))
+      } catch (e) {
+        console.error(`Failed to parse cart_${i}:`, e)
+      }
+    }
+  }
+
+  return items
+}
+
+async function handlePaymentIntentSucceeded(event: Stripe.Event) {
+  console.log('✅ Received payment_intent.succeeded event.')
+  const paymentIntent = event.data.object as Stripe.PaymentIntent
+
+  const {
+    userId,
+    userEmail,
+    fullName,
+    phoneNumber,
+    address,
+    city,
+    postalCode,
+    country,
+    itemCount
+  } = paymentIntent.metadata || {}
+
+  if (!userId || !itemCount) {
+    console.error(`🚫 Missing required metadata in payment intent: ${paymentIntent.id}`)
+    console.error('Metadata:', paymentIntent.metadata)
+    throw new Error(`Missing required metadata in payment intent: ${paymentIntent.id}`)
+  }
+
+  console.log(`[INFO] Processing payment for user: ${userId}, items: ${itemCount}`)
+
+  // Reconstruct cart items from split metadata
+  const cartItems = reconstructCartItems(paymentIntent.metadata)
+  console.log(`[INFO] Reconstructed ${cartItems.length} cart items`)
+  console.log('[DEBUG] Raw cart items:', JSON.stringify(cartItems, null, 2))
+
+  // Build shipping address snapshot
+  const shippingAddress = {
+    fullName: fullName || '',
+    email: userEmail || '',
+    phoneNumber: phoneNumber || '',
+    address: address || '',
+    city: city || '',
+    postalCode: postalCode || '',
+    country: country || '',
+  }
+
+  // Calculate total from cart items
+  const totalPrice = cartItems.reduce((sum, item) => sum + (item.totalPrice || 0), 0)
+
+  // Transform cart items to match database format
+  const orderItems = cartItems.map(item => ({
+    product_id: item.productId || item.experienceSlug || '',
+    title: item.productTitle || item.experienceTitle || item.title || '',
+    quantity: item.quantity || item.qty || 1,
+    price: item.unitPrice || item.total / (item.qty || 1) || 0,
+    variant: item.variant || '',
+    sku: item.sku || '',
+    item_type: item.type || 'physical',
+    image_url: item.imageUrl || null,
+    // Experience-specific fields
+    location: item.location || null,
+    addons: item.addons || null, // Already an array, don't stringify
+    voucher_type: item.voucherType || null,
+    voucher_recipient_name: item.voucherRecipientName || null,
+  }))
+
+  console.log('[DEBUG] Mapped order items to send to RPC:', JSON.stringify(orderItems, null, 2))
+
+  // Call the database function to create the order
+  const { error } = await supabase.rpc('create_order_from_webhook', {
+    p_user_id: userId,
+    p_total_price: totalPrice,
+    p_shipping_address_snapshot: shippingAddress,
+    p_cart_items: orderItems,
+  })
+
+  if (error) {
+    console.error('❌ Error calling create_order_from_webhook:', error)
+    throw new Error(`Database RPC error: ${error.message}`)
+  }
+
+  // Update user profile with checkout personal info
+  const { error: profileError } = await supabase.rpc('update_profile_from_checkout', {
+    p_user_id: userId,
+    p_full_name: fullName || '',
+    p_phone_number: phoneNumber || '',
+    p_address: address || '',
+    p_city: city || '',
+    p_postal_code: postalCode || '',
+    p_country: country || '',
+  })
+
+  if (profileError) {
+    // Log but don't fail the order creation
+    console.error('⚠️ Error updating profile:', profileError)
+  } else {
+    console.log(`✅ Profile updated for user: ${userId}`)
+  }
+
+  console.log(`✅✅✅ Order successfully created for payment: ${paymentIntent.id}`)
+}
+
+// Legacy handler for checkout sessions (backwards compatibility)
 async function handleCheckoutSessionCompleted(event: Stripe.Event) {
-  console.log('✅ Received checkout.session.completed event.')
+  console.log('✅ Received checkout.session.completed event (legacy).')
   const session = event.data.object as Stripe.Checkout.Session
 
   const { userId, shippingAddress, cartItems } = session.metadata || {}
@@ -25,7 +141,7 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event) {
     throw new Error(`🚫 Missing metadata in checkout session: ${session.id}`)
   }
 
-  console.log(`[INFO] Metadata validated for session: ${session.id}`)
+  console.log(`[INFO] Legacy checkout session: ${session.id}`)
 
   const { error } = await supabase.rpc('create_order_from_webhook', {
     p_user_id: userId,
@@ -43,7 +159,6 @@ async function handleCheckoutSessionCompleted(event: Stripe.Event) {
 }
 
 export async function POST(req: Request) {
-  // FIX: Await the headers() call to get the actual Headers object.
   const headersList = await headers()
   const signature = headersList.get('stripe-signature')!
   const body = await req.text()
@@ -66,19 +181,18 @@ export async function POST(req: Request) {
 
   try {
     switch (event.type) {
+      case 'payment_intent.succeeded':
+        // Handle successful payments from embedded checkout
+        await handlePaymentIntentSucceeded(event)
+        break
       case 'checkout.session.completed':
-        // This is where you handle the successful payment.
+        // Legacy: Handle redirect-based checkout (backwards compatibility)
         await handleCheckoutSessionCompleted(event)
         break
-      // You can add more event types here if needed
-      // case 'payment_intent.succeeded':
-      //   ...
-      //   break
       default:
-        // console.log(`Unhandled event type: ${event.type}`)
+        console.log(`Unhandled event type: ${event.type}`)
         break
     }
-    // Acknowledge receipt of the event
     return NextResponse.json({ received: true })
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error'

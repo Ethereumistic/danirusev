@@ -427,11 +427,22 @@ export const Products: CollectionConfig = {
           },
         },
         {
-          name: 'location',
-          type: 'text',
+          name: 'locations',
+          type: 'array',
+          label: 'Available Locations',
           admin: {
-            description: 'e.g., "Трявна", "София"',
+            description: 'City names where this experience is available (e.g., Трявна, София)',
           },
+          fields: [
+            {
+              name: 'city',
+              type: 'text',
+              required: true,
+              admin: {
+                description: 'City name displayed on card',
+              },
+            },
+          ],
         },
         // Tech Specs Group
         {
@@ -580,20 +591,23 @@ export const Products: CollectionConfig = {
             {
               name: 'price',
               type: 'number',
-              required: true,
               min: 0,
+              admin: {
+                description: 'Optional price (leave empty for free items)',
+              },
             },
             {
               name: 'description',
               type: 'textarea',
-              required: true,
+              admin: {
+                description: 'Optional description',
+              },
             },
             {
               name: 'icon',
               type: 'text',
-              required: true,
               admin: {
-                description: 'Lucide icon name (e.g., "Video", "Disc", "MapPin")',
+                description: 'Optional Lucide icon name (e.g., "Video", "Disc", "MapPin", "Smartphone", "Gift")',
               },
             },
             {
@@ -606,6 +620,15 @@ export const Products: CollectionConfig = {
                 { label: 'Voucher (Single Choice)', value: 'voucher' },
               ],
               defaultValue: 'standard',
+            },
+            // Google Maps link for location type items
+            {
+              name: 'googleMapsUrl',
+              type: 'text',
+              admin: {
+                description: 'Google Maps link for this location',
+                condition: (data, siblingData) => siblingData?.type === 'location',
+              },
             },
           ],
         },

@@ -3,18 +3,42 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { createClient } from '@/utils/supabase/server'
-import { DRIFT_EXPERIENCES } from '@/lib/drift-data'
 import { z } from 'zod'
 
-// Zod schema for cart item validation
-const cartItemSchema = z.object({
+// Zod schema for stored addon from cart
+const storedAddonSchema = z.object({
     id: z.string(),
-    experienceSlug: z.string(),
+    name: z.string(),
+    price: z.number(),
+    icon: z.string().optional().nullable(),
+    type: z.enum(['standard', 'location', 'voucher']),
+    googleMapsUrl: z.string().optional().nullable(),
+})
+
+// Zod schema for cart item validation - supports both physical and experience products
+const cartItemSchema = z.object({
+    id: z.union([z.string(), z.number()]).transform(String),
+    productType: z.enum(['physical', 'experience']).optional(),
+    title: z.string().optional(),
+    price: z.number().optional(),
     quantity: z.number().min(1),
-    selectedLocation: z.string().nullable(),
-    selectedVoucher: z.string().nullable(),
-    voucherName: z.string().optional(),
-    additionalItems: z.array(z.string()).optional(),
+    imageUrl: z.string().optional().nullable(),
+    // Physical product fields
+    selectedVariant: z.object({
+        options: z.record(z.string()).optional(),
+        sku: z.string().optional(),
+    }).optional().nullable(),
+    // Experience fields (CMS data stored in cart)
+    experienceSlug: z.string().optional().nullable(),
+    selectedLocation: z.string().nullable().optional(),
+    selectedVoucher: z.string().nullable().optional(),
+    voucherName: z.string().optional().nullable(),
+    additionalItems: z.array(z.string()).optional().nullable(),
+    // CMS experience stored addon data
+    storedAddons: z.array(storedAddonSchema).optional().nullable(),
+    storedLocationName: z.string().optional().nullable(),
+    storedVoucherName: z.string().optional().nullable(),
+    storedLocationUrl: z.string().optional().nullable(),
 })
 
 const requestSchema = z.object({
@@ -49,6 +73,7 @@ export async function POST(request: NextRequest) {
         const validation = requestSchema.safeParse(body)
 
         if (!validation.success) {
+            console.error('Validation error:', validation.error.flatten())
             return NextResponse.json(
                 { error: 'Invalid request data', details: validation.error.flatten() },
                 { status: 400 }
@@ -57,76 +82,93 @@ export async function POST(request: NextRequest) {
 
         const { cartItems, personalInfo } = validation.data
 
-        // 3. Calculate total and validate prices against drift-data.ts
+        // 3. Calculate total and validate prices
         let totalAmount = 0
         const validatedItems = []
 
         for (const item of cartItems) {
-            // Find the experience in hardcoded data
-            const experience = DRIFT_EXPERIENCES.find(exp => exp.slug === item.experienceSlug)
+            // Check if it's a physical product or experience
+            const isPhysicalProduct = item.productType === 'physical' || !item.experienceSlug
 
-            if (!experience) {
-                return NextResponse.json(
-                    { error: `Experience ${item.experienceSlug} not found` },
-                    { status: 400 }
-                )
-            }
-
-            // Calculate item price: base + addons + voucher
-            let itemPrice = experience.price
-
-            // Add additional items prices
-            if (item.additionalItems && experience.additionalItems) {
-                for (const addonId of item.additionalItems) {
-                    const addon = experience.additionalItems.find(a => a.id === addonId)
-                    if (addon) {
-                        itemPrice += addon.price
-                    }
+            if (isPhysicalProduct) {
+                // Handle physical product
+                if (!item.price || !item.title) {
+                    return NextResponse.json(
+                        { error: `Physical product ${item.id} missing price or title` },
+                        { status: 400 }
+                    )
                 }
+
+                const itemTotal = item.price * item.quantity
+                totalAmount += itemTotal
+
+                // Format variant options as string
+                const optionsStr = item.selectedVariant?.options
+                    ? Object.entries(item.selectedVariant.options)
+                        .map(([k, v]) => `${k}: ${v}`)
+                        .join(', ')
+                    : ''
+
+                validatedItems.push({
+                    type: 'physical',
+                    productId: item.id,
+                    productTitle: item.title,
+                    variant: optionsStr,
+                    sku: item.selectedVariant?.sku || '',
+                    imageUrl: item.imageUrl || '',
+                    quantity: item.quantity,
+                    unitPrice: item.price,
+                    totalPrice: itemTotal,
+                })
+            } else {
+                // Handle experience product - use storedAddons from cart (CMS data)
+                // item.price already includes base price + all selected addons
+                const itemPrice = item.price || 0
+                const itemTotal = itemPrice * item.quantity
+                totalAmount += itemTotal
+
+                // Get addon names from storedAddons (CMS data stored in cart)
+                const addonNames = item.storedAddons
+                    ?.filter(addon => addon.type === 'standard')
+                    .map(addon => addon.name) || []
+
+                // Get location name from storedLocationName
+                const locationName = item.storedLocationName || 'N/A'
+
+                // Get voucher type from storedVoucherName
+                const voucherType = item.storedVoucherName || 'Digital'
+
+                validatedItems.push({
+                    type: 'experience',
+                    experienceSlug: item.experienceSlug,
+                    experienceTitle: item.title || '',
+                    imageUrl: item.imageUrl || '',
+                    location: locationName,
+                    addons: addonNames,
+                    voucherType,
+                    voucherRecipientName: item.voucherName || '',
+                    quantity: item.quantity,
+                    unitPrice: itemPrice,
+                    totalPrice: itemTotal,
+                })
             }
-
-            // Add voucher price
-            if (item.selectedVoucher && experience.additionalItems) {
-                const voucher = experience.additionalItems.find(v => v.id === item.selectedVoucher)
-                if (voucher) {
-                    itemPrice += voucher.price
-                }
-            }
-
-            const itemTotal = itemPrice * item.quantity
-            totalAmount += itemTotal
-
-            // Get location name
-            const locationName = item.selectedLocation && experience.additionalItems
-                ? experience.additionalItems.find(l => l.id === item.selectedLocation)?.name || 'N/A'
-                : 'N/A'
-
-            // Get addon names
-            const addonNames = item.additionalItems && experience.additionalItems
-                ? item.additionalItems.map(id =>
-                    experience.additionalItems?.find(a => a.id === id)?.name || id
-                )
-                : []
-
-            // Get voucher type
-            const voucherType = item.selectedVoucher && experience.additionalItems
-                ? experience.additionalItems.find(v => v.id === item.selectedVoucher)?.name || 'Digital'
-                : 'Digital'
-
-            validatedItems.push({
-                experienceSlug: item.experienceSlug,
-                experienceTitle: experience.title,
-                location: locationName,
-                addons: addonNames,
-                voucherType,
-                voucherRecipientName: item.voucherName || '',
-                quantity: item.quantity,
-                unitPrice: itemPrice,
-                totalPrice: itemTotal,
-            })
         }
 
         // 4. Create Payment Intent with metadata
+        // Split cart items to stay under Stripe's 500 char limit per field
+        const itemsMetadata: Record<string, string> = {}
+        validatedItems.forEach((item, index) => {
+            const itemJson = JSON.stringify(item)
+            itemsMetadata[`cart_${index}`] = itemJson.length <= 500
+                ? itemJson
+                : JSON.stringify({
+                    type: item.type,
+                    title: (item as any).productTitle || (item as any).experienceTitle || '',
+                    qty: item.quantity,
+                    total: item.totalPrice
+                })
+        })
+
         const paymentIntent = await stripe.paymentIntents.create({
             amount: Math.round(totalAmount * 100), // Convert to cents
             currency: 'bgn',
@@ -142,8 +184,8 @@ export async function POST(request: NextRequest) {
                 city: personalInfo.city,
                 postalCode: personalInfo.postalCode,
                 country: personalInfo.country,
-                // Store cart details as JSON string (Stripe metadata has 500 char limit per field)
-                cartItems: JSON.stringify(validatedItems),
+                itemCount: String(validatedItems.length),
+                ...itemsMetadata,
             },
         })
 
