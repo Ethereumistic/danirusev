@@ -14,7 +14,7 @@ import { useRouter } from 'next/navigation'
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import { loadStripe } from '@stripe/stripe-js'
 import Image from 'next/image'
-import { MapPin, Trash, Plus, Minus, Gift } from 'lucide-react'
+import { MapPin, Trash, Plus, Minus, Gift, CalendarDays } from 'lucide-react'
 import { getBorderColor, getTextColor, getBgColor, getBorderStyle } from '@/lib/utils'
 
 interface CheckoutFormProps {
@@ -151,6 +151,8 @@ export function CheckoutForm({ profile }: CheckoutFormProps) {
             storedLocationName: item.storedLocationName,
             storedVoucherName: item.storedVoucherName,
             storedLocationUrl: item.storedLocationUrl,
+            selectedDate: item.selectedDate, // Raw ISO date for database
+            storedSelectedDate: item.storedSelectedDate, // Formatted for display
           })),
           personalInfo: {
             fullName,
@@ -318,6 +320,14 @@ export function CheckoutForm({ profile }: CheckoutFormProps) {
                           <div className="h-8 px-3 flex items-center text-xs border border-slate-700 bg-slate-800 rounded-md w-full">
                             <Gift className="h-3 w-3 mr-2 shrink-0" />
                             <span className="truncate text-slate-300">{item.storedVoucherName}</span>
+                          </div>
+                        )}
+
+                        {/* Selected Date Display */}
+                        {item.storedSelectedDate && (
+                          <div className="h-8 px-3 flex items-center text-xs border border-slate-700 bg-slate-800 rounded-md w-full col-span-2">
+                            <CalendarDays className="h-3 w-3 mr-2 shrink-0" />
+                            <span className="truncate text-slate-300">{item.storedSelectedDate}</span>
                           </div>
                         )}
                       </div>

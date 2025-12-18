@@ -2,11 +2,12 @@
 
 import * as React from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { Check } from "lucide-react"
+import { Check, CalendarDays, Info } from "lucide-react"
 import * as LucideIcons from "lucide-react"
 import { getThemeClasses, type ThemeColor } from "./types"
 import type { AdditionalItem } from "@/types/payload-types"
 import { useCartStore } from "@/lib/stores/cart-store"
+import { Calendar } from "@/components/ui/calendar"
 
 interface ExperienceAdditionalItemsProps {
     items: AdditionalItem[]
@@ -32,7 +33,7 @@ export function ExperienceAdditionalItems({
 
     // Use Zustand store for selections
     const { driftSelections, updateDriftSelections } = useCartStore()
-    const selections = driftSelections[experienceId] || { additionalItems: [], selectedLocation: null }
+    const selections = driftSelections[experienceId] || { additionalItems: [], selectedLocation: null, selectedDate: null }
 
     // Separate items by type
     const regularItems = items.filter(item => item.type === 'standard')
@@ -194,6 +195,61 @@ export function ExperienceAdditionalItems({
                     })}
                 </div>
             )}
+
+            {/* Date Picker Section */}
+            <Card className={`bg-slate-900 border-2 ${selections.selectedDate ? `${theme.border} ${theme.bgFaded}` : 'border-slate-800'}`}>
+                <CardContent className="p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                        <div className={`p-3 rounded-xl ${selections.selectedDate ? theme.bgFaded : 'bg-slate-800'}`}>
+                            <CalendarDays className={`h-6 w-6 ${selections.selectedDate ? theme.text : 'text-slate-400'}`} />
+                        </div>
+                        <div>
+                            <h4 className={`font-bold text-base ${selections.selectedDate ? 'text-white' : 'text-slate-300'}`}>
+                                Предпочитана дата
+                            </h4>
+                            {selections.selectedDate && (
+                                <p className={`text-sm font-semibold ${theme.text}`}>
+                                    {new Date(selections.selectedDate).toLocaleDateString('bg-BG', {
+                                        weekday: 'long',
+                                        day: 'numeric',
+                                        month: 'long',
+                                        year: 'numeric'
+                                    })}
+                                </p>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="flex justify-center">
+                        <Calendar
+                            mode="single"
+                            selected={selections.selectedDate ? new Date(selections.selectedDate) : undefined}
+                            onSelect={(date) => {
+                                // Format as YYYY-MM-DD to prevent timezone shift
+                                const formattedDate = date
+                                    ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+                                    : null
+                                updateDriftSelections(
+                                    experienceId,
+                                    selections.additionalItems,
+                                    selections.selectedLocation,
+                                    formattedDate
+                                )
+                            }}
+                            disabled={(date) => date < new Date()}
+                            className="rounded-md border border-slate-700"
+                        />
+                    </div>
+
+                    {/* Info note about date confirmation */}
+                    <div className="mt-3 flex items-start gap-2 p-3 rounded-lg bg-slate-800 border border-slate-700">
+                        <Info className="h-4 w-4 text-slate-400 flex-shrink-0 mt-0.5" />
+                        <p className="text-xs text-slate-400">
+                            Избраната дата е предпочитана и ще бъде потвърдена по телефон след покупката.
+                        </p>
+                    </div>
+                </CardContent>
+            </Card>
         </div>
     )
 }

@@ -39,6 +39,8 @@ const cartItemSchema = z.object({
     storedLocationName: z.string().optional().nullable(),
     storedVoucherName: z.string().optional().nullable(),
     storedLocationUrl: z.string().optional().nullable(),
+    selectedDate: z.string().optional().nullable(), // Raw ISO date for database
+    storedSelectedDate: z.string().optional().nullable(), // Formatted for display
 })
 
 const requestSchema = z.object({
@@ -147,6 +149,7 @@ export async function POST(request: NextRequest) {
                     addons: addonNames,
                     voucherType,
                     voucherRecipientName: item.voucherName || '',
+                    selectedDate: item.selectedDate || null,
                     quantity: item.quantity,
                     unitPrice: itemPrice,
                     totalPrice: itemTotal,

@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import Image from "next/image"
-import { Minus, Plus, Trash, MapPin, Gift } from "lucide-react"
+import { Minus, Plus, Trash, MapPin, Gift, CalendarDays } from "lucide-react"
 import Link from "next/link"
 import { getBorderColor, getTextColor, getBgColor, getBorderStyle } from "@/lib/utils"
 
@@ -142,6 +142,14 @@ export function Cart({ closeSheet }: { closeSheet: () => void }) {
                               <div className="h-8 px-3 flex items-center text-xs border border-slate-700 bg-slate-800 rounded-md w-full">
                                 <Gift className="h-3 w-3 mr-2 shrink-0" />
                                 <span className="truncate text-slate-300">{item.storedVoucherName}</span>
+                              </div>
+                            )}
+
+                            {/* Selected Date Display */}
+                            {item.storedSelectedDate && (
+                              <div className="h-8 px-3 flex items-center text-xs border border-slate-700 bg-slate-800 rounded-md w-full col-span-2">
+                                <CalendarDays className="h-3 w-3 mr-2 shrink-0" />
+                                <span className="truncate text-slate-300">{item.storedSelectedDate}</span>
                               </div>
                             )}
                           </div>

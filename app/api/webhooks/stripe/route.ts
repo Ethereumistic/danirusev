@@ -93,16 +93,18 @@ async function handlePaymentIntentSucceeded(event: Stripe.Event) {
     addons: item.addons || null, // Already an array, don't stringify
     voucher_type: item.voucherType || null,
     voucher_recipient_name: item.voucherRecipientName || null,
+    selected_date: item.selectedDate || null,
   }))
 
   console.log('[DEBUG] Mapped order items to send to RPC:', JSON.stringify(orderItems, null, 2))
 
-  // Call the database function to create the order
-  const { error } = await supabase.rpc('create_order_from_webhook', {
+  // Call the database function to create the order (with idempotency via payment intent ID)
+  const { data: orderId, error } = await supabase.rpc('create_order_from_webhook', {
     p_user_id: userId,
     p_total_price: totalPrice,
     p_shipping_address_snapshot: shippingAddress,
     p_cart_items: orderItems,
+    p_stripe_payment_intent_id: paymentIntent.id,
   })
 
   if (error) {
@@ -131,32 +133,39 @@ async function handlePaymentIntentSucceeded(event: Stripe.Event) {
   console.log(`✅✅✅ Order successfully created for payment: ${paymentIntent.id}`)
 }
 
-// Legacy handler for checkout sessions (backwards compatibility)
-async function handleCheckoutSessionCompleted(event: Stripe.Event) {
-  console.log('✅ Received checkout.session.completed event (legacy).')
-  const session = event.data.object as Stripe.Checkout.Session
-
-  const { userId, shippingAddress, cartItems } = session.metadata || {}
-  if (!userId || !shippingAddress || !cartItems) {
-    throw new Error(`🚫 Missing metadata in checkout session: ${session.id}`)
-  }
-
-  console.log(`[INFO] Legacy checkout session: ${session.id}`)
-
-  const { error } = await supabase.rpc('create_order_from_webhook', {
-    p_user_id: userId,
-    p_total_price: session.amount_total! / 100,
-    p_shipping_address_snapshot: JSON.parse(shippingAddress),
-    p_cart_items: JSON.parse(cartItems),
-  })
-
-  if (error) {
-    console.error('❌ Error calling create_order_from_webhook:', error)
-    throw new Error(`Database RPC error: ${error.message}`)
-  }
-
-  console.log(`✅✅✅ Order successfully processed for session: ${session.id}`)
-}
+// ============================================
+// LEGACY HANDLER - DISABLED TO PREVENT DUPLICATE ORDERS
+// This was creating orders WITHOUT stripe_payment_intent_id, causing duplicates.
+// If you need redirect-based Stripe Checkout in the future, re-enable this
+// but make sure to pass the payment_intent_id for idempotency.
+// ============================================
+// async function handleCheckoutSessionCompleted(event: Stripe.Event) {
+//   console.log('✅ Received checkout.session.completed event (legacy).')
+//   const session = event.data.object as Stripe.Checkout.Session
+//
+//   const { userId, shippingAddress, cartItems } = session.metadata || {}
+//   if (!userId || !shippingAddress || !cartItems) {
+//     throw new Error(`🚫 Missing metadata in checkout session: ${session.id}`)
+//   }
+//
+//   console.log(`[INFO] Legacy checkout session: ${session.id}`)
+//
+//   // NOTE: This was missing p_stripe_payment_intent_id, causing duplicates!
+//   const { error } = await supabase.rpc('create_order_from_webhook', {
+//     p_user_id: userId,
+//     p_total_price: session.amount_total! / 100,
+//     p_shipping_address_snapshot: JSON.parse(shippingAddress),
+//     p_cart_items: JSON.parse(cartItems),
+//     p_stripe_payment_intent_id: session.payment_intent as string, // FIXED!
+//   })
+//
+//   if (error) {
+//     console.error('❌ Error calling create_order_from_webhook:', error)
+//     throw new Error(`Database RPC error: ${error.message}`)
+//   }
+//
+//   console.log(`✅✅✅ Order successfully processed for session: ${session.id}`)
+// }
 
 export async function POST(req: Request) {
   const headersList = await headers()
@@ -185,10 +194,10 @@ export async function POST(req: Request) {
         // Handle successful payments from embedded checkout
         await handlePaymentIntentSucceeded(event)
         break
-      case 'checkout.session.completed':
-        // Legacy: Handle redirect-based checkout (backwards compatibility)
-        await handleCheckoutSessionCompleted(event)
-        break
+      // DISABLED: checkout.session.completed was causing duplicate orders
+      // case 'checkout.session.completed':
+      //   await handleCheckoutSessionCompleted(event)
+      //   break
       default:
         console.log(`Unhandled event type: ${event.type}`)
         break

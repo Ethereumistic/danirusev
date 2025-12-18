@@ -21,7 +21,7 @@ export function ExperienceBookingSidebar({ experience }: ExperienceBookingSideba
 
     // Read selections from Zustand store
     const { driftSelections, addItem } = useCartStore()
-    const selections = driftSelections[experience.id] || { additionalItems: [], selectedLocation: null }
+    const selections = driftSelections[experience.id] || { additionalItems: [], selectedLocation: null, selectedDate: null }
 
     // Calculate total price
     const basePrice = experience.price
@@ -98,11 +98,20 @@ export function ExperienceBookingSidebar({ experience }: ExperienceBookingSideba
             experienceSlug: experience.slug,
             imageUrl,
             themeColor,
+            selectedDate: selections.selectedDate,
             // Store addon data for cart display (no DRIFT_EXPERIENCES lookup needed)
             storedAddons: selectedAddonsData,
             storedLocationName: selectedLocationName !== 'Не е избрана локация' ? selectedLocationName : undefined,
             storedVoucherName: selectedVoucherItem?.name,
             storedLocationUrl: googleMapsUrl,
+            storedSelectedDate: selections.selectedDate
+                ? new Date(selections.selectedDate).toLocaleDateString('bg-BG', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                })
+                : undefined,
         })
     }
 

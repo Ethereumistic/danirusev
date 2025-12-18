@@ -6,6 +6,9 @@ import { Flame } from "lucide-react"
 import { getProducts } from "@/lib/api/products"
 import type { ExperienceProduct } from "@/types/payload-types"
 
+// Force dynamic rendering to always get fresh CMS data
+export const revalidate = 0
+
 // Components - Using new CMS-only experience components
 import { ExperienceSection } from "@/components/experience"
 import { WhyChooseUs } from "@/components/drift/why-choose-us"

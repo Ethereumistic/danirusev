@@ -1,7 +1,10 @@
 'use client'
 
+import * as React from 'react'
+
 import { ColumnDef } from '@tanstack/react-table'
-import { MoreHorizontal, ArrowUpDown, Clock, CheckCircle, Truck, Package, ChevronDown, ChevronRight, MapPin, Video, Disc, Gift, Smartphone, ShoppingBag, Ticket } from 'lucide-react'
+import { MoreHorizontal, ArrowUpDown, Clock, CheckCircle, Truck, Package, ChevronDown, ChevronRight, MapPin, Video, Disc, Gift, Smartphone, ShoppingBag, Ticket, CalendarDays } from 'lucide-react'
+import { Calendar } from '@/components/ui/calendar'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -31,11 +34,13 @@ export type OrderItem = {
   addons: string[] | null
   voucher_type: string | null
   voucher_recipient_name: string | null
+  selected_date: string | null
 }
 
 // This type is updated to include the new fields from our RPC function
 export type Order = {
   orderId: string
+  userId: string | null
   customerEmail: string | null
   customerName: string | null
   customerPhone: string | null
@@ -252,9 +257,57 @@ export const columns: ColumnDef<Order>[] = [
 export function ExpandedOrderDetails({ order }: { order: Order }) {
   const orderItems = order.orderItems || []
 
+  // Get the first selected date from experience items (if any)
+  const experienceWithDate = orderItems.find(item => item.item_type === 'experience' && item.selected_date)
+  const initialDate = experienceWithDate?.selected_date ? new Date(experienceWithDate.selected_date) : null
+
+  // State for date editing
+  const [isEditingDate, setIsEditingDate] = React.useState(false)
+  const [selectedDate, setSelectedDate] = React.useState<Date | null>(initialDate)
+  const [isConfirming, setIsConfirming] = React.useState(false)
+  const [confirmError, setConfirmError] = React.useState<string | null>(null)
+
+  // Handle date confirmation
+  const handleConfirmDate = async () => {
+    if (!selectedDate) return
+
+    setIsConfirming(true)
+    setConfirmError(null)
+
+    try {
+      // Format date as YYYY-MM-DD
+      const formattedDate = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`
+
+      const response = await fetch('/api/orders/confirm-date', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: order.orderId,
+          orderItemId: experienceWithDate?.id,
+          selectedDate: isEditingDate ? formattedDate : experienceWithDate?.selected_date,
+          confirmOnly: !isEditingDate,
+          orderItem: experienceWithDate, // Pass order item for voucher generation
+          userId: order.userId // Pass user ID for voucher generation
+        })
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to confirm date')
+      }
+
+      // Success - reload the page to see updated status
+      window.location.reload()
+    } catch (error) {
+      setConfirmError(error instanceof Error ? error.message : 'Failed to confirm date')
+    } finally {
+      setIsConfirming(false)
+    }
+  }
+
   return (
     <div className="bg-slate-950 p-6 border-t border-slate-800">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className={`grid grid-cols-1 ${initialDate ? 'lg:grid-cols-3' : 'lg:grid-cols-2'} gap-6`}>
         {/* Shipping Address Section */}
         <div className="bg-slate-900 rounded-xl p-4 border border-slate-800">
           <h4 className="text-sm font-bold text-slate-400 uppercase mb-3">Адрес за доставка</h4>
@@ -267,6 +320,67 @@ export function ExpandedOrderDetails({ order }: { order: Order }) {
             <p className="text-slate-400">{order.customerEmail}</p>
           </div>
         </div>
+
+        {/* Selected Date Calendar Section - Only for experience orders with a date */}
+        {initialDate && (
+          <div className="bg-slate-900 rounded-xl p-4 border border-slate-800">
+            <h4 className="text-sm font-bold text-slate-400 uppercase mb-3 flex items-center gap-2">
+              <CalendarDays className="h-4 w-4 text-main" />
+              {isEditingDate ? 'Изберете нова дата' : 'Избрана дата'}
+            </h4>
+            <div className="flex flex-col items-center">
+              <Calendar
+                mode="single"
+                selected={selectedDate || undefined}
+                onSelect={(date) => isEditingDate && date && setSelectedDate(date)}
+                className="rounded-md border border-slate-700"
+                disabled={!isEditingDate}
+              />
+              <p className="mt-3 text-sm text-slate-300">
+                {selectedDate?.toLocaleDateString('bg-BG', {
+                  weekday: 'long',
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric'
+                })}
+              </p>
+
+              {/* Error message */}
+              {confirmError && (
+                <p className="mt-2 text-xs text-red-400">{confirmError}</p>
+              )}
+
+              {/* Action Buttons */}
+              <div className="mt-4 flex gap-2 w-full">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    if (isEditingDate) {
+                      // Cancel edit mode
+                      setIsEditingDate(false)
+                      setSelectedDate(initialDate)
+                    } else {
+                      // Enter edit mode
+                      setIsEditingDate(true)
+                    }
+                  }}
+                  className="flex-1 border-slate-700 hover:bg-slate-800"
+                >
+                  {isEditingDate ? 'Отказ' : 'Промени датата'}
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleConfirmDate}
+                  disabled={isConfirming || order.status === 'approved'}
+                  className="flex-1 bg-main hover:bg-main/90 text-black font-bold"
+                >
+                  {isConfirming ? 'Потвърждаване...' : order.status === 'approved' ? 'Потвърдена' : 'Потвърди датата'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Order Items Section */}
         <div className="bg-slate-900 rounded-xl p-4 border border-slate-800">
@@ -326,6 +440,19 @@ export function ExpandedOrderDetails({ order }: { order: Order }) {
                             <div className="flex items-center gap-2 text-xs">
                               <MapPin className="h-3 w-3 text-main" />
                               <span className="text-slate-300">{item.location}</span>
+                            </div>
+                          )}
+                          {item.selected_date && (
+                            <div className="flex items-center gap-2 text-xs">
+                              <CalendarDays className="h-3 w-3 text-main" />
+                              <span className="text-slate-300">
+                                {new Date(item.selected_date).toLocaleDateString('bg-BG', {
+                                  weekday: 'long',
+                                  day: 'numeric',
+                                  month: 'long',
+                                  year: 'numeric'
+                                })}
+                              </span>
                             </div>
                           )}
                           {(item.addons && item.addons.length > 0) || item.voucher_type ? (

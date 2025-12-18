@@ -2,7 +2,7 @@
 
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { Package, MapPin, Gift, Clock, CheckCircle, Truck, ShoppingBag, Ticket, Smartphone } from 'lucide-react'
+import { Package, MapPin, Gift, Clock, CheckCircle, Truck, ShoppingBag, Ticket, Smartphone, CalendarDays } from 'lucide-react'
 import { useState } from 'react'
 import Image from 'next/image'
 
@@ -22,6 +22,7 @@ type OrderItem = {
   addons?: string[]
   voucher_type?: string
   voucher_recipient_name?: string
+  selected_date?: string
 }
 
 type ShippingAddress = {
@@ -194,6 +195,17 @@ export function OrdersList({ orders }: OrdersListProps) {
                                       <p className="text-sm text-slate-400 flex items-center gap-2">
                                         <MapPin className="h-3 w-3 text-main" /> {item.location}
                                       </p>
+                                    )}
+                                    {item.selected_date && (
+                                      <Badge className="text-xs bg-main/20 text-main border-main/30 gap-1">
+                                        <CalendarDays className="h-3 w-3" />
+                                        {new Date(item.selected_date).toLocaleDateString('bg-BG', {
+                                          weekday: 'long',
+                                          day: 'numeric',
+                                          month: 'long',
+                                          year: 'numeric'
+                                        })}
+                                      </Badge>
                                     )}
                                     {(item.addons && item.addons.length > 0) || item.voucher_type ? (
                                       <div className="flex flex-wrap gap-1 mt-1">

@@ -30,6 +30,7 @@ export interface CartItem {
   imageUrl?: string; // Image URL for display
   themeColor?: ThemeColor; // Theme color for styling
   voucherName?: string; // Recipient name for gift vouchers
+  selectedDate?: string; // Selected preferred date (ISO string)
 
   // CMS experience stored addon data (for display without lookup)
   storedAddons?: {
@@ -43,6 +44,7 @@ export interface CartItem {
   storedLocationName?: string; // Display name of selected location
   storedVoucherName?: string; // Display name of selected voucher
   storedLocationUrl?: string; // Google Maps URL for selected location
+  storedSelectedDate?: string; // Display string for selected date
 }
 
 // Helper function to generate unique cart item ID
@@ -67,6 +69,7 @@ interface CartState {
     [experienceId: string]: {
       additionalItems: string[];
       selectedLocation: string | null;
+      selectedDate: string | null;
     }
   }
   addItem: (item: Omit<CartItem, 'quantity' | 'cartItemId'>) => void
@@ -75,7 +78,7 @@ interface CartState {
   decreaseQuantity: (cartItemId: string) => void
   clearCart: () => void
   // Drift experience actions
-  updateDriftSelections: (experienceId: string, additionalItems: string[], selectedLocation: string | null) => void
+  updateDriftSelections: (experienceId: string, additionalItems: string[], selectedLocation: string | null, selectedDate?: string | null) => void
   toggleCartItemAdditional: (cartItemId: string, additionalItemId: string) => void
   updateCartItemLocation: (cartItemId: string, locationId: string) => void
   updateCartItemVoucher: (cartItemId: string, voucherId: string) => void
@@ -123,11 +126,16 @@ export const useCartStore = create<CartState>()(
         set({ items: updatedItems })
       },
       clearCart: () => set({ items: [] }),
-      updateDriftSelections: (experienceId, additionalItems, selectedLocation) => {
+      updateDriftSelections: (experienceId, additionalItems, selectedLocation, selectedDate) => {
+        const currentSelections = get().driftSelections[experienceId] || { additionalItems: [], selectedLocation: null, selectedDate: null }
         set({
           driftSelections: {
             ...get().driftSelections,
-            [experienceId]: { additionalItems, selectedLocation }
+            [experienceId]: {
+              additionalItems,
+              selectedLocation,
+              selectedDate: selectedDate !== undefined ? selectedDate : currentSelections.selectedDate
+            }
           }
         })
       },

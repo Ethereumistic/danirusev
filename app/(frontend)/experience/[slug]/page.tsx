@@ -1,7 +1,6 @@
 import * as React from "react"
 import { notFound } from "next/navigation"
 import Link from "next/link"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Quote, Gauge, Car, CarTaxiFront } from "lucide-react"
 
@@ -9,17 +8,17 @@ import { ArrowLeft, Quote, Gauge, Car, CarTaxiFront } from "lucide-react"
 import { getProductBySlug } from "@/lib/api/products"
 import type { ExperienceProduct } from "@/types/payload-types"
 
-// Components - Using new CMS-only experience components
+// Components
 import {
     ExperienceGallery,
     ExperienceStatsGrid,
-    ExperienceProgram,
-    ExperienceIncluded,
-    ExperienceAdditionalItems,
     ExperienceBookingSidebar,
     getThemeClasses,
     type ThemeColor
 } from "@/components/experience"
+
+// Import the new component
+import { ExperienceScrollableTabs } from "@/components/experience/experience-scrollable-tabs"
 
 // Helper function to get the correct icon component
 function getIconComponent(iconName?: 'CarTaxiFront' | 'Car' | 'Gauge', themeColor?: ThemeColor) {
@@ -108,64 +107,17 @@ export default async function ExperienceDetailPage({
                             </div>
                         )}
 
-                        {/* Tabs System */}
-                        <div className="relative">
-                            <Tabs defaultValue="program" className="w-full">
-                                <TabsList className="w-full justify-start self-start bg-slate-900 p-1 rounded-lg border border-slate-800 z-30">
-                                    <TabsTrigger
-                                        value="program"
-                                        className={`data-[state=active]:!${theme.bg} data-[state=active]:!text-black text-slate-400`}
-                                    >
-                                        Програма
-                                    </TabsTrigger>
-                                    <TabsTrigger
-                                        value="included"
-                                        className={`data-[state=active]:!${theme.bg} data-[state=active]:!text-black text-slate-400`}
-                                    >
-                                        Условия
-                                    </TabsTrigger>
-                                    <TabsTrigger
-                                        value="additional"
-                                        className={`data-[state=active]:!${theme.bg} data-[state=active]:!text-black text-slate-400`}
-                                    >
-                                        Допълнения
-                                    </TabsTrigger>
-                                </TabsList>
-
-                                <div className="mt-2">
-                                    {/* Tab: Program */}
-                                    <TabsContent value="program">
-                                        <ExperienceProgram
-                                            program={experience.program || []}
-                                            locations={experience.locations}
-                                            themeColor={themeColor}
-                                        />
-                                    </TabsContent>
-
-                                    {/* Tab: Included/Excluded */}
-                                    <TabsContent value="included">
-                                        <ExperienceIncluded
-                                            included={experience.included || []}
-                                            notIncluded={experience.notIncluded || []}
-                                            themeColor={themeColor}
-                                        />
-                                    </TabsContent>
-
-                                    {/* Tab: Additional Items */}
-                                    <TabsContent value="additional">
-                                        {experience.additionalItems && experience.additionalItems.length > 0 ? (
-                                            <ExperienceAdditionalItems
-                                                items={experience.additionalItems}
-                                                themeColor={themeColor}
-                                                experienceId={experience.id}
-                                            />
-                                        ) : (
-                                            <p className="text-slate-400 text-center py-8">Няма налични допълнения за този пакет.</p>
-                                        )}
-                                    </TabsContent>
-                                </div>
-                            </Tabs>
-                        </div>
+                        {/* NEW SCROLLABLE TABS COMPONENT */}
+                        {/* This replaces the old <Tabs> system */}
+                        <ExperienceScrollableTabs
+                            program={experience.program || []}
+                            locations={experience.locations}
+                            included={experience.included || []}
+                            notIncluded={experience.notIncluded || []}
+                            additionalItems={experience.additionalItems || []}
+                            experienceId={experience.id}
+                            themeColor={themeColor}
+                        />
 
                         {/* Booking Sidebar */}
                         <ExperienceBookingSidebar experience={experience} />
