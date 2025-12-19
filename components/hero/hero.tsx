@@ -7,8 +7,7 @@ import {
   Trophy,
   Timer,
   Star,
-  ShieldCheck,
-  Video
+  ShieldCheck
 } from 'lucide-react';
 
 const Hero = () => {
@@ -96,21 +95,13 @@ const Hero = () => {
             size="lg"
             className="bg-main hover:bg-main/90 text-black font-extrabold uppercase tracking-wider h-16 px-10 text-lg rounded-xl group relative overflow-hidden shadow-[0_0_40px_-10px_rgba(16,185,129,0.6)]"
             onClick={() => {
-              document.getElementById('experiences')?.scrollIntoView({ behavior: 'smooth' });
+              document.getElementById('drift-experiences')?.scrollIntoView({ behavior: 'smooth' });
             }}
           >
             <span className="relative z-10 flex items-center gap-2">
               Избери Преживяване
               <Flame className="w-5 h-5 group-hover:rotate-12 transition-transform" />
             </span>
-          </Button>
-          <Button
-            size="lg"
-            variant="outline"
-            className="border-2 border-slate-700 hover:border-main bg-slate-950/50 hover:bg-slate-900 text-white font-bold uppercase tracking-wider h-16 px-10 text-lg rounded-xl backdrop-blur-md"
-          >
-            <Video className="mr-2 w-5 h-5" />
-            Виж Видео
           </Button>
         </motion.div>
 
@@ -122,10 +113,10 @@ const Hero = () => {
           className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto"
         >
           {[
-            { icon: Trophy, value: "500+", label: "Доволни Клиенти" },
-            { icon: Timer, value: "1000+", label: "Дрифт Сесии" },
-            { icon: Star, value: "5.0", label: "Рейтинг" },
-            { icon: ShieldCheck, value: "100%", label: "Безопасност" },
+            { icon: Trophy, value: "СУПЕР", label: "Доволни Клиенти" },
+            { icon: Timer, value: "МНОГО", label: "Дрифт Сесии" },
+            { icon: Star, value: "ТОП", label: "Рейтинг" },
+            { icon: ShieldCheck, value: "МАКС", label: "Безопасност" },
           ].map((stat, idx) => (
             <div key={idx} className="bg-slate-900/50 backdrop-blur-md border border-slate-800 rounded-xl p-4">
               <stat.icon className="w-6 h-6 text-main mb-2 mx-auto" />

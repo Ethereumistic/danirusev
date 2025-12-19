@@ -1,7 +1,7 @@
 'use client'
 
 import { useCartStore } from '@/lib/stores/cart-store'
-import { CheckCircle } from 'lucide-react'
+import { CheckCircle, Package } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -111,7 +111,7 @@ export default function OrderConfirmationPage() {
           </CardHeader>
           <CardContent className="space-y-6">
             <p className="text-lg text-white text-center">
-              Благодарим Ви, {details?.customerName || 'клиент'}! Вашата поръчка се обработва.
+              Благодарим Ви, {details?.customerName || ''}! Вашата поръчка се обработва.
             </p>
 
             {details && details.items.length > 0 && (
@@ -145,12 +145,12 @@ export default function OrderConfirmationPage() {
             )}
 
             <p className="text-slate-400 text-center text-sm">
-              Ще получите имейл за потвърждение съвсем скоро с всички детайли за вашето преживяване.
+              Ако сте закупили преживяване, ще Ви се обадим скоро с всички детайли за Вашето преживяване.
             </p>
 
             <div className="pt-4 flex justify-center space-x-4">
               <Button asChild className="bg-main text-black font-black uppercase hover:bg-main/90">
-                <Link href="/xp">Още Преживявания</Link>
+                <Link href="/orders"><Package /> Моите поръчки</Link>
               </Button>
               <Button asChild variant="outline" className="border-slate-700 text-white hover:bg-slate-800">
                 <Link href="/">Начало</Link>

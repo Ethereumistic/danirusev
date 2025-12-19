@@ -31,8 +31,11 @@ export async function GET(request: NextRequest, { params }: DownloadRouteProps) 
 
         const voucher = vouchers[0]
 
-        // Verify the voucher belongs to the current user (or user is admin - could add role check)
-        // For now, allow any authenticated user to download if they have the ID
+        // SECURITY: Verify the voucher belongs to the current user
+        if (voucher.user_id !== user.id) {
+            console.warn(`[Security] User ${user.id} attempted to download voucher ${voucherId} belonging to user ${voucher.user_id}`)
+            return NextResponse.json({ error: 'Forbidden: This voucher does not belong to you' }, { status: 403 })
+        }
 
         // Determine which PDF template to use
         const pdfMap: Record<string, string> = {

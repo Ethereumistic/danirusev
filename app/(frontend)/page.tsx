@@ -4,11 +4,8 @@ import { Metadata } from 'next'
 import { HowItWorks } from '@/components/landing/how-it-works'
 import { TestimonialsCarousel } from '@/components/landing/testimonials-carousel'
 import { UrgencyCTA } from '@/components/landing/urgency-cta'
-import { ExperiencesSection } from '@/components/drift/experiences-section'
-import { WhyChooseUs } from '@/components/drift/why-choose-us'
-import { ExperienceSection } from '@/components/experience'
-import type { ExperienceProduct } from "@/types/payload-types"
-import { getProducts } from '@/lib/api/products'
+import { WhyChooseUsV2 } from '@/components/experience/why-choose-us-v2'
+import { ExperienceSectionWrapper, ExperienceSectionSkeleton } from '@/components/experience'
 
 export const metadata: Metadata = {
   title: 'Начало',
@@ -27,24 +24,27 @@ export const metadata: Metadata = {
   },
 }
 
-export default async function Home() {
-  const products = await getProducts('experience')
-  const experiences = products as ExperienceProduct[]
+export default function Home() {
   return (
     <main className="min-h-screen ">
       {/* Hero with rotating quotes */}
       <Hero />
 
-      <WhyChooseUs />
+      <WhyChooseUsV2 />
       {/* Show how easy it is to book */}
+
+      {/* auth store problem: logs out user constantly if not admin and also admin because we are checking public.users which is for payload and we dont have any other users there */}
+
+      <Suspense fallback={<ExperienceSectionSkeleton />}>
+        <ExperienceSectionWrapper linkPrefix="/experience" />
+      </Suspense>
+
       <HowItWorks />
 
       {/* Main drift experiences - the core offering */}
-      <ExperiencesSection />
-      <ExperienceSection
-        experiences={experiences}
-        linkPrefix="/experience"
-      />
+      {/* Wrapped in Suspense so the rest of the page loads instantly */}
+
+
       {/* Build trust with social proof */}
       <TestimonialsCarousel />
 

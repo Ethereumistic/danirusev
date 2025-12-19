@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, User } from 'lucide-react';
+import { Menu, User, Shield, LayoutDashboard, ScanLine, Package, Settings, LogOut, Ticket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ModeToggle } from '@/components/ui/theme-switch';
 import {
@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/components/providers/supabase-auth-provider';
+import { useAuthStore } from '@/lib/stores/auth-store';
 import Logo from '@/components/ui/logo';
 import { CartWidget } from '../cart/cart-widget';
 
@@ -21,15 +22,30 @@ import { CartWidget } from '../cart/cart-widget';
 export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
-  const { user, signOut } = useAuth();
+  const { user, userRole: contextRole, signOut } = useAuth();
+  const { userRole: storedRole } = useAuthStore();
+
+  // Use context role if available, fallback to stored role for persistence
+  const userRole = contextRole || storedRole;
 
   const navItems = [
     { label: 'За Нас', href: '/about' },
-    { label: 'Преживявания', href: '/experience' },
+    { label: 'Преживявания', href: '/#drift-experiences', isHashLink: true },
     { label: 'Магазин', href: '/shop', },
     { label: 'Абонамент 🔒', href: '/subscription', disabled: true },
     { label: 'Контакти', href: '/contact' },
   ];
+
+  // Handler for smooth scroll when already on homepage
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, item: typeof navItems[0]) => {
+    // If we're on the homepage and clicking a hash link, do smooth scroll
+    if (pathname === '/' && item.isHashLink) {
+      e.preventDefault();
+      const targetId = item.href.replace('/#', '');
+      document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth' });
+    }
+    // Otherwise, let the browser handle navigation to /#hash
+  };
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -77,6 +93,7 @@ export function Navbar() {
                 >
                   <Link
                     href={item.href}
+                    onClick={(e) => handleNavClick(e, item)}
                     className={`text-md mx-1 font-black uppercase tracking-tighter italic transition-colors ${pathname === item.href
                       ? 'text-alt dark:text-main dark:hover:text-alt'
                       : 'text-alt dark:text-main dark:hover:text-alt'
@@ -117,18 +134,58 @@ export function Navbar() {
                     {user.user_metadata?.name || 'Customer'}
                   </div>
                 </DropdownMenuItem>
+
+                {/* Admin Section */}
+                {userRole === 'admin' && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin" className="flex items-center gap-2 text-foreground">
+                        <Shield className="h-4 w-4" />
+                        Admin Panel
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/dash" className="flex items-center gap-2 text-foreground">
+                        <LayoutDashboard className="h-4 w-4" />
+                        Dashboard
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/dash/verify" className="flex items-center gap-2 text-foreground">
+                        <ScanLine className="h-4 w-4" />
+                        Scan
+                      </Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
+
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/account" className="text-foreground">Настройки</Link>
+                  <Link href="/orders" className="flex items-center gap-2 text-foreground">
+                    <Package className="h-4 w-4" />
+                    Поръчки
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/orders" className="text-foreground">Поръчки</Link>
+                  <Link href="/vouchers" className="flex items-center gap-2 text-foreground">
+                    <Ticket className="h-4 w-4" />
+                    Ваучери
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+
+                  <Link href="/account" className="flex items-center gap-2 text-foreground">
+                    <Settings className="h-4 w-4" />
+                    Настройки
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="text-red-600 focus:text-red-600"
                   onClick={() => signOut()}
                 >
+                  <LogOut className="h-4 w-4 text-red-600" />
                   Изход
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -161,7 +218,10 @@ export function Navbar() {
                     ? 'text-foreground'
                     : 'text-muted-foreground'
                     }`}
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  onClick={(e) => {
+                    handleNavClick(e, item);
+                    setIsMobileMenuOpen(false);
+                  }}
                 >
                   {item.label}
                 </Link>

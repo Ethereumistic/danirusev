@@ -121,6 +121,7 @@ async function handlePaymentIntentSucceeded(event: Stripe.Event) {
     p_city: city || '',
     p_postal_code: postalCode || '',
     p_country: country || '',
+    p_email: userEmail || '',
   })
 
   if (profileError) {

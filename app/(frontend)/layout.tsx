@@ -103,7 +103,7 @@ export default function RootLayout({
           <AuthProvider>
             <Navbar />
             <main className="flex-grow">
-              <Suspense fallback={<div>Loading...</div>}>
+              <Suspense fallback={null}>
                 {children}
               </Suspense>
             </main>

@@ -18,6 +18,10 @@ export default function VerifyPage() {
     const startScanning = async () => {
         try {
             setError(null)
+            setIsScanning(true)
+
+            // Wait for DOM to update
+            await new Promise(resolve => setTimeout(resolve, 100))
 
             if (!scannerRef.current) {
                 scannerRef.current = new Html5Qrcode(qrBoxId)
@@ -40,9 +44,17 @@ export default function VerifyPage() {
                     setIsScanning(false)
 
                     // Extract voucher ID from URL
-                    // Expected format: https://domain.com/dash/verify/{voucher-id}
                     try {
                         const url = new URL(decodedText)
+                        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+                        const expectedHost = new URL(siteUrl).host
+
+                        // Validate the QR code is from our domain
+                        if (url.host !== expectedHost) {
+                            setError(`Невалиден QR код - не е от ${expectedHost}`)
+                            return
+                        }
+
                         const pathParts = url.pathname.split('/')
                         const verifyIndex = pathParts.indexOf('verify')
                         if (verifyIndex !== -1 && pathParts[verifyIndex + 1]) {
@@ -60,15 +72,14 @@ export default function VerifyPage() {
                         }
                     }
                 },
-                (errorMessage) => {
+                () => {
                     // Ignore continuous scanning errors
                 }
             )
-
-            setIsScanning(true)
         } catch (err) {
             console.error('Error starting scanner:', err)
             setError('Грешка при стартиране на камерата. Моля, разрешете достъп до камерата.')
+            setIsScanning(false)
         }
     }
 
@@ -94,6 +105,22 @@ export default function VerifyPage() {
 
     return (
         <div className="container mx-auto px-4 py-8 max-w-2xl">
+            {/* CSS to ensure video displays properly */}
+            <style jsx global>{`
+                #${qrBoxId} video {
+                    width: 100% !important;
+                    height: 100% !important;
+                    object-fit: cover !important;
+                    border-radius: 0.75rem;
+                }
+                #${qrBoxId} {
+                    border: none !important;
+                }
+                #${qrBoxId} > div {
+                    border: none !important;
+                }
+            `}</style>
+
             {/* Back button */}
             <Button asChild variant="ghost" className="mb-6 text-slate-400 hover:text-white">
                 <Link href="/dash">
@@ -111,15 +138,15 @@ export default function VerifyPage() {
                     <p className="text-slate-400 mt-2">Сканирайте QR кода от ваучера на клиента</p>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                    {/* Scanner container */}
-                    <div
-                        id={qrBoxId}
-                        className={`w-full aspect-square rounded-xl overflow-hidden bg-slate-800 ${!isScanning ? 'hidden' : ''}`}
-                    />
-
-                    {/* Placeholder when not scanning */}
-                    {!isScanning && (
-                        <div className="w-full aspect-square rounded-xl bg-slate-800 flex flex-col items-center justify-center">
+                    {/* Scanner container - Must be visible and have dimensions */}
+                    {isScanning ? (
+                        <div
+                            id={qrBoxId}
+                            className="w-full rounded-xl overflow-hidden bg-black"
+                            style={{ minHeight: '400px' }}
+                        />
+                    ) : (
+                        <div className="w-full rounded-xl bg-slate-800 flex flex-col items-center justify-center" style={{ minHeight: '400px' }}>
                             <ScanLine className="h-16 w-16 text-slate-600 mb-4" />
                             <p className="text-slate-500">Натиснете бутона за да започнете сканиране</p>
                         </div>
@@ -136,8 +163,8 @@ export default function VerifyPage() {
                     <Button
                         onClick={isScanning ? stopScanning : startScanning}
                         className={`w-full h-14 text-lg font-bold ${isScanning
-                                ? 'bg-red-500 hover:bg-red-600 text-white'
-                                : 'bg-main hover:bg-main/90 text-black'
+                            ? 'bg-red-500 hover:bg-red-600 text-white'
+                            : 'bg-main hover:bg-main/90 text-black'
                             }`}
                     >
                         {isScanning ? 'Спри сканирането' : 'Започни сканиране'}

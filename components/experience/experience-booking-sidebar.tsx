@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { getThemeClasses, getImageUrl, type ThemeColor } from "./types"
-import { PATTERN_COMPONENTS } from "@/components/drift/patterns"
+import { PATTERN_COMPONENTS } from "@/components/experience/patterns"
 import { useCartStore } from "@/lib/stores/cart-store"
 import type { ExperienceProduct } from "@/types/payload-types"
 
