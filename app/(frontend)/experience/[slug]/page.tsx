@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Quote, Gauge, Car, CarTaxiFront } from "lucide-react"
+import * as LucideIcons from "lucide-react"
 
 // Data fetching
 import { getProductBySlug } from "@/lib/api/products"
@@ -21,15 +22,13 @@ import {
 import { ExperienceScrollableTabs } from "@/components/experience/experience-scrollable-tabs"
 
 // Helper function to get the correct icon component
-function getIconComponent(iconName?: 'CarTaxiFront' | 'Car' | 'Gauge', themeColor?: ThemeColor) {
+function getIconComponent(iconName?: string, themeColor?: ThemeColor) {
     const theme = getThemeClasses(themeColor || 'main')
 
-    const iconMap = {
-        CarTaxiFront: <CarTaxiFront className={`w-12 h-12 ${theme.text}`} />,
-        Car: <Car className={`w-12 h-12 ${theme.text}`} />,
-        Gauge: <Gauge className={`w-12 h-12 ${theme.text}`} />,
-    }
-    return iconMap[iconName || 'Car']
+    const Icon = iconName ? (LucideIcons as any)[iconName] : null
+    const FinalIcon = Icon || Car
+
+    return <FinalIcon className={`w-12 h-12 ${theme.text}`} />
 }
 
 export default async function ExperienceDetailPage({
@@ -55,7 +54,7 @@ export default async function ExperienceDetailPage({
         <div className="min-h-screen bg-slate-950 pb-12 pt-4 md:pt-8">
             {/* Back Button */}
             <div className="max-w-7xl mx-auto px-4 mb-6">
-                <Link href="/experience">
+                <Link href="/#drift-experiences">
                     <Button
                         variant="ghost"
                         className="text-slate-400 hover:text-white group"
@@ -117,6 +116,12 @@ export default async function ExperienceDetailPage({
                             additionalItems={experience.additionalItems || []}
                             experienceId={experience.id}
                             themeColor={themeColor}
+                            // @ts-ignore - tabNames is a new field
+                            customLabelProgram={experience.tabNames?.program}
+                            // @ts-ignore
+                            customLabelIncluded={experience.tabNames?.included}
+                            // @ts-ignore
+                            customLabelAdditional={experience.tabNames?.additional}
                         />
 
                         {/* Booking Sidebar */}

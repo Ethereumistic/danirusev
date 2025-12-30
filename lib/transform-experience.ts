@@ -81,7 +81,7 @@ export function transformExperienceToDrift(product: ExperienceProduct): DriftExp
         duration: product.duration || '60 мин',
         carModel: product.techSpecs?.carModel || 'BMW E46',
         horsePower: product.techSpecs?.horsePower || 400,
-        tires: product.techSpecs?.tiresBurned || 4,
+        tires: product.techSpecs?.tiresBurned || "4 бр.",
         description: product.description || '',
         images,
         program,

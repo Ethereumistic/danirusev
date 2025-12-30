@@ -53,6 +53,28 @@ export const Experiences: CollectionConfig = {
       required: true,
     },
     {
+      name: 'techSpecs',
+      type: 'group',
+      label: 'Technical Specifications',
+      fields: [
+        {
+          name: 'carModel',
+          type: 'text',
+        },
+        {
+          name: 'horsePower',
+          type: 'number',
+        },
+        {
+          name: 'tiresBurned',
+          type: 'text',
+          admin: {
+            description: 'Tires burned (e.g., 4, 8, or ∞)',
+          },
+        },
+      ],
+    },
+    {
       name: 'detailedInfo',
       type: 'group',
       fields: [

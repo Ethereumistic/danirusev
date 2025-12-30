@@ -1,7 +1,4 @@
-'use server'
-
 import { NextRequest, NextResponse } from 'next/server'
-import { stripe } from '@/lib/stripe'
 import { createClient } from '@/utils/supabase/server'
 import { z } from 'zod'
 
@@ -15,7 +12,7 @@ const storedAddonSchema = z.object({
     googleMapsUrl: z.string().optional().nullable(),
 })
 
-// Zod schema for cart item validation - supports both physical and experience products
+// Zod schema for cart item validation
 const cartItemSchema = z.object({
     id: z.union([z.string(), z.number()]).transform(String),
     productType: z.enum(['physical', 'experience']).optional(),
@@ -28,7 +25,7 @@ const cartItemSchema = z.object({
         options: z.record(z.string()).optional(),
         sku: z.string().optional(),
     }).optional().nullable(),
-    // Experience fields (CMS data stored in cart)
+    // Experience fields
     experienceSlug: z.string().optional().nullable(),
     selectedLocation: z.string().nullable().optional(),
     selectedVoucher: z.string().nullable().optional(),
@@ -39,8 +36,8 @@ const cartItemSchema = z.object({
     storedLocationName: z.string().optional().nullable(),
     storedVoucherName: z.string().optional().nullable(),
     storedLocationUrl: z.string().optional().nullable(),
-    selectedDate: z.string().optional().nullable(), // Raw ISO date for database
-    storedSelectedDate: z.string().optional().nullable(), // Formatted for display
+    selectedDate: z.string().optional().nullable(),
+    storedSelectedDate: z.string().optional().nullable(),
 })
 
 const requestSchema = z.object({
@@ -55,6 +52,20 @@ const requestSchema = z.object({
         country: z.string().optional().nullable(),
     }),
 })
+
+// Use service role client for order creation (similar to webhook)
+import { createClient as createServiceRoleClient } from '@supabase/supabase-js'
+
+const supabaseAdmin = createServiceRoleClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+        auth: {
+            autoRefreshToken: false,
+            persistSession: false,
+        },
+    }
+)
 
 export async function POST(request: NextRequest) {
     try {
@@ -99,122 +110,110 @@ export async function POST(request: NextRequest) {
             if (!personalInfo.country || personalInfo.country.length < 2) return NextResponse.json({ error: 'Country is required' }, { status: 400 });
         }
 
-        // 5. Calculate total and validate prices
+        // 5. Process items and calculate total
         let totalAmount = 0
-        const validatedItems = []
+        const orderItems = []
 
         for (const item of cartItems) {
-            // Check if it's a physical product or experience
-            const isPhysicalProduct = item.productType === 'physical' || !item.experienceSlug
+            const itemPrice = item.price || 0
+            const itemTotal = itemPrice * item.quantity
+            totalAmount += itemTotal
 
-            if (isPhysicalProduct) {
-                // Handle physical product
-                if (!item.price || !item.title) {
-                    return NextResponse.json(
-                        { error: `Physical product ${item.id} missing price or title` },
-                        { status: 400 }
-                    )
-                }
-
-                const itemTotal = item.price * item.quantity
-                totalAmount += itemTotal
-
-                // Format variant options as string
+            if (item.productType === 'physical' || !item.experienceSlug) {
+                // Physical product
                 const optionsStr = item.selectedVariant?.options
                     ? Object.entries(item.selectedVariant.options)
                         .map(([k, v]) => `${k}: ${v}`)
                         .join(', ')
                     : ''
 
-                validatedItems.push({
-                    type: 'physical',
-                    productId: item.id,
-                    productTitle: item.title,
+                orderItems.push({
+                    product_id: item.id,
+                    title: item.title || 'Product',
+                    quantity: item.quantity,
+                    price: itemPrice,
                     variant: optionsStr,
                     sku: item.selectedVariant?.sku || '',
-                    imageUrl: item.imageUrl || '',
-                    quantity: item.quantity,
-                    unitPrice: item.price,
-                    totalPrice: itemTotal,
+                    item_type: 'physical',
+                    image_url: item.imageUrl || null,
+                    location: null,
+                    addons: null,
+                    voucher_type: null,
+                    voucher_recipient_name: null,
+                    selected_date: null,
                 })
             } else {
-                // Handle experience product - use storedAddons from cart (CMS data)
-                // item.price already includes base price + all selected addons
-                const itemPrice = item.price || 0
-                const itemTotal = itemPrice * item.quantity
-                totalAmount += itemTotal
-
-                // Get addon names from storedAddons (CMS data stored in cart)
+                // Experience
                 const addonNames = item.storedAddons
                     ?.filter(addon => addon.type === 'standard')
                     .map(addon => addon.name) || []
 
-                // Get location name from storedLocationName
-                const locationName = item.storedLocationName || 'N/A'
-
-                // Get voucher type from storedVoucherName
-                const voucherType = item.storedVoucherName || 'Digital'
-
-                validatedItems.push({
-                    type: 'experience',
-                    experienceSlug: item.experienceSlug,
-                    experienceTitle: item.title || '',
-                    imageUrl: item.imageUrl || '',
-                    location: locationName,
-                    addons: addonNames,
-                    voucherType,
-                    voucherRecipientName: item.voucherName || '',
-                    selectedDate: item.selectedDate || null,
+                orderItems.push({
+                    product_id: item.experienceSlug || item.id,
+                    title: item.title || 'Experience',
                     quantity: item.quantity,
-                    unitPrice: itemPrice,
-                    totalPrice: itemTotal,
+                    price: itemPrice,
+                    variant: '',
+                    sku: '',
+                    item_type: 'experience',
+                    image_url: item.imageUrl || null,
+                    location: item.storedLocationName || null,
+                    addons: addonNames,
+                    voucher_type: item.storedVoucherName || null,
+                    voucher_recipient_name: item.voucherName || null,
+                    selected_date: item.selectedDate || null,
                 })
             }
         }
 
-        // 4. Create Payment Intent with metadata
-        // Split cart items to stay under Stripe's 500 char limit per field
-        const itemsMetadata: Record<string, string> = {}
-        validatedItems.forEach((item, index) => {
-            const itemJson = JSON.stringify(item)
-            itemsMetadata[`cart_${index}`] = itemJson.length <= 500
-                ? itemJson
-                : JSON.stringify({
-                    type: item.type,
-                    title: (item as any).productTitle || (item as any).experienceTitle || '',
-                    qty: item.quantity,
-                    total: item.totalPrice
-                })
-        })
+        // 4. Create manual order ID (to satisfy idempotency or just distinguish)
+        const manualOrderId = `manual_${Date.now()}_${user.id.slice(0, 8)}`
 
-        const paymentIntent = await stripe.paymentIntents.create({
-            amount: Math.round(totalAmount * 100), // Convert to cents
-            currency: 'bgn',
-            automatic_payment_methods: {
-                enabled: true,
-            },
-            metadata: {
-                userId: user.id,
-                userEmail: personalInfo.email,
-                fullName: personalInfo.fullName,
-                phoneNumber: personalInfo.phoneNumber,
+        // 5. Call Database Function to create order
+        const { data: orderId, error: orderError } = await supabaseAdmin.rpc('create_order_from_webhook', {
+            p_user_id: user.id,
+            p_total_price: totalAmount,
+            p_shipping_address_snapshot: {
+                ...personalInfo,
+                email: personalInfo.email,
                 address: personalInfo.address || '',
                 city: personalInfo.city || '',
                 postalCode: personalInfo.postalCode || '',
                 country: personalInfo.country || '',
-                itemCount: String(validatedItems.length),
-                ...itemsMetadata,
             },
+            p_cart_items: orderItems,
+            p_stripe_payment_intent_id: manualOrderId, // Use manual ID as "payment intent"
         })
 
-        // 5. Return client secret to frontend
+        if (orderError) {
+            console.error('Error creating manual order:', orderError)
+            return NextResponse.json({ error: 'Failed to create order' }, { status: 500 })
+        }
+
+        // 6. Update Profile
+        const { error: profileError } = await supabaseAdmin.rpc('update_profile_from_checkout', {
+            p_user_id: user.id,
+            p_full_name: personalInfo.fullName,
+            p_phone_number: personalInfo.phoneNumber,
+            p_address: personalInfo.address || '',
+            p_city: personalInfo.city || '',
+            p_postal_code: personalInfo.postalCode || '',
+            p_country: personalInfo.country || '',
+            p_email: personalInfo.email,
+        })
+
+        if (profileError) {
+            console.error('Error updating profile:', profileError)
+            // Still proceed since order was created
+        }
+
         return NextResponse.json({
-            clientSecret: paymentIntent.client_secret,
-            amount: totalAmount,
+            success: true,
+            orderId
         })
 
     } catch (error) {
-        console.error('Payment Intent creation error:', error)
+        console.error('Manual order creation error:', error)
         return NextResponse.json(
             { error: error instanceof Error ? error.message : 'Unknown error occurred' },
             { status: 500 }

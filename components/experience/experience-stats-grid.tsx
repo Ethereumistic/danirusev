@@ -45,7 +45,7 @@ export function ExperienceStatsGrid({ experience }: ExperienceStatsGridProps) {
                 <CardContent className="flex flex-col items-center justify-center text-center ">
                     <Disc className={`w-8 h-8 ${theme.text} mb-2 animate-spin-slow`} />
                     <span className="text-xs text-slate-400 uppercase font-bold tracking-wider">Гуми</span>
-                    <span className="text-base md:text-lg font-bold text-white">~ {experience.techSpecs?.tiresBurned || 4} бр.</span>
+                    <span className="text-base md:text-lg font-bold text-white">{experience.techSpecs?.tiresBurned || '4'}</span>
                 </CardContent>
             </Card>
         </div>

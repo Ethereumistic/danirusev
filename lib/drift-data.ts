@@ -24,7 +24,7 @@ export type DriftExperience = {
     duration: string; // e.g. "60 min"
     carModel: string;
     horsePower: number;
-    tires: number; // approximate tires burned per session
+    tires: string; // approximate tires burned per session (e.g., "4", "∞")
     description: string;
     images: string[];
     program: { time: string; activity: string; description: string }[];
@@ -47,7 +47,7 @@ export const DRIFT_EXPERIENCES: DriftExperience[] = [
         duration: "60 мин",
         carModel: "BMW E46 V6",
         horsePower: 450,
-        tires: 4,
+        tires: "4",
         description: "Седнете на пасажерската седалка до Дани Русев и усетете истинската G-сила. Без теория, само чист адреналин.",
         images: [
             "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/taxi/0.png",
@@ -87,7 +87,7 @@ export const DRIFT_EXPERIENCES: DriftExperience[] = [
         duration: "60 мин",
         carModel: "BMW E36 V6",
         horsePower: 400,
-        tires: 4,
+        tires: "4",
         description: "Поемете контрола. Под напътствията на Дани, вие ще се научите да контролирате хаоса.",
         images: [
             "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/rent/1.png",
@@ -125,7 +125,7 @@ export const DRIFT_EXPERIENCES: DriftExperience[] = [
         duration: "60 мин",
         carModel: "BMW E36 V6",
         horsePower: 400,
-        tires: 4,
+        tires: "4",
         description: "Усетете дрифта от двете страни - от пасажерското място и от шофьорската седалка!",
         images: [
             "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/mix/2.png",

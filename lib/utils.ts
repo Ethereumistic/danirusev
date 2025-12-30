@@ -68,7 +68,7 @@ import {
  * Drift Experience Theme Color Utilities
  * Centralized functions to get theme-based CSS classes for consistent styling across components
  */
-export type ThemeColor = 'taxi' | 'rent' | 'mix' | 'main';
+export type ThemeColor = 'taxi' | 'rent' | 'mix' | 'event' | 'main';
 
 /**
  * Maps experience titles to their corresponding theme colors
@@ -78,6 +78,7 @@ export function getExperienceThemeColor(title: string): ThemeColor {
   if (lowerTitle.includes('такси') || lowerTitle.includes('taxi')) return 'taxi'
   if (lowerTitle.includes('наеми') || lowerTitle.includes('rent')) return 'rent'
   if (lowerTitle.includes('микс') || lowerTitle.includes('mix')) return 'mix'
+  if (lowerTitle.includes('събитие') || lowerTitle.includes('event')) return 'event'
   return 'main'
 }
 
@@ -89,6 +90,7 @@ export function getExperienceThumbnail(themeColor: ThemeColor): string {
     case 'taxi': return 'https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/taxi/0.png'
     case 'rent': return 'https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/rent/1.png'
     case 'mix': return 'https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/mix/2.png'
+    case 'event': return 'https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/taxi/0.png' // Fallback for event
     default: return 'https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/taxi/0.png'
   }
 }
@@ -101,6 +103,7 @@ export function getExperienceIcon(themeColor: ThemeColor) {
     case 'taxi': return CarTaxiFront
     case 'rent': return Car
     case 'mix': return Blend
+    case 'event': return Ticket
     default: return Ticket
   }
 }
@@ -112,6 +115,7 @@ export function getBorderColor(themeColor?: ThemeColor): string {
   if (themeColor === 'taxi') return 'border-taxi';
   if (themeColor === 'rent') return 'border-rent';
   if (themeColor === 'mix') return 'border-mix';
+  if (themeColor === 'event') return 'border-event';
   return 'border-main';
 }
 
@@ -122,6 +126,7 @@ export function getTextColor(themeColor?: ThemeColor): string {
   if (themeColor === 'taxi') return 'text-taxi';
   if (themeColor === 'rent') return 'text-rent';
   if (themeColor === 'mix') return 'text-mix';
+  if (themeColor === 'event') return 'text-event';
   return 'text-main';
 }
 
@@ -132,6 +137,7 @@ export function getBgColor(themeColor?: ThemeColor): string {
   if (themeColor === 'taxi') return 'bg-taxi';
   if (themeColor === 'rent') return 'bg-rent';
   if (themeColor === 'mix') return 'bg-mix';
+  if (themeColor === 'event') return 'bg-event';
   return 'bg-main';
 }
 
@@ -143,6 +149,7 @@ export function getBorderStyle(themeColor?: ThemeColor): string {
   if (themeColor === 'taxi') return 'border-dashed';
   if (themeColor === 'rent') return 'border-double';
   if (themeColor === 'mix') return 'border-dotted';
+  if (themeColor === 'event') return 'border-solid';
   return 'border-solid';
 }
 
@@ -158,18 +165,22 @@ export function getDriftThemeClasses(themeColor: ThemeColor = 'main') {
     borderStyle: getBorderStyle(themeColor),
     bgFaded: themeColor === 'taxi' ? 'bg-taxi/10' :
       themeColor === 'rent' ? 'bg-rent/10' :
-        themeColor === 'mix' ? 'bg-mix/10' : 'bg-main/10',
+        themeColor === 'mix' ? 'bg-mix/10' :
+          themeColor === 'event' ? 'bg-event/10' : 'bg-main/10',
     borderFaded: themeColor === 'taxi' ? 'border-taxi/30' :
       themeColor === 'rent' ? 'border-rent/30' :
-        themeColor === 'mix' ? 'border-mix/30' : 'border-main/30',
+        themeColor === 'mix' ? 'border-mix/30' :
+          themeColor === 'event' ? 'border-event/30' : 'border-main/30',
     shadow: themeColor === 'taxi' ? 'shadow-[0_0_30px_-8px] shadow-taxi/40' :
       themeColor === 'rent' ? 'shadow-[0_0_30px_-8px] shadow-rent/40' :
         themeColor === 'mix' ? 'shadow-[0_0_30px_-8px] shadow-mix/40' :
-          'shadow-[0_0_30px_-8px] shadow-main/40',
+          themeColor === 'event' ? 'shadow-[0_0_30px_-8px] shadow-white/20' :
+            'shadow-[0_0_30px_-8px] shadow-main/40',
     gradient: themeColor === 'taxi' ? 'from-taxi/5 via-transparent to-transparent' :
       themeColor === 'rent' ? 'from-rent/5 via-transparent to-transparent' :
         themeColor === 'mix' ? 'from-mix/5 via-transparent to-transparent' :
-          'from-main/5 via-transparent to-transparent',
+          themeColor === 'event' ? 'from-event/5 via-transparent to-transparent' :
+            'from-main/5 via-transparent to-transparent',
   };
 }
 

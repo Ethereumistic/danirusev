@@ -97,9 +97,19 @@ export function CheckoutForm({ profile }: CheckoutFormProps) {
   const [postalCode, setPostalCode] = useState(profile?.postal_code ?? '')
   const [country, setCountry] = useState(profile?.country ?? 'България')
 
-  // Payment Intent state
+  // Checkout logic states
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [isLoadingPayment, setIsLoadingPayment] = useState(false)
+  const [isSubmittingManual, setIsSubmittingManual] = useState(false)
+
+  // Determine if physical address is required
+  const isPhysicalRequired = useMemo(() => {
+    return items.some(item =>
+      item.productType === 'physical' ||
+      item.storedVoucherName?.toLowerCase().includes('физически') ||
+      item.storedVoucherName?.toLowerCase().includes('physical')
+    )
+  }, [items])
 
   // Accordion state - open by default
   const [personalInfoOpen, setPersonalInfoOpen] = useState<string | undefined>('personal-info')
@@ -119,8 +129,13 @@ export function CheckoutForm({ profile }: CheckoutFormProps) {
   // Create Payment Intent when ready to pay
   const handleCreatePaymentIntent = async () => {
     // Validate personal info
-    if (!fullName || !email || !phoneNumber || !address || !city || !postalCode || !country) {
-      toast.error('Моля, попълнете всички полета')
+    if (!fullName || !email || !phoneNumber) {
+      toast.error('Моля, попълнете основните данни')
+      return
+    }
+
+    if (isPhysicalRequired && (!address || !city || !postalCode || !country)) {
+      toast.error('Моля, попълнете адресните данни за доставка')
       return
     }
 
@@ -180,6 +195,73 @@ export function CheckoutForm({ profile }: CheckoutFormProps) {
       toast.error(error instanceof Error ? error.message : 'Грешка при създаване на плащане')
     } finally {
       setIsLoadingPayment(false)
+    }
+  }
+
+  // Handle Manual Checkout for 0 BGN orders
+  const handleManualCheckout = async () => {
+    if (!fullName || !email || !phoneNumber) {
+      toast.error('Моля, попълнете основните данни')
+      return
+    }
+
+    if (isPhysicalRequired && (!address || !city || !postalCode || !country)) {
+      toast.error('Моля, попълнете адресните данни за доставка')
+      return
+    }
+
+    setIsSubmittingManual(true)
+
+    try {
+      const response = await fetch('/api/create-manual-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cartItems: items.map(item => ({
+            id: item.id,
+            productType: item.productType,
+            title: item.title,
+            price: item.price,
+            quantity: item.quantity,
+            imageUrl: item.imageUrl,
+            selectedVariant: item.selectedVariant,
+            experienceSlug: item.experienceSlug,
+            selectedLocation: item.selectedLocation,
+            selectedVoucher: item.selectedVoucher,
+            voucherName: item.voucherName,
+            additionalItems: item.additionalItems,
+            storedAddons: item.storedAddons,
+            storedLocationName: item.storedLocationName,
+            storedVoucherName: item.storedVoucherName,
+            storedLocationUrl: item.storedLocationUrl,
+            selectedDate: item.selectedDate,
+            storedSelectedDate: item.storedSelectedDate,
+          })),
+          personalInfo: {
+            fullName,
+            email,
+            phoneNumber,
+            address,
+            city,
+            postalCode,
+            country,
+          },
+        }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to create order')
+      }
+
+      const data = await response.json()
+      toast.success('Вашата заявка беше изпратена успешно!')
+      clearCart()
+      router.push(`/order-confirmation?order_id=${data.orderId}`)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Грешка при изпращане на заявката')
+    } finally {
+      setIsSubmittingManual(false)
     }
   }
 
@@ -466,48 +548,56 @@ export function CheckoutForm({ profile }: CheckoutFormProps) {
                         className="bg-slate-950 border-slate-700 text-white focus:border-main"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="address" className="text-slate-300 font-bold">Адрес</Label>
-                      <Input
-                        id="address"
-                        value={address}
-                        onChange={(e) => setAddress(e.target.value)}
-                        required
-                        className="bg-slate-950 border-slate-700 text-white focus:border-main"
-                      />
-                    </div>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="city" className="text-slate-300 font-bold">Град</Label>
-                        <Input
-                          id="city"
-                          value={city}
-                          onChange={(e) => setCity(e.target.value)}
-                          required
-                          className="bg-slate-950 border-slate-700 text-white focus:border-main"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="postalCode" className="text-slate-300 font-bold">Пощенски код</Label>
-                        <Input
-                          id="postalCode"
-                          value={postalCode}
-                          onChange={(e) => setPostalCode(e.target.value)}
-                          required
-                          className="bg-slate-950 border-slate-700 text-white focus:border-main"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="country" className="text-slate-300 font-bold">Държава</Label>
-                        <Input
-                          id="country"
-                          value={country}
-                          onChange={(e) => setCountry(e.target.value)}
-                          required
-                          className="bg-slate-950 border-slate-700 text-white focus:border-main"
-                        />
-                      </div>
-                    </div>
+                    {isPhysicalRequired && (
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor="address" className="text-slate-300 font-bold">Адрес</Label>
+                          <Input
+                            id="address"
+                            value={address}
+                            onChange={(e) => setAddress(e.target.value)}
+                            required
+                            className="bg-slate-950 border-slate-700 text-white focus:border-main"
+                          />
+                        </div>
+                        <div className="grid grid-cols-3 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="city" className="text-slate-300 font-bold">Град</Label>
+                            <Input
+                              id="city"
+                              value={city}
+                              onChange={(e) => setCity(e.target.value)}
+                              required
+                              className="bg-slate-950 border-slate-700 text-white focus:border-main"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="postalCode" className="text-slate-300 font-bold">Пощенски код</Label>
+                            <Input
+                              id="postalCode"
+                              value={postalCode}
+                              onChange={(e) => setPostalCode(e.target.value)}
+                              required
+                              className="bg-slate-950 border-slate-700 text-white focus:border-main"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="country" className="text-slate-300 font-bold">Държава</Label>
+                            <div className="relative">
+                              <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
+                                <img src="https://flagcdn.com/bg.svg" alt="Bulgaria" className="w-5 h-auto rounded-sm" />
+                              </div>
+                              <Input
+                                id="country"
+                                value="България"
+                                disabled
+                                className="bg-slate-900 border-slate-700 text-white pl-12 disabled:opacity-100 disabled:cursor-default"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </CardContent>
                 </AccordionContent>
               </Card>
@@ -521,21 +611,31 @@ export function CheckoutForm({ profile }: CheckoutFormProps) {
               <p className="text-sm text-slate-400">Сигурно плащане чрез Stripe</p>
             </CardHeader>
             <CardContent>
-              {!clientSecret ? (
+              {subtotal > 0 ? (
+                !clientSecret ? (
+                  <Button
+                    onClick={handleCreatePaymentIntent}
+                    disabled={isLoadingPayment}
+                    className="w-full h-12 bg-main text-black font-black uppercase tracking-wider hover:bg-main/90 transition-all hover:scale-[1.02]"
+                  >
+                    {isLoadingPayment ? 'Подготовка...' : 'Продължи към плащане →'}
+                  </Button>
+                ) : (
+                  <Elements stripe={stripePromise} options={{ clientSecret }}>
+                    <PaymentForm
+                      personalInfo={{ fullName, email, phoneNumber, address, city, postalCode, country }}
+                      onSuccess={clearCart}
+                    />
+                  </Elements>
+                )
+              ) : (
                 <Button
-                  onClick={handleCreatePaymentIntent}
-                  disabled={isLoadingPayment}
+                  onClick={handleManualCheckout}
+                  disabled={isSubmittingManual}
                   className="w-full h-12 bg-main text-black font-black uppercase tracking-wider hover:bg-main/90 transition-all hover:scale-[1.02]"
                 >
-                  {isLoadingPayment ? 'Подготовка...' : 'Продължи към плащане →'}
+                  {isSubmittingManual ? 'Изпращане...' : 'Потвърди Заявка →'}
                 </Button>
-              ) : (
-                <Elements stripe={stripePromise} options={{ clientSecret }}>
-                  <PaymentForm
-                    personalInfo={{ fullName, email, phoneNumber, address, city, postalCode, country }}
-                    onSuccess={clearCart}
-                  />
-                </Elements>
               )}
             </CardContent>
           </Card>

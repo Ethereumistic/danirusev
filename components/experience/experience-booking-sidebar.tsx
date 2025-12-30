@@ -24,14 +24,18 @@ export function ExperienceBookingSidebar({ experience }: ExperienceBookingSideba
     const selections = driftSelections[experience.id] || { additionalItems: [], selectedLocation: null, selectedDate: null }
 
     // Calculate total price
-    const basePrice = experience.price
+    const basePrice = experience.price || 0
+    const hasPrice = typeof experience.price === 'number' && experience.price > 0
+
     const additionalPrice = experience.additionalItems
         ?.filter(item => {
             const itemId = item.id || item.name.toLowerCase().replace(/\s+/g, '-')
             return selections.additionalItems.includes(itemId)
         })
         .reduce((sum, item) => sum + (item.price || 0), 0) || 0
-    const totalPrice = basePrice + additionalPrice
+
+    // Only calculate total if base price exists
+    const totalPrice = hasPrice ? basePrice + additionalPrice : 0
 
     // Get selected location details
     const selectedLocationItem = experience.additionalItems?.find(item => {
@@ -151,12 +155,18 @@ export function ExperienceBookingSidebar({ experience }: ExperienceBookingSideba
                     <div className="flex items-center justify-between">
                         <div className="flex flex-col">
                             <span className="text-sm text-slate-500">Базова цена</span>
-                            <span className="text-2xl font-black text-white tracking-tighter">
-                                {experience.price}
-                                <span className={`text-sm font-bold ml-1 ${theme.text}`}>
-                                    BGN
+                            {hasPrice ? (
+                                <span className="text-2xl font-black text-white tracking-tighter">
+                                    {experience.price}
+                                    <span className={`text-sm font-bold ml-1 ${theme.text}`}>
+                                        BGN
+                                    </span>
                                 </span>
-                            </span>
+                            ) : (
+                                <span className={`text-xl font-black uppercase tracking-tight ${theme.text}`}>
+                                    ПО ДОГОВАРЯНЕ
+                                </span>
+                            )}
                         </div>
                         <div className="bg-slate-800 px-3 py-1 rounded text-xs font-medium text-slate-300">
                             {experience.duration || '60 мин'}
@@ -224,19 +234,23 @@ export function ExperienceBookingSidebar({ experience }: ExperienceBookingSideba
                         </>
                     )}
 
-                    {/* Total Price */}
-                    <Separator className="bg-slate-800" />
-                    <div className="flex items-center justify-between">
-                        <span className="text-lg font-bold text-white">Обща цена</span>
-                        <span className="text-3xl font-black text-white tracking-tighter">
-                            {totalPrice}
-                            <span className={`text-lg font-bold ml-1 ${theme.text}`}>
-                                BGN
-                            </span>
-                        </span>
-                    </div>
+                    {/* Total Price - Only show if has base price */}
+                    {hasPrice && (
+                        <>
+                            <Separator className="bg-slate-800" />
+                            <div className="flex items-center justify-between">
+                                <span className="text-lg font-bold text-white">Обща цена</span>
+                                <span className="text-3xl font-black text-white tracking-tighter">
+                                    {totalPrice}
+                                    <span className={`text-lg font-bold ml-1 ${theme.text}`}>
+                                        BGN
+                                    </span>
+                                </span>
+                            </div>
+                        </>
+                    )}
 
-                    {/* Add to Cart Button */}
+                    {/* Add to Cart Button or Contact Button */}
                     <Button
                         onClick={handleAddToCart}
                         className={`w-full h-14 text-lg font-black uppercase tracking-wider transition-all hover:scale-[1.02] ${theme.bg} ${theme.hover} text-black`}

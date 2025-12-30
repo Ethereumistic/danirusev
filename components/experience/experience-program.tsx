@@ -35,7 +35,13 @@ export function ExperienceProgram({
 
                         <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
                             <div className="flex items-center gap-2 bg-slate-800/50 px-3 py-1 rounded-full w-fit border border-slate-700">
-                                <Clock className={`w-3 h-3 ${theme.text}`} />
+                                {(() => {
+                                    // Dynamic icon rendering
+                                    // @ts-ignore - icon exists in schema but types need regeneration
+                                    const iconName = (item as any).icon
+                                    const IconComponent = iconName ? getIconByName(iconName) : Clock
+                                    return <IconComponent className={`w-3 h-3 ${theme.text}`} />
+                                })()}
                                 <span className="text-xs font-mono text-white font-bold">{item.time}</span>
                             </div>
                             <h4 className="text-lg font-bold text-white">{item.activity}</h4>

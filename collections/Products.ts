@@ -95,10 +95,10 @@ export const Products: CollectionConfig = {
     {
       name: 'price',
       type: 'number',
-      required: true,
+      required: false,
       min: 0,
       admin: {
-        description: 'Base price of the product',
+        description: 'Base price of the product (optional for events)',
       },
     },
     {
@@ -466,9 +466,9 @@ export const Products: CollectionConfig = {
             },
             {
               name: 'tiresBurned',
-              type: 'number',
+              type: 'text',
               admin: {
-                description: 'Approximate tires burned per session',
+                description: 'Tires burned (e.g., 4, 8, or ∞)',
               },
             },
           ],
@@ -481,14 +481,9 @@ export const Products: CollectionConfig = {
           fields: [
             {
               name: 'iconName',
-              type: 'select',
-              options: [
-                { label: 'Car Taxi Front', value: 'CarTaxiFront' },
-                { label: 'Car', value: 'Car' },
-                { label: 'Gauge', value: 'Gauge' },
-              ],
+              type: 'text',
               admin: {
-                description: 'Lucide icon name to display',
+                description: 'Lucide icon name to display (e.g. CarTaxiFront, Car, Gauge, Calendar, PartyPopper)',
               },
             },
             {
@@ -498,6 +493,7 @@ export const Products: CollectionConfig = {
                 { label: 'Taxi', value: 'taxi' },
                 { label: 'Rent', value: 'rent' },
                 { label: 'Mix', value: 'mix' },
+                { label: 'Event', value: 'event' },
                 { label: 'Main', value: 'main' },
               ],
               defaultValue: 'main',
@@ -511,6 +507,7 @@ export const Products: CollectionConfig = {
               options: [
                 { label: 'Taxi Checker', value: 'taxi-checker' },
                 { label: 'Tyre Pattern', value: 'tyre-pattern' },
+                { label: 'Event Pattern', value: 'event' },
                 { label: 'None', value: 'none' },
               ],
               defaultValue: 'none',
@@ -532,6 +529,13 @@ export const Products: CollectionConfig = {
               required: true,
               admin: {
                 description: 'e.g., "00:00"',
+              },
+            },
+            {
+              name: 'icon',
+              type: 'text',
+              admin: {
+                description: 'Optional: Lucide icon name (e.g. Clock, Flag, FlagTriangleRight)',
               },
             },
             {
@@ -631,6 +635,38 @@ export const Products: CollectionConfig = {
               },
             },
           ],
+        },
+      ],
+    },
+    // Tab Names Customization
+    {
+      type: 'group',
+      name: 'tabNames',
+      label: 'Tab Names Customization',
+      admin: {
+        description: 'Rename the tabs on the experience page (optional)',
+      },
+      fields: [
+        {
+          name: 'program',
+          type: 'text',
+          admin: {
+            description: 'Custom name for "Program" tab (e.g. "Agenda")',
+          },
+        },
+        {
+          name: 'included',
+          type: 'text',
+          admin: {
+            description: 'Custom name for "Included" tab (e.g. "Conditions")',
+          },
+        },
+        {
+          name: 'additional',
+          type: 'text',
+          admin: {
+            description: 'Custom name for "Additional Items" tab (e.g. "Extras")',
+          },
         },
       ],
     },

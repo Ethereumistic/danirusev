@@ -16,6 +16,9 @@ interface ExperienceScrollableTabsProps {
     additionalItems: AdditionalItem[]
     experienceId: string
     themeColor?: ThemeColor
+    customLabelProgram?: string | null
+    customLabelIncluded?: string | null
+    customLabelAdditional?: string | null
 }
 
 export function ExperienceScrollableTabs({
@@ -25,7 +28,10 @@ export function ExperienceScrollableTabs({
     notIncluded,
     additionalItems,
     experienceId,
-    themeColor = 'main'
+    themeColor = 'main',
+    customLabelProgram,
+    customLabelIncluded,
+    customLabelAdditional
 }: ExperienceScrollableTabsProps) {
     const theme = getThemeClasses(themeColor)
     const [activeTab, setActiveTab] = React.useState('program')
@@ -75,9 +81,9 @@ export function ExperienceScrollableTabs({
     }
 
     const tabs = [
-        { id: 'program', label: 'Програма' },
-        { id: 'included', label: 'Условия' },
-        { id: 'additional', label: 'Допълнения' }
+        { id: 'program', label: customLabelProgram || 'Програма' },
+        { id: 'included', label: customLabelIncluded || 'Условия' },
+        { id: 'additional', label: customLabelAdditional || 'Допълнения' }
     ]
 
     return (
@@ -108,7 +114,7 @@ export function ExperienceScrollableTabs({
                 <div id="program" ref={programRef} className="scroll-mt-40">
                     <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                         <span className={`w-2 h-8 rounded-full ${theme.bg}`}></span>
-                        Програма
+                        {customLabelProgram || 'Програма'}
                     </h3>
                     <ExperienceProgram
                         program={program || []}
@@ -121,7 +127,7 @@ export function ExperienceScrollableTabs({
                 <div id="included" ref={includedRef} className="scroll-mt-40 border-t border-slate-800 pt-8">
                     <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                         <span className={`w-2 h-8 rounded-full ${theme.bg}`}></span>
-                        Какво е включено
+                        {customLabelIncluded || 'Какво е включено'}
                     </h3>
                     <ExperienceIncluded
                         included={included || []}
@@ -134,7 +140,7 @@ export function ExperienceScrollableTabs({
                 <div id="additional" ref={additionalRef} className="scroll-mt-40 border-t border-slate-800 pt-8">
                     <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                         <span className={`w-2 h-8 rounded-full ${theme.bg}`}></span>
-                        Допълнителни опции
+                        {customLabelAdditional || 'Допълнителни опции'}
                     </h3>
                     {additionalItems && additionalItems.length > 0 ? (
                         <ExperienceAdditionalItems

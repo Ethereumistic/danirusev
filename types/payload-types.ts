@@ -99,7 +99,7 @@ export interface ProgramItem {
 export interface TechSpecs {
   carModel?: string
   horsePower?: number
-  tiresBurned?: number
+  tiresBurned?: string
 }
 
 // Visuals for experiences
