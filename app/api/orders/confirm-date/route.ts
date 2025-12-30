@@ -30,35 +30,30 @@ export async function POST(request: NextRequest) {
         // If this is an experience order, generate voucher
         if (orderItem && orderItem.item_type === 'experience' && userId) {
             try {
-                const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
-
                 // Get the date - use provided selectedDate or the one from orderItem
                 const voucherDate = selectedDate || orderItem.selected_date
 
-                const voucherResponse = await fetch(`${baseUrl}/api/vouchers/generate`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        orderItemId: parseInt(orderItemId),
-                        userId: userId,
-                        productSlug: orderItem.product_id,
-                        selectedDate: voucherDate,
-                        addons: orderItem.addons,
-                        voucherRecipientName: orderItem.voucher_recipient_name,
-                        location: orderItem.location
-                    })
+                console.log('[Voucher] Creating voucher via RPC directly...')
+
+                // Call the database function directly instead of fetching our own API
+                const { data: voucherId, error: voucherError } = await supabase.rpc('create_voucher', {
+                    p_order_item_id: parseInt(orderItemId),
+                    p_user_id: userId,
+                    p_product_slug: orderItem.product_id,
+                    p_selected_date: voucherDate,
+                    p_addons: orderItem.addons,
+                    p_voucher_recipient_name: orderItem.voucher_recipient_name,
+                    p_location: orderItem.location
                 })
 
-                if (!voucherResponse.ok) {
-                    const voucherError = await voucherResponse.json()
-                    console.error('Voucher generation failed:', voucherError)
+                if (voucherError) {
+                    console.error('Voucher creation failed:', voucherError)
                     // Don't fail the whole request - voucher can be regenerated
                 } else {
-                    const voucherData = await voucherResponse.json()
-                    console.log('[Voucher] Generated successfully:', voucherData)
+                    console.log('[Voucher] Generated successfully via RPC:', voucherId)
                 }
             } catch (voucherError) {
-                console.error('Error calling voucher generation:', voucherError)
+                console.error('Error in voucher generation logic:', voucherError)
                 // Don't fail the whole request
             }
         }

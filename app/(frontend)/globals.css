@@ -31,9 +31,13 @@
   --color-yellow: var(--yellow);
   --color-neon-blue: var(--neon-blue);
   --color-toxic: var(--toxic);
+
   --color-taxi: var(--taxi);
   --color-rent: var(--rent);
   --color-mix: var(--mix);
+  --color-event: var(--event);
+  --color-course: var(--course);
+
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -72,9 +76,13 @@
   --destructive: oklch(0.577 0.245 27.325);
   --main: oklch(0.741 0.149861 239.5917);
   --alt: oklch(0.4187 0.1028 243.78);
+
   --taxi: oklch(0.9045 0.1526 95.16);
   --rent: oklch(0.741 0.149861 239.5917);
   --mix: oklch(0.9137 0.214 120.48);
+  --event: oklch(0.6453 0.2302 24.39);
+  --course: oklch(0.7527 0.1303 169.95);
+
   --neon-blue: oklch(0.5703 0.2363 261);
   --toxic: oklch(0.5703 0.2363 261);
   --border: oklch(0.922 0 0);
@@ -116,6 +124,8 @@
   --taxi: oklch(0.8442 0.172159 84.9338);
   --rent: oklch(0.741 0.149861 239.5917);
   --mix: oklch(0.9137 0.214 120.48);
+  --event: oklch(0.6453 0.2302 24.39);
+  --course: oklch(0.7527 0.1303 169.95);
   --neon-blue: oklch(0.5703 0.2363 261);
   --toxic: oklch(0.9137 0.214 120.48);
   --border: oklch(1 0 0 / 10%);
