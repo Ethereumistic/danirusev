@@ -46,12 +46,20 @@ export default function VerifyPage() {
                     // Extract voucher ID from URL
                     try {
                         const url = new URL(decodedText)
-                        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
-                        const expectedHost = new URL(siteUrl).host
 
-                        // Validate the QR code is from our domain
-                        if (url.host !== expectedHost) {
-                            setError(`Невалиден QR код - не е от ${expectedHost}`)
+                        // Get current host from window for flexible validation across deployments
+                        const currentHost = window.location.host
+                        // Check multiple fallback env vars to be resilient for the expected host
+                        const siteUrlEnv = process.env.NEXT_PUBLIC_BASE_URL ||
+                            process.env.NEXT_PUBLIC_SITE_URL ||
+                            process.env.NEXT_PUBLIC_SERVER_URL
+                        const expectedHostFromEnv = siteUrlEnv ? new URL(siteUrlEnv).host : null
+
+                        // Validate the QR code is from our domain (either current host OR the configured site URL)
+                        const isAuthorizedHost = url.host === currentHost || (expectedHostFromEnv && url.host === expectedHostFromEnv)
+
+                        if (!isAuthorizedHost) {
+                            setError(`Невалиден QR код - не е от ${currentHost}`)
                             return
                         }
 

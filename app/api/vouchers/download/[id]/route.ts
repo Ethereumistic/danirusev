@@ -67,7 +67,12 @@ export async function GET(request: NextRequest, { params }: DownloadRouteProps) 
         const customFont = await pdfDoc.embedFont(fontBytes)
 
         // Generate QR code with verification URL
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+        // Check multiple fallback env vars to be resilient
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
+            process.env.NEXT_PUBLIC_SITE_URL ||
+            process.env.NEXT_PUBLIC_SERVER_URL ||
+            'http://localhost:3000'
+
         const verifyUrl = `${baseUrl}/dash/verify/${voucherId}`
 
         const qrCodeDataUrl = await QRCode.toDataURL(verifyUrl, {
