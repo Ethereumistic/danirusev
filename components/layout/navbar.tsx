@@ -179,8 +179,11 @@ export function Navbar() {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  className="text-red-600 focus:text-red-600"
-                  onClick={() => signOut()}
+                  className="text-red-600 focus:text-red-600 cursor-pointer"
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    signOut();
+                  }}
                 >
                   <LogOut className="h-4 w-4 text-red-600" />
                   Изход

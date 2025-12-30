@@ -37,15 +37,28 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [userRole, setUserRole] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export function AuthProvider({
+  children,
+  initialUser = null,
+  initialRole = null
+}: {
+  children: React.ReactNode;
+  initialUser?: User | null;
+  initialRole?: string | null;
+}) {
+  const [user, setUser] = useState<User | null>(initialUser);
+  const [userRole, setUserRole] = useState<string | null>(initialRole);
+  const [isLoading, setIsLoading] = useState(!initialUser);
   const router = useRouter();
   const supabase = createClient();
 
   // Zustand store for persisting role across navigations
-  const { userRole: storedRole, setUserRole: setStoredRole, setIsAuthenticated, clearAuth } = useAuthStore();
+  const {
+    userRole: storedRole,
+    setUserRole: setStoredRole,
+    setIsAuthenticated,
+    clearAuth
+  } = useAuthStore();
 
   // Fetch user role - checks public.users (Payload CMS) for admin, defaults to 'customer' for regular users
   const fetchUserRole = async (userEmail: string | undefined) => {
@@ -56,7 +69,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     // First check if we already have the role in store (for quick navigation)
-    if (storedRole) {
+    // But if we have an initialRole from server, that takes priority
+    if (initialRole && !userRole) {
+      setUserRole(initialRole);
+      setStoredRole(initialRole);
+      return;
+    }
+
+    if (storedRole && !userRole) {
       setUserRole(storedRole);
     }
 
@@ -70,15 +90,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         // PGRST116 = "no rows returned" - this is expected for regular customers
-        // They don't exist in public.users (Payload CMS table), only in auth.users
         if (error.code === 'PGRST116') {
-          // User is authenticated but not in Payload CMS users table = regular customer
           const customerRole = 'customer';
           setUserRole(customerRole);
           setStoredRole(customerRole);
           return;
         }
-        // For other errors, log and treat as customer
         console.error('Error fetching user role:', error);
         const customerRole = 'customer';
         setUserRole(customerRole);
@@ -86,13 +103,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // User found in public.users - use their role (likely 'admin')
       const role = data?.role || 'customer';
       setUserRole(role);
       setStoredRole(role);
     } catch (err) {
       console.error('Error fetching user role:', err);
-      // On any error, if user is authenticated, treat them as customer
       const customerRole = 'customer';
       setUserRole(customerRole);
       setStoredRole(customerRole);
@@ -101,11 +116,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const getUser = async () => {
+      // If we already have initialUser from server, we skip the initial getUser call or just sync it
+      if (initialUser) {
+        setIsAuthenticated(true);
+        if (initialRole) {
+          setUserRole(initialRole);
+          setStoredRole(initialRole);
+        } else {
+          await fetchUserRole(initialUser.email);
+        }
+        setIsLoading(false);
+        return;
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
-      setIsAuthenticated(!!user); // Sync auth state to store
+      setIsAuthenticated(!!user);
 
-      // If we have stored role and same user, use it immediately
       if (storedRole && user) {
         setUserRole(storedRole);
       }
@@ -115,31 +142,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setUser(session?.user ?? null);
-      setIsAuthenticated(!!session?.user); // Sync auth state to store
-      if (!session?.user) {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+      setIsAuthenticated(!!currentUser);
+
+      if (!currentUser) {
         clearAuth();
         setUserRole(null);
-      } else {
-        await fetchUserRole(session?.user?.email);
+      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+        await fetchUserRole(currentUser.email);
       }
-      router.refresh();
+
+      // Only refresh if the event is significant to avoid infinite loops
+      if (['SIGNED_IN', 'SIGNED_OUT', 'USER_UPDATED'].includes(event)) {
+        router.refresh();
+      }
     });
+
+    // Listen for storage changes (for cross-tab logout/login sync)
+    const handleStorageChange = (e: StorageEvent) => {
+      // Listen for our own store changes
+      if (e.key === 'auth-storage') {
+        router.refresh();
+      }
+
+      // Listen for Supabase session changes (immediate cross-tab logout)
+      // The key usually starts with 'sb-' and ends with '-auth-token'
+      if (e.key?.includes('-auth-token') && !e.newValue) {
+        // Session was cleared in another tab
+        console.log('Detected session removal in another tab, signing out...');
+        setUser(null);
+        setUserRole(null);
+        clearAuth();
+
+        // Use window.location.href to force a complete reset of the app state
+        // This is the most robust way to ensure all tabs are immediately kicked out
+        window.location.href = '/sign-in';
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
 
     getUser();
 
     return () => {
       subscription.unsubscribe();
+      window.removeEventListener('storage', handleStorageChange);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router, supabase]);
+  }, [router, supabase, initialUser, initialRole]);
 
   const signUp = async (email: string, password: string, name: string) => {
     try {
       const siteUrl = getSiteUrl();
-      console.log('Using site URL for redirect:', siteUrl); // Debug log
-
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -154,19 +210,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
 
-      // Send welcome email using our API route
       await fetch('/api/emails/welcome', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, name }),
       });
 
-      toast.success('Check your email for the confirmation link!');
+      toast.success('Проверете имейла си за връзка за потвърждение!');
     } catch (error) {
       console.error('Sign up error:', error);
-      toast.error('Error signing up');
+      toast.error('Грешка при регистрация');
       throw error;
     }
   };
@@ -181,29 +234,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
 
       toast.success('Вие се вписахте успешно!');
-      router.push('/'); // Redirect to home page
+      // Redirection is handled by the middleware redirecting away from /sign-in
+      // or by the onAuthStateChange listener below.
+      // We use refresh() to update all server components with the new session.
+      router.refresh();
+
+      // Give the session a moment to be persisted and the middleware to catch up
+      setTimeout(() => {
+        if (window.location.pathname === '/sign-in') {
+          window.location.href = '/';
+        }
+      }, 500);
     } catch (error) {
       console.error('Sign in error:', error);
-      toast.error('Error signing in');
+      toast.error('Грешка при влизане');
       throw error;
     }
   };
 
   const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-
-      // Clear the stored role on sign out
-      clearAuth();
+      // 1. Clear client state FIRST
+      setUser(null);
       setUserRole(null);
+      clearAuth();
+
+      // 2. Call server-side sign-out route to clear cookies RELIABLY
+      const response = await fetch('/api/auth/sign-out', { method: 'POST' });
+      if (!response.ok) {
+        console.error('Server-side sign out failed');
+      }
+
+      // 3. Just in case, also call the client-side sign out
+      await supabase.auth.signOut({ scope: 'global' });
 
       toast.success('Излязохте успешно!');
-      router.push('/');
+
+      // 4. Force a hard reload to ensure a fresh server-side state
+      window.location.href = '/';
     } catch (error) {
       console.error('Sign out error:', error);
-      toast.error('Error signing out');
-      throw error;
+      toast.error('Грешка при излизане');
+      setUser(null);
+      setUserRole(null);
+      clearAuth();
+      window.location.href = '/';
     }
   };
 

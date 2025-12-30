@@ -1,24 +1,54 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { createClient } from '@/utils/supabase/server' // Import the async client
 
 export async function middleware(request: NextRequest) {
-  // We are not using the response object directly, so we can remove it for now.
-  // The new createClient handles cookies server-side.
-  const supabase = await createClient()
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  })
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
 
-  // If the user is not logged in and tries to access the account page, redirect them
+  // Refresh session if expired - essential for SSR
+  const { data: { user } } = await supabase.auth.getUser()
+
+  // 1. Redirect authenticated users away from auth pages
+  if (user && (request.nextUrl.pathname.startsWith('/sign-in') || request.nextUrl.pathname.startsWith('/sign-up'))) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/'
+    return NextResponse.redirect(url)
+  }
+
+  // 2. Protect the /account page
   if (!user && request.nextUrl.pathname.startsWith('/account')) {
     const url = request.nextUrl.clone()
     url.pathname = '/sign-in'
     return NextResponse.redirect(url)
   }
 
-  // Protect the /dash route
+  // 3. Protect the /dash route (Admin only)
   if (request.nextUrl.pathname.startsWith('/dash')) {
     if (!user) {
       const url = request.nextUrl.clone()
@@ -34,19 +64,18 @@ export async function middleware(request: NextRequest) {
       .single()
 
     if (error || !adminUser) {
-      // Not an admin, redirect to home page
       const url = request.nextUrl.clone()
       url.pathname = '/'
       return NextResponse.redirect(url)
     }
   }
-  
+
   // Only allow test routes in development
   if (request.nextUrl.pathname.startsWith('/api/test-') && process.env.NODE_ENV === 'production') {
     return new NextResponse('Not Found', { status: 404 });
   }
 
-  return NextResponse.next()
+  return response
 }
 
 export const config = {

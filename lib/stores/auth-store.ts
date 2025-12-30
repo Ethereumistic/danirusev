@@ -26,8 +26,8 @@ export const useAuthStore = create<AuthState>()(
             isAdmin: () => get().userRole === 'admin',
         }),
         {
-            name: 'auth-storage', // Unique name for sessionStorage key
-            storage: createJSONStorage(() => sessionStorage), // Use sessionStorage so it clears on browser close
+            name: 'auth-storage', // Unique name for localStorage key
+            storage: createJSONStorage(() => localStorage), // Use localStorage so it persists across tabs
         }
     )
 )

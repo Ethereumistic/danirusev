@@ -82,18 +82,41 @@ export const metadata: Metadata = {
 };
 
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const { createClient } = await import('@/utils/supabase/server');
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  let role = null;
+  if (user) {
+    const { data } = await supabase
+      .from('users')
+      .select('role')
+      .eq('email', user.email)
+      .single();
+    role = data?.role || 'customer';
+  }
+
+  // Sanitize user object for serialization
+  const sanitizedUser = user ? {
+    id: user.id,
+    email: user.email,
+    user_metadata: user.user_metadata,
+    aud: user.aud,
+    role: user.role,
+  } : null;
+
   return (
     <html lang="bg" className="dark">
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${gagalin.variable} antialiased min-h-screen flex flex-col bg-slate-950`}
       >
         <OrganizationSchema />
-        <AuthProvider>
+        <AuthProvider initialUser={sanitizedUser as any} initialRole={role}>
           <Navbar />
           <main className="flex-grow">
             <Suspense fallback={null}>
