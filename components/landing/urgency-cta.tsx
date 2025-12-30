@@ -9,8 +9,7 @@ export function UrgencyCTA() {
     return (
         <section className="py-24 px-4 relative overflow-hidden bg-slate-950">
             {/* Background Gradients */}
-            <div className="absolute inset-0 bg-gradient-to-r from-main/10 via-transparent to-taxi/10" />
-            <div className="absolute inset-0 bg-[url('/noise.png')] opacity-5" />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-main/10 to-transparent" />
 
             <div className="max-w-5xl mx-auto text-center relative z-10">
                 <motion.div
@@ -36,7 +35,7 @@ export function UrgencyCTA() {
 
                     {/* Description */}
                     <p className="text-xl md:text-2xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
-                        GoPro заснемане от всички ъгли на стойност <span className="text-main font-bold">150 лв</span> - напълно безплатно при резервация тази седмица
+                        GoPro заснемане от всички ъгли на стойност <span className="text-main line-through font-bold">150 лв</span> - напълно безплатно при резервация тази седмица
                     </p>
 
                     {/* Urgency Indicators */}
@@ -56,7 +55,7 @@ export function UrgencyCTA() {
                     <div className="pt-4">
                         <Button
                             size="lg"
-                            className="bg-main hover:bg-emerald-400 text-black font-extrabold uppercase tracking-wider h-16 px-12 text-lg rounded-xl shadow-[0_0_60px_-10px_rgba(16,185,129,0.6)] group transition-all hover:scale-105"
+                            className="bg-main hover:bg-main/90 text-black font-extrabold uppercase tracking-wider h-16 px-12 text-lg rounded-xl shadow-[0_0_60px_-10px_rgba(16,185,129,0.6)] group transition-all hover:scale-105"
                             onClick={() => {
                                 // Scroll to experiences section
                                 document.getElementById('drift-experiences')?.scrollIntoView({

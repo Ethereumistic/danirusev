@@ -6,6 +6,9 @@ import { TestimonialsCarousel } from '@/components/landing/testimonials-carousel
 import { UrgencyCTA } from '@/components/landing/urgency-cta'
 import { WhyChooseUsV2 } from '@/components/experience/why-choose-us-v2'
 import { ExperienceSectionWrapper, ExperienceSectionSkeleton } from '@/components/experience'
+import { PromoBanner } from '@/components/landing/promo-banner'
+import { getPayloadClient } from '@/lib/get-payload'
+import type { PromoBanner as PromoBannerType } from '@/types/payload-types'
 
 export const metadata: Metadata = {
   title: 'Начало',
@@ -24,7 +27,15 @@ export const metadata: Metadata = {
   },
 }
 
-export default function Home() {
+export default async function Home() {
+  // Fetch active promo banners from Payload CMS
+  const payload = await getPayloadClient()
+  const { docs: promoBanners } = await payload.find({
+    collection: 'promo-banners',
+    where: { isActive: { equals: true } },
+    limit: 10,
+  })
+
   return (
     <main className="min-h-screen ">
       {/* Hero with rotating quotes */}
@@ -33,7 +44,6 @@ export default function Home() {
       <WhyChooseUsV2 />
       {/* Show how easy it is to book */}
 
-      {/* auth store problem: logs out user constantly if not admin and also admin because we are checking public.users which is for payload and we dont have any other users there */}
 
       <Suspense fallback={<ExperienceSectionSkeleton />}>
         <ExperienceSectionWrapper linkPrefix="/experience" />
@@ -50,6 +60,11 @@ export default function Home() {
 
       {/* Final push with urgency */}
       <UrgencyCTA />
+
+      {/* CMS-driven promo banners */}
+      {promoBanners.map((banner) => (
+        <PromoBanner key={banner.id} banner={banner as unknown as PromoBannerType} />
+      ))}
     </main>
   )
 }

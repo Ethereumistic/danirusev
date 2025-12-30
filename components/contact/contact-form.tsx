@@ -8,9 +8,9 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { Send } from 'lucide-react'
+import { Send, Loader2, CheckCircle } from 'lucide-react'
 import { toast } from 'sonner'
-import { useAuth } from '../providers/supabase-auth-provider' // Adjust path if needed
+import { useAuth } from '../providers/supabase-auth-provider'
 
 const contactFormSchema = z.object({
   name: z.string().min(1, { message: 'Името е задължително.' }),
@@ -29,7 +29,7 @@ type ContactFormInputs = z.infer<typeof contactFormSchema>
 
 export function ContactForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [result, setResult] = useState<string | null>(null)
+  const [isSuccess, setIsSuccess] = useState(false)
   const { user, isLoading } = useAuth()
 
   const {
@@ -51,6 +51,7 @@ export function ContactForm() {
 
   const onValid: SubmitHandler<ContactFormInputs> = async (data) => {
     setIsSubmitting(true)
+    setIsSuccess(false)
     try {
       const formData = new FormData()
       Object.entries(data).forEach(([key, value]) => {
@@ -66,7 +67,7 @@ export function ContactForm() {
       const result = await response.json()
 
       if (result.success) {
-        setResult('Съобщението Ви е изпратено успешно!')
+        setIsSuccess(true)
         toast.success('Успех!', {
           description: 'Съобщението Ви е изпратено успешно!',
         })
@@ -76,16 +77,16 @@ export function ContactForm() {
         } else {
           reset()
         }
+        // Reset success state after animation
+        setTimeout(() => setIsSuccess(false), 3000)
       } else {
         console.error('Error submitting form:', result)
-        setResult(result.message || 'Възникна грешка при изпращането.')
         toast.error('Грешка', {
           description: result.message || 'Възникна грешка при изпращането.',
         })
       }
     } catch (error) {
       console.error('An error occurred:', error)
-      setResult('Възникна грешка при изпращането.')
       toast.error('Грешка', {
         description: 'Възникна грешка при изпращането.',
       })
@@ -109,78 +110,117 @@ export function ContactForm() {
     if (isSubmitSuccessful && !user) {
       reset()
     } else if (isSubmitSuccessful && user) {
-        setValue('message', '')
+      setValue('message', '')
     }
   }, [isSubmitSuccessful, reset, user, setValue])
 
   return (
-    <form onSubmit={handleSubmit(onValid, onInvalid)} className='space-y-6'>
+    <form onSubmit={handleSubmit(onValid, onInvalid)} className="space-y-6">
+      {/* Honeypot */}
       <input
-        type='text'
-        autoComplete='off'
+        type="text"
+        autoComplete="off"
         tabIndex={-1}
-        className='hidden'
+        className="hidden"
         style={{ display: 'none' }}
         {...register('hiddenspam')}
       />
 
-      <div className='space-y-2'>
-        <Label htmlFor='name'>Име</Label>
+      {/* Name Field */}
+      <div className="space-y-2">
+        <Label
+          htmlFor="name"
+          className="text-slate-300 font-medium text-sm uppercase tracking-wide"
+        >
+          Име
+        </Label>
         <Input
-          id='name'
-          placeholder='Вашето име'
+          id="name"
+          placeholder="Вашето име"
           {...register('name')}
           disabled={isLoading || !!user}
+          className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-main focus:ring-main/20 h-12 rounded-xl disabled:opacity-70 disabled:cursor-not-allowed"
         />
         {errors.name && (
-          <p className='text-sm text-destructive'>{errors.name.message}</p>
+          <p className="text-sm text-red-400 font-medium">{errors.name.message}</p>
         )}
       </div>
-      <div className='space-y-2'>
-        <Label htmlFor='email'>Имейл</Label>
+
+      {/* Email Field */}
+      <div className="space-y-2">
+        <Label
+          htmlFor="email"
+          className="text-slate-300 font-medium text-sm uppercase tracking-wide"
+        >
+          Имейл
+        </Label>
         <Input
-          id='email'
-          type='email'
-          placeholder='danirusev@gmail.com'
+          id="email"
+          type="email"
+          placeholder="example@email.com"
           {...register('email')}
           disabled={isLoading || !!user}
+          className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-main focus:ring-main/20 h-12 rounded-xl disabled:opacity-70 disabled:cursor-not-allowed"
         />
         {errors.email && (
-          <p className='text-sm text-destructive'>{errors.email.message}</p>
+          <p className="text-sm text-red-400 font-medium">{errors.email.message}</p>
         )}
       </div>
-      <div className='space-y-2'>
-        <Label htmlFor='message'>Съобщение</Label>
+
+      {/* Message Field */}
+      <div className="space-y-2">
+        <Label
+          htmlFor="message"
+          className="text-slate-300 font-medium text-sm uppercase tracking-wide"
+        >
+          Съобщение
+        </Label>
         <Textarea
-          id='message'
-          placeholder='Напишете Вашето съобщение тук...'
+          id="message"
+          placeholder="Напишете Вашето съобщение тук..."
           rows={6}
           {...register('message')}
           disabled={isSubmitting}
+          className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-main focus:ring-main/20 rounded-xl resize-none disabled:opacity-70 disabled:cursor-not-allowed"
         />
         {errors.message && (
-          <p className='text-sm text-destructive'>{errors.message.message}</p>
+          <p className="text-sm text-red-400 font-medium">{errors.message.message}</p>
         )}
       </div>
-      <div className='flex justify-center'>
+
+      {/* Submit Button */}
+      <div className="pt-2">
         <Button
-          type='submit'
-          className='w-full sm:w-auto bg-main text-alt hover:bg-main/80'
+          type="submit"
           disabled={isSubmitting}
+          className={`w-full h-14 text-base font-extrabold uppercase tracking-wider rounded-xl transition-all duration-300 ${isSuccess
+            ? 'bg-main hover:bg-main/90 text-black shadow-[0_0_40px_-10px_rgba(16,185,129,0.8)]'
+            : 'bg-main hover:bg-main/90 text-black shadow-[0_0_40px_-10px_rgba(16,185,129,0.6)] hover:scale-[1.02]'
+            } disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100`}
         >
           {isSubmitting ? (
-            'Изпращане...'
+            <span className="flex items-center gap-2">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              Изпращане...
+            </span>
+          ) : isSuccess ? (
+            <span className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5" />
+              Изпратено успешно!
+            </span>
           ) : (
-            <>
-              <Send className='mr-2 h-4 w-4' />
+            <span className="flex items-center gap-2">
+              <Send className="h-5 w-5" />
               Изпрати съобщението
-            </>
+            </span>
           )}
         </Button>
       </div>
-      {result && <p className='mt-4 text-center text-sm'>{result}</p>}
+
+      {/* Privacy note */}
+      <p className="text-xs text-slate-500 text-center pt-2">
+        Изпращайки това съобщение, Вие се съгласявате с нашата политика за поверителност.
+      </p>
     </form>
   )
 }
-
-

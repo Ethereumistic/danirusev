@@ -7,7 +7,8 @@ import {
   Trophy,
   Timer,
   Star,
-  ShieldCheck
+  ShieldCheck,
+  Hourglass
 } from 'lucide-react';
 
 const Hero = () => {
@@ -81,7 +82,7 @@ const Hero = () => {
           className="text-xl md:text-2xl text-slate-300 mb-10 max-w-3xl mx-auto leading-relaxed"
         >
           Професионални дрифт сесии с <span className="text-main font-bold">Дани Русев</span> —
-          твоят път към майсторството на занеса.
+          твоят път към майсторството над волана.
         </motion.p>
 
         {/* CTA Buttons */}
@@ -114,7 +115,7 @@ const Hero = () => {
         >
           {[
             { icon: Trophy, value: "СУПЕР", label: "Доволни Клиенти" },
-            { icon: Timer, value: "МНОГО", label: "Дрифт Сесии" },
+            { icon: Hourglass, value: "+15 г.", label: "Мотор Спорт" },
             { icon: Star, value: "ТОП", label: "Рейтинг" },
             { icon: ShieldCheck, value: "МАКС", label: "Безопасност" },
           ].map((stat, idx) => (

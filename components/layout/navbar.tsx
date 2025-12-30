@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, User, Shield, LayoutDashboard, ScanLine, Package, Settings, LogOut, Ticket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ModeToggle } from '@/components/ui/theme-switch';
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -54,7 +54,7 @@ export function Navbar() {
           {/* Mobile Menu Button */}
           <Button
             variant="ghost"
-            className="mr-2 px-0 text-foreground hover:text-foreground hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 lg:hidden"
+            className="mx-2 px-0 text-foreground hover:text-foreground hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 lg:hidden"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             <Menu className="h-6 w-6" />
@@ -108,9 +108,6 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-x-4">
-          {/* Theme Switch */}
-          <ModeToggle />
-
           {/* Shopping Cart */}
           <CartWidget />
 
@@ -200,12 +197,12 @@ export function Navbar() {
 
       {/* Mobile Navigation */}
       {isMobileMenuOpen && (
-        <div className="border-b bg-background px-4 py-4 lg:hidden">
+        <div className="border-b bg-background px-4 py-4 lg:hidden fixed w-full">
           {navItems.map((item) => (
             <div key={item.href}>
               {item.disabled ? (
                 <span
-                  className="py-2 text-muted-foreground font-medium flex items-center cursor-not-allowed opacity-60 select-none"
+                  className="py-2 pl-4 text-muted-foreground font-medium flex items-center cursor-not-allowed opacity-60 select-none"
                   aria-disabled="true"
                   tabIndex={-1}
                 >
@@ -214,7 +211,7 @@ export function Navbar() {
               ) : (
                 <Link
                   href={item.href}
-                  className={`block py-2 text-foreground font-medium transition-colors hover:text-primary ${pathname === item.href
+                  className={`block pl-4 py-2 text-foreground font-medium transition-colors hover:text-main ${pathname === item.href
                     ? 'text-foreground'
                     : 'text-muted-foreground'
                     }`}

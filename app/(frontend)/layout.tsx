@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/components/ui/theme-provider";
 import { AuthProvider } from '@/components/providers/supabase-auth-provider';
 import { Toaster } from 'sonner';
 import { Navbar } from "@/components/layout/navbar";
@@ -89,28 +88,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="bg" suppressHydrationWarning>
+    <html lang="bg" className="dark">
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${gagalin.variable} antialiased min-h-screen flex flex-col`}
       >
         <OrganizationSchema />
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <AuthProvider>
-            <Navbar />
-            <main className="flex-grow">
-              <Suspense fallback={null}>
-                {children}
-              </Suspense>
-            </main>
-            <Toaster />
-            <Footer />
-          </AuthProvider>
-        </ThemeProvider>
+        <AuthProvider>
+          <Navbar />
+          <main className="flex-grow">
+            <Suspense fallback={null}>
+              {children}
+            </Suspense>
+          </main>
+          <Toaster />
+          <Footer />
+        </AuthProvider>
       </body>
     </html>
   );

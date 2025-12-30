@@ -180,7 +180,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
 
-      toast.success('Signed in successfully!');
+      toast.success('Вие се вписахте успешно!');
       router.push('/'); // Redirect to home page
     } catch (error) {
       console.error('Sign in error:', error);
@@ -198,7 +198,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       clearAuth();
       setUserRole(null);
 
-      toast.success('Signed out successfully!');
+      toast.success('Излязохте успешно!');
       router.push('/');
     } catch (error) {
       console.error('Sign out error:', error);

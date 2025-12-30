@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import '../(frontend)/globals.css' // Reuse the global styles
-import { ThemeProvider } from '@/components/ui/theme-provider'
 import { AuthProvider } from '@/components/providers/supabase-auth-provider'
 import { Toaster } from 'sonner'
 import localFont from 'next/font/local'
@@ -34,25 +33,18 @@ export default function DashLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className="dark">
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${gagalin.variable} antialiased bg-muted/40`}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <AuthProvider>
-            <Navbar />
-            {/* A simple header could go here if needed in the future */}
-            <Suspense fallback={<div className="flex justify-center items-center h-screen">Loading...</div>}>
-              {children}
-            </Suspense>
-            <Toaster richColors />
-          </AuthProvider>
-        </ThemeProvider>
+        <AuthProvider>
+          <Navbar />
+          {/* A simple header could go here if needed in the future */}
+          <Suspense fallback={<div className="flex justify-center items-center h-screen">Loading...</div>}>
+            {children}
+          </Suspense>
+          <Toaster richColors />
+        </AuthProvider>
       </body>
     </html>
   )

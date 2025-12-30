@@ -156,6 +156,42 @@ export interface ExperienceProduct extends Product {
 // Union type for any product
 export type AnyProduct = PhysicalProduct | ExperienceProduct
 
+// PromoBanner types
+export interface TitleSegment {
+  text: string
+  color: 'white' | 'main'
+  id?: string
+}
+
+export interface SubtitleSegment {
+  text: string
+  strikethrough: boolean
+  id?: string
+}
+
+export interface KeyPoint {
+  icon: string
+  text: string
+  id?: string
+}
+
+export interface PromoBanner {
+  id: string
+  badgeIcon: string
+  badgeText: string
+  titleSegments: TitleSegment[]
+  subtitleSegments: SubtitleSegment[]
+  keyPoints?: KeyPoint[]
+  ctaButtonText: string
+  ctaButtonIcon?: string
+  noteText?: string
+  startDate?: string
+  expiryDate?: string
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+}
+
 // Type guards
 export function isPhysicalProduct(product: Product): product is PhysicalProduct {
   return product.productType === 'physical'
