@@ -57,11 +57,53 @@ export function getMediaUrl(url: string | undefined): string {
   return url;
 }
 
+import {
+  CarTaxiFront,
+  Car,
+  Blend,
+  Ticket
+} from 'lucide-react'
+
 /**
  * Drift Experience Theme Color Utilities
  * Centralized functions to get theme-based CSS classes for consistent styling across components
  */
 export type ThemeColor = 'taxi' | 'rent' | 'mix' | 'main';
+
+/**
+ * Maps experience titles to their corresponding theme colors
+ */
+export function getExperienceThemeColor(title: string): ThemeColor {
+  const lowerTitle = title.toLowerCase()
+  if (lowerTitle.includes('такси') || lowerTitle.includes('taxi')) return 'taxi'
+  if (lowerTitle.includes('наеми') || lowerTitle.includes('rent')) return 'rent'
+  if (lowerTitle.includes('микс') || lowerTitle.includes('mix')) return 'mix'
+  return 'main'
+}
+
+/**
+ * Get the appropriate thumbnail image for an experience based on its theme
+ */
+export function getExperienceThumbnail(themeColor: ThemeColor): string {
+  switch (themeColor) {
+    case 'taxi': return 'https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/taxi/0.png'
+    case 'rent': return 'https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/rent/1.png'
+    case 'mix': return 'https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/mix/2.png'
+    default: return 'https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/taxi/0.png'
+  }
+}
+
+/**
+ * Get the appropriate icon for an experience based on its theme
+ */
+export function getExperienceIcon(themeColor: ThemeColor) {
+  switch (themeColor) {
+    case 'taxi': return CarTaxiFront
+    case 'rent': return Car
+    case 'mix': return Blend
+    default: return Ticket
+  }
+}
 
 /**
  * Get border color class based on theme
@@ -108,11 +150,42 @@ export function getBorderStyle(themeColor?: ThemeColor): string {
  * Get all theme-based classes at once
  * Returns an object with text, border, bg color, and border style classes
  */
-export function getDriftThemeClasses(themeColor?: ThemeColor) {
+export function getDriftThemeClasses(themeColor: ThemeColor = 'main') {
   return {
     text: getTextColor(themeColor),
     border: getBorderColor(themeColor),
     bg: getBgColor(themeColor),
     borderStyle: getBorderStyle(themeColor),
+    bgFaded: themeColor === 'taxi' ? 'bg-taxi/10' :
+      themeColor === 'rent' ? 'bg-rent/10' :
+        themeColor === 'mix' ? 'bg-mix/10' : 'bg-main/10',
+    borderFaded: themeColor === 'taxi' ? 'border-taxi/30' :
+      themeColor === 'rent' ? 'border-rent/30' :
+        themeColor === 'mix' ? 'border-mix/30' : 'border-main/30',
+    shadow: themeColor === 'taxi' ? 'shadow-[0_0_30px_-8px] shadow-taxi/40' :
+      themeColor === 'rent' ? 'shadow-[0_0_30px_-8px] shadow-rent/40' :
+        themeColor === 'mix' ? 'shadow-[0_0_30px_-8px] shadow-mix/40' :
+          'shadow-[0_0_30px_-8px] shadow-main/40',
+    gradient: themeColor === 'taxi' ? 'from-taxi/5 via-transparent to-transparent' :
+      themeColor === 'rent' ? 'from-rent/5 via-transparent to-transparent' :
+        themeColor === 'mix' ? 'from-mix/5 via-transparent to-transparent' :
+          'from-main/5 via-transparent to-transparent',
   };
+}
+
+/**
+ * Get normalized RGB values for PDF-LIB based on theme color
+ * [r, g, b] where each value is 0.0 to 1.0
+ */
+export function getThemeRGB(themeColor: ThemeColor): [number, number, number] {
+  switch (themeColor) {
+    case 'taxi':
+      return [255 / 255, 193 / 255, 6 / 255]; // rgb(255, 193, 6)
+    case 'mix':
+      return [208 / 255, 246 / 255, 26 / 255]; // rgb(208, 246, 26)
+    case 'rent':
+      return [57 / 255, 182 / 255, 255 / 255]; // rgb(57, 182, 255)
+    default:
+      return [208 / 255, 246 / 255, 26 / 255]; // Default to mix/main neon
+  }
 }

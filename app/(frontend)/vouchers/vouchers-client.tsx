@@ -39,119 +39,127 @@ const productNames: Record<string, string> = {
 }
 
 export function VouchersClient({ vouchers }: VouchersClientProps) {
-    if (vouchers.length === 0) {
-        return (
-            <div className="container mx-auto px-4 py-12">
-                <div className="text-center py-20">
-                    <Ticket className="mx-auto h-16 w-16 text-slate-600 mb-4" />
-                    <h2 className="text-2xl font-bold text-white mb-2">Нямате ваучери</h2>
-                    <p className="text-slate-400 mb-6">
-                        Когато закупите и потвърдите дрифт преживяване, вашите ваучери ще се появят тук.
-                    </p>
-                    <Button asChild className="bg-main hover:bg-main/90 text-black font-bold">
-                        <Link href="/experiences">Разгледай преживяванията</Link>
-                    </Button>
-                </div>
-            </div>
-        )
-    }
-
     return (
-        <div className="container mx-auto px-4 py-12">
-            <div className="mb-8">
-                <h1 className="text-3xl font-black text-white mb-2">Моите Ваучери</h1>
-                <p className="text-slate-400">Управлявайте и преглеждайте вашите дрифт ваучери</p>
-            </div>
+        <div className="bg-slate-950 py-8 px-4">
+            <div className="container mx-auto max-w-4xl">
+                <div className="flex items-center gap-3 mb-8">
+                    <div className="p-3 bg-main/10 rounded-xl">
+                        <Ticket className="h-8 w-8 text-main" />
+                    </div>
+                    <div>
+                        <h1 className="text-3xl font-black text-white uppercase">Моите Ваучери</h1>
+                        <p className="text-slate-400 text-sm">Управлявайте и преглеждайте вашите дрифт ваучери</p>
+                    </div>
+                </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {vouchers.map((voucher) => {
-                    const status = statusConfig[voucher.status] || statusConfig['pending']
-                    const StatusIcon = status.icon
-                    const isExpired = new Date(voucher.expiry_date) < new Date()
-                    const displayStatus = isExpired ? 'expired' : voucher.status
-                    const finalStatus = statusConfig[displayStatus] || statusConfig['pending']
-                    const FinalIcon = finalStatus.icon
+                {vouchers.length === 0 ? (
+                    <div className="text-center py-8 border-2 border-dashed border-slate-700 rounded-xl bg-slate-900/50">
+                        <Ticket className="h-16 w-16 text-slate-600 mx-auto mb-4" />
+                        <h2 className="text-xl font-bold text-white mb-2">Нямате ваучери</h2>
+                        <p className="text-slate-500 mb-8 max-w-md mx-auto">
+                            Когато закупиш преживяване и <span className="font-bold underline text-slate-400">датата ти бъде потвърдена</span>, твоите ваучери ще се появят тук!
+                        </p>
+                        <div className="flex flex-wrap items-center justify-center gap-4">
+                            <Button asChild className="bg-main hover:bg-main/90 text-black font-bold px-8">
+                                <Link href="/#drift-experiences">Разгледай преживяванията</Link>
+                            </Button>
+                            <Button asChild variant="outline" className="border-slate-700 hover:bg-slate-800 text-white font-bold px-8">
+                                <Link href="/shop">Магазин</Link>
+                            </Button>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {vouchers.map((voucher) => {
+                            const status = statusConfig[voucher.status] || statusConfig['pending']
+                            const StatusIcon = status.icon
+                            const isExpired = new Date(voucher.expiry_date) < new Date()
+                            const displayStatus = isExpired ? 'expired' : voucher.status
+                            const finalStatus = statusConfig[displayStatus] || statusConfig['pending']
+                            const FinalIcon = finalStatus.icon
 
-                    return (
-                        <Card key={voucher.id} className="bg-slate-900 border-slate-800 hover:border-slate-700 transition-all">
-                            <CardHeader className="pb-3">
-                                <div className="flex items-start justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <Ticket className="h-5 w-5 text-main" />
-                                        <CardTitle className="text-lg font-bold text-white">
-                                            {productNames[voucher.product_slug] || voucher.product_slug}
-                                        </CardTitle>
-                                    </div>
-                                    <Badge className={`${finalStatus.bgColor} ${finalStatus.color} border`}>
-                                        <FinalIcon className="h-3 w-3 mr-1" />
-                                        {displayStatus === 'active' ? 'Активен' :
-                                            displayStatus === 'redeemed' ? 'Използван' :
-                                                displayStatus === 'expired' ? 'Изтекъл' : 'Чакащ'}
-                                    </Badge>
-                                </div>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                {/* Date info */}
-                                <div className="space-y-2 text-sm">
-                                    <div className="flex items-center gap-2 text-slate-300">
-                                        <Calendar className="h-4 w-4 text-main" />
-                                        <span>
-                                            {new Date(voucher.selected_date).toLocaleDateString('bg-BG', {
-                                                weekday: 'long',
-                                                day: 'numeric',
-                                                month: 'long',
-                                                year: 'numeric'
-                                            })}
-                                        </span>
-                                    </div>
-                                    {voucher.location && (
-                                        <div className="flex items-center gap-2 text-slate-400">
-                                            <MapPin className="h-4 w-4" />
-                                            <span>{voucher.location}</span>
-                                        </div>
-                                    )}
-                                    <div className="flex items-center gap-2 text-slate-500 text-xs">
-                                        <Clock className="h-3 w-3" />
-                                        <span>Валиден до: {new Date(voucher.expiry_date).toLocaleDateString('bg-BG')}</span>
-                                    </div>
-                                </div>
-
-                                {/* Addons */}
-                                {voucher.addons && voucher.addons.length > 0 && (
-                                    <div className="flex flex-wrap gap-1">
-                                        {voucher.addons.map((addon, idx) => (
-                                            <Badge key={idx} className="text-xs bg-slate-800 text-slate-300 border-slate-700">
-                                                {addon}
+                            return (
+                                <Card key={voucher.id} className="bg-slate-900 border-slate-800 hover:border-slate-700 transition-all">
+                                    <CardHeader className="pb-3">
+                                        <div className="flex items-start justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <Ticket className="h-5 w-5 text-main" />
+                                                <CardTitle className="text-lg font-bold text-white">
+                                                    {productNames[voucher.product_slug] || voucher.product_slug}
+                                                </CardTitle>
+                                            </div>
+                                            <Badge className={`${finalStatus.bgColor} ${finalStatus.color} border`}>
+                                                <FinalIcon className="h-3 w-3 mr-1" />
+                                                {displayStatus === 'active' ? 'Активен' :
+                                                    displayStatus === 'redeemed' ? 'Използван' :
+                                                        displayStatus === 'expired' ? 'Изтекъл' : 'Чакащ'}
                                             </Badge>
-                                        ))}
-                                    </div>
-                                )}
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        {/* Date info */}
+                                        <div className="space-y-2 text-sm">
+                                            <div className="flex items-center gap-2 text-slate-300">
+                                                <Calendar className="h-4 w-4 text-main" />
+                                                <span>
+                                                    {new Date(voucher.selected_date).toLocaleDateString('bg-BG', {
+                                                        weekday: 'long',
+                                                        day: 'numeric',
+                                                        month: 'long',
+                                                        year: 'numeric'
+                                                    })}
+                                                </span>
+                                            </div>
+                                            {voucher.location && (
+                                                <div className="flex items-center gap-2 text-slate-400">
+                                                    <MapPin className="h-4 w-4" />
+                                                    <span>{voucher.location}</span>
+                                                </div>
+                                            )}
+                                            <div className="flex items-center gap-2 text-slate-500 text-xs">
+                                                <Clock className="h-3 w-3" />
+                                                <span>Валиден до: {new Date(voucher.expiry_date).toLocaleDateString('bg-BG')}</span>
+                                            </div>
+                                        </div>
 
-                                {/* Recipient name */}
-                                {voucher.voucher_recipient_name && (
-                                    <p className="text-sm text-slate-400">
-                                        Получател: <span className="text-white font-semibold">{voucher.voucher_recipient_name}</span>
-                                    </p>
-                                )}
+                                        {/* Addons */}
+                                        {voucher.addons && voucher.addons.length > 0 && (
+                                            <div className="flex flex-wrap gap-1">
+                                                {voucher.addons.map((addon, idx) => (
+                                                    <Badge key={idx} className="text-xs bg-slate-800 text-slate-300 border-slate-700">
+                                                        {addon}
+                                                    </Badge>
+                                                ))}
+                                            </div>
+                                        )}
 
-                                {/* Action buttons */}
-                                <div className="flex gap-2 pt-2">
-                                    <Button asChild variant="outline" className="flex-1 border-slate-700 hover:bg-slate-800">
-                                        <Link href={`/vouchers/${voucher.id}`}>
-                                            Преглед
-                                        </Link>
-                                    </Button>
-                                    <Button asChild className="flex-1 bg-main hover:bg-main/90 text-black font-bold">
-                                        <a href={`/api/vouchers/download/${voucher.id}`} download>
-                                            <Download className="h-4 w-4 mr-1" />
-                                            PDF
-                                        </a>
-                                    </Button>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    )
-                })}
+                                        {/* Recipient name */}
+                                        {voucher.voucher_recipient_name && (
+                                            <p className="text-sm text-slate-400">
+                                                Получател: <span className="text-white font-semibold">{voucher.voucher_recipient_name}</span>
+                                            </p>
+                                        )}
+
+                                        {/* Action buttons */}
+                                        <div className="flex gap-2 pt-2">
+                                            <Button asChild variant="outline" className="flex-1 border-slate-700 hover:bg-slate-800">
+                                                <Link href={`/vouchers/${voucher.id}`}>
+                                                    Преглед
+                                                </Link>
+                                            </Button>
+                                            <Button asChild className="flex-1 bg-main hover:bg-main/90 text-black font-bold">
+                                                <a href={`/api/vouchers/download/${voucher.id}`} download>
+                                                    <Download className="h-4 w-4 mr-1" />
+                                                    PDF
+                                                </a>
+                                            </Button>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )
+                        })}
+                    </div>
+                )}
             </div>
         </div>
     )

@@ -90,7 +90,7 @@ export default function RootLayout({
   return (
     <html lang="bg" className="dark">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${gagalin.variable} antialiased min-h-screen flex flex-col`}
+        className={`${geistSans.variable} ${geistMono.variable} ${gagalin.variable} antialiased min-h-screen flex flex-col bg-slate-950`}
       >
         <OrganizationSchema />
         <AuthProvider>

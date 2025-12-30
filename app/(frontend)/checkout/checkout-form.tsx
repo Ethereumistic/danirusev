@@ -189,7 +189,7 @@ export function CheckoutForm({ profile }: CheckoutFormProps) {
         <div className="text-center space-y-4">
           <div className="text-xl font-bold text-white">Вашата количка е празна</div>
           <p className="text-slate-400">Добавете преживявания или продукти за да продължите.</p>
-          <Button onClick={() => router.push('/xp')} className="mt-4 bg-main hover:bg-main/90 text-black font-bold">
+          <Button onClick={() => router.push('/#drift-experiences')} className="mt-4 bg-main hover:bg-main/90 text-black font-bold">
             Разгледай Преживявания
           </Button>
         </div>
@@ -369,15 +369,21 @@ export function CheckoutForm({ profile }: CheckoutFormProps) {
                     {/* Voucher Name Input - Only for experiences */}
                     {item.experienceSlug && (
                       <div className="mt-4 pt-4 border-t border-slate-800">
-                        <Label htmlFor={`voucher-name-${item.cartItemId}`} className="text-xs font-bold text-slate-400 uppercase mb-2 block">
-                          Име на ваучера
-                        </Label>
+                        <div className="flex items-center justify-between mb-2">
+                          <Label htmlFor={`voucher-name-${item.cartItemId}`} className="text-xs font-bold text-slate-400 uppercase block">
+                            Име на ваучера
+                          </Label>
+                          <span className="text-[10px] text-slate-500 font-bold">
+                            {item.voucherName?.length || 0}/16
+                          </span>
+                        </div>
                         <Input
                           id={`voucher-name-${item.cartItemId}`}
                           type="text"
+                          maxLength={16}
                           placeholder="Име на получателя (по избор)"
                           value={item.voucherName || ''}
-                          onChange={(e) => updateCartItemVoucherName(item.cartItemId, e.target.value)}
+                          onChange={(e) => updateCartItemVoucherName(item.cartItemId, e.target.value.slice(0, 16))}
                           className="bg-slate-950 border-slate-700 text-white placeholder:text-slate-600 focus:border-main h-10"
                         />
                       </div>

@@ -32,7 +32,7 @@ const cartItemSchema = z.object({
     experienceSlug: z.string().optional().nullable(),
     selectedLocation: z.string().nullable().optional(),
     selectedVoucher: z.string().nullable().optional(),
-    voucherName: z.string().optional().nullable(),
+    voucherName: z.string().max(16).optional().nullable(),
     additionalItems: z.array(z.string()).optional().nullable(),
     // CMS experience stored addon data
     storedAddons: z.array(storedAddonSchema).optional().nullable(),
