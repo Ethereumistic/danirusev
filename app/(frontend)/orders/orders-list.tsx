@@ -143,7 +143,7 @@ export function OrdersList({ orders }: OrdersListProps) {
                 </Badge>
                 <div className="text-right">
                   <p className="text-2xl font-black text-main">{parseFloat(order.total_price).toFixed(2)}</p>
-                  <p className="text-xs font-bold text-slate-500">BGN</p>
+                  <p className="text-xs font-bold text-slate-500">EUR</p>
                 </div>
               </div>
             </button>
@@ -274,20 +274,20 @@ export function OrdersList({ orders }: OrdersListProps) {
 
                                     {/* Booking Confirmation / Status - PUSHED TO BOTTOM */}
                                     <div className="mt-auto pt-6">
-                                      <div className={`p-4 rounded-2xl border-2 ${order.status.toLowerCase() === 'approved' ? 'border-main/30 bg-main/5' : 'border-red-500/30 bg-red-500/5'} max-w-[280px]`}>
+                                      <div className={`p-4 rounded-2xl border-2 ${item.voucher_id ? 'border-main/30 bg-main/5' : 'border-red-500/30 bg-red-500/5'} max-w-[280px]`}>
                                         <div className="flex items-start gap-3">
-                                          <div className={`mt-0.5 p-1.5 rounded-lg ${order.status.toLowerCase() === 'approved' ? 'bg-main/20 text-main' : 'bg-red-500/20 text-red-400'}`}>
-                                            {order.status.toLowerCase() === 'approved' ? <CheckCircle className="h-4 w-4" /> : <Clock className="h-4 w-4" />}
+                                          <div className={`mt-0.5 p-1.5 rounded-lg ${item.voucher_id ? 'bg-main/20 text-main' : 'bg-red-500/20 text-red-400'}`}>
+                                            {item.voucher_id ? <CheckCircle className="h-4 w-4" /> : <Clock className="h-4 w-4" />}
                                           </div>
-                                          <p className={`text-[13px] font-bold leading-relaxed ${order.status.toLowerCase() === 'approved' ? 'text-main' : 'text-red-400'}`}>
-                                            {order.status.toLowerCase() === 'approved'
+                                          <p className={`text-[13px] font-bold leading-relaxed ${item.voucher_id ? 'text-main' : 'text-red-400'}`}>
+                                            {item.voucher_id
                                               ? 'Датата е одобрена!'
                                               : 'Датата все още НЕ е одобрена, очаквайте обаждане в най-скоро време!'}
                                           </p>
                                         </div>
 
-                                        {/* View Voucher Button - ONLY FOR APPROVED */}
-                                        {order.status.toLowerCase() === 'approved' && item.voucher_id && (
+                                        {/* View Voucher Button - ONLY IF VOUCHER EXISTS */}
+                                        {item.voucher_id && (
                                           <div className="mt-4 pt-4 border-t border-main/20">
                                             <Button
                                               asChild
@@ -353,7 +353,7 @@ export function OrdersList({ orders }: OrdersListProps) {
                                           <span className={`text-4xl lg:text-5xl font-black tracking-tighter ${theme.text}`}>
                                             {parseFloat(item.price).toFixed(2)}
                                           </span>
-                                          <span className="text-sm font-black text-slate-500">BGN</span>
+                                          <span className="text-sm font-black text-slate-500">EUR</span>
                                         </div>
                                         <p className="text-xs font-black text-slate-600 uppercase tracking-widest mt-1">
                                           Количество: {item.quantity}
@@ -431,7 +431,7 @@ export function OrdersList({ orders }: OrdersListProps) {
                                 <p className="text-xl font-black text-purple-400">
                                   {parseFloat(item.price).toFixed(2)}
                                 </p>
-                                <p className="text-xs text-slate-500">BGN</p>
+                                <p className="text-xs text-slate-500">EUR</p>
                               </div>
                             </div>
                           </div>

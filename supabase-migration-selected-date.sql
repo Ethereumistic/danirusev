@@ -76,7 +76,7 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.create_order_from_webhook(uuid, numeric, jsonb, jsonb, text) TO service_role;
 
--- 3. Update get_all_orders_with_details to include selected_date
+-- 3. Update get_all_orders_with_details to include selected_date and voucher_id
 DROP FUNCTION IF EXISTS public.get_all_orders_with_details();
 
 CREATE OR REPLACE FUNCTION public.get_all_orders_with_details()
@@ -140,13 +140,15 @@ BEGIN
                     'addons', oi.addons,
                     'voucher_type', oi.voucher_type,
                     'voucher_recipient_name', oi.voucher_recipient_name,
-                    'selected_date', oi.selected_date
+                    'selected_date', oi.selected_date,
+                    'voucher_id', v.id
                 )
             ) FILTER (WHERE oi.id IS NOT NULL),
             '[]'::jsonb
         ) AS "orderItems"
     FROM ecommerce.orders o
     LEFT JOIN ecommerce.order_items oi ON o.id = oi.order_id
+    LEFT JOIN ecommerce.vouchers v ON oi.id = v.order_item_id
     GROUP BY o.id, o.created_at, o.total_price, o.status, o.shipping_address_snapshot, o.stripe_payment_intent_id
     ORDER BY o.created_at DESC;
 END;
@@ -154,7 +156,7 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.get_all_orders_with_details TO authenticated;
 
--- 4. Update get_user_orders_with_items to include selected_date
+-- 4. Update get_user_orders_with_items to include selected_date and voucher_id
 DROP FUNCTION IF EXISTS public.get_user_orders_with_items();
 
 CREATE OR REPLACE FUNCTION public.get_user_orders_with_items()
@@ -193,13 +195,15 @@ BEGIN
                     'addons', oi.addons,
                     'voucher_type', oi.voucher_type,
                     'voucher_recipient_name', oi.voucher_recipient_name,
-                    'selected_date', oi.selected_date
+                    'selected_date', oi.selected_date,
+                    'voucher_id', v.id
                 )
             ) FILTER (WHERE oi.id IS NOT NULL),
             '[]'::jsonb
         ) AS order_items
     FROM ecommerce.orders o
     LEFT JOIN ecommerce.order_items oi ON o.id = oi.order_id
+    LEFT JOIN ecommerce.vouchers v ON oi.id = v.order_item_id
     WHERE o.user_id = auth.uid()
     GROUP BY o.id
     ORDER BY o.created_at DESC;
@@ -228,10 +232,10 @@ BEGIN
         WHERE id = p_order_item_id AND order_id = p_order_id;
     END IF;
 
-    -- Update order status to 'approved'
+    -- Update order status to 'approved' if it was Pending
     UPDATE ecommerce.orders
     SET status = 'approved'
-    WHERE id = p_order_id;
+    WHERE id = p_order_id AND (status = 'Pending' OR status = 'pending');
 
     RETURN true;
 END;

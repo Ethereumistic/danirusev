@@ -60,8 +60,9 @@ export function getMediaUrl(url: string | undefined): string {
 import {
   CarTaxiFront,
   Car,
-  Blend,
-  Ticket
+  Gauge,
+  PartyPopper,
+  Shirt
 } from 'lucide-react'
 
 /**
@@ -102,9 +103,9 @@ export function getExperienceIcon(themeColor: ThemeColor) {
   switch (themeColor) {
     case 'taxi': return CarTaxiFront
     case 'rent': return Car
-    case 'mix': return Blend
-    case 'event': return Ticket
-    default: return Ticket
+    case 'mix': return Gauge
+    case 'event': return PartyPopper
+    default: return Shirt
   }
 }
 

@@ -77,7 +77,7 @@ export function transformExperienceToDrift(product: ExperienceProduct): DriftExp
         title: product.title,
         subtitle: product.subtitle || '',
         price: product.price,
-        currency: 'BGN', // Default currency
+        currency: 'EUR', // Default currency
         duration: product.duration || '60 мин',
         carModel: product.techSpecs?.carModel || 'BMW E46',
         horsePower: product.techSpecs?.horsePower || 400,

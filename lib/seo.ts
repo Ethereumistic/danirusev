@@ -80,11 +80,11 @@ export function generateProductDescription(
   price?: number
 ): string {
   if (description) return description.slice(0, 160)
-  
+
   let desc = `Купете ${productName} - екстремно автомобилно преживяване.`
   if (price) desc += ` Цена: ${price} лв.`
   desc += ' Подарете незабравимо изживяване с адреналин.'
-  
+
   return desc
 }
 
@@ -94,22 +94,22 @@ export function generateKeywords(
 ): string {
   const keywords = [...primary]
   if (secondary) keywords.push(...secondary)
-  
+
   // Remove duplicates and empty strings
   const unique = Array.from(new Set(keywords.filter(Boolean)))
-  
+
   return unique.join(', ')
 }
 
 export function generateCanonicalUrl(path: string): string {
   // Remove trailing slash and ensure leading slash
   const cleanPath = path.replace(/\/+$/, '').replace(/^(?!\/)/, '/')
-  
+
   // For home page
   if (cleanPath === '/' || cleanPath === '') {
     return baseUrl
   }
-  
+
   return `${baseUrl}${cleanPath}`
 }
 
@@ -138,10 +138,10 @@ export function generateProductSchema(product: {
     },
     offers: {
       '@type': 'Offer',
-      priceCurrency: 'BGN',
+      priceCurrency: 'EUR',
       price: product.price,
-      availability: product.inStock !== false 
-        ? 'https://schema.org/InStock' 
+      availability: product.inStock !== false
+        ? 'https://schema.org/InStock'
         : 'https://schema.org/OutOfStock',
     },
     ...(product.rating && {
@@ -171,18 +171,18 @@ export function generateBreadcrumbSchema(items: { name: string; url: string }[])
 export function sanitizeMetaDescription(text: string, maxLength = 160): string {
   // Remove HTML tags
   const stripped = text.replace(/<[^>]*>/g, '')
-  
+
   // Remove extra whitespace
   const cleaned = stripped.replace(/\s+/g, ' ').trim()
-  
+
   // Truncate if needed
   if (cleaned.length <= maxLength) return cleaned
-  
+
   // Find last complete word within limit
   const truncated = cleaned.slice(0, maxLength)
   const lastSpace = truncated.lastIndexOf(' ')
-  
-  return lastSpace > 0 
+
+  return lastSpace > 0
     ? truncated.slice(0, lastSpace) + '...'
     : truncated + '...'
 }

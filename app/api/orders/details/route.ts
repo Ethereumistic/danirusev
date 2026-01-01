@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({
             customerName: (order.shipping_address_snapshot as any).fullName || 'Customer',
             amount: 0, // It's always 0 for manual inquiries in this path
-            currency: 'BGN',
+            currency: 'EUR',
             items: [] // No longer needed for display on confirmation page
         })
 

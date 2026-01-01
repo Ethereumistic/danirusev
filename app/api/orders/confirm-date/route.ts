@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
         // Call RPC function to update date and status
         const { data, error } = await supabase.rpc('confirm_order_date', {
             p_order_id: parseInt(orderId),
-            p_order_item_id: confirmOnly ? null : (orderItemId ? parseInt(orderItemId) : null),
+            p_order_item_id: orderItemId ? parseInt(orderItemId) : null,
             p_selected_date: finalDate
         })
 

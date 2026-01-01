@@ -57,14 +57,14 @@ export function OrdersDataTable<TData extends Order, TValue>({
   return (
     <div>
       <Toaster richColors />
-      <div className="rounded-xl border-2 border-slate-800 bg-slate-900 overflow-hidden">
+      <div className="rounded-2xl border border-slate-800 bg-slate-900/40 backdrop-blur-xl shadow-2xl !overflow-visible [&_[data-slot=table-container]]:!overflow-visible">
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-slate-900/60">
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="border-slate-800 hover:bg-slate-800/50">
+              <TableRow key={headerGroup.id} className="border-slate-800/50 hover:bg-transparent">
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id} className="text-slate-400 font-bold uppercase text-xs">
+                    <TableHead key={header.id} className="text-slate-500 font-black uppercase text-[10px] tracking-[0.2em] py-5 px-6">
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -83,23 +83,27 @@ export function OrdersDataTable<TData extends Order, TValue>({
                 <React.Fragment key={row.id}>
                   <TableRow
                     data-state={row.getIsSelected() && 'selected'}
-                    className={`border-slate-800 hover:bg-slate-800/50 transition-colors cursor-pointer ${row.getIsExpanded() ? 'bg-slate-800/30' : ''}`}
+                    className={`border-slate-800/50 hover:bg-slate-800/30 transition-all cursor-pointer group ${row.getIsExpanded() ? 'bg-slate-800/40' : ''}`}
                     onClick={() => row.toggleExpanded()}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className="py-4">
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
+                      <TableCell key={cell.id} className="py-5 px-6">
+                        <div className="transition-transform group-hover:translate-x-1 duration-300">
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </div>
                       </TableCell>
                     ))}
                   </TableRow>
-                  {/* Expanded Row */}
+                  {/* Expanded Row with slide-down animation feel */}
                   {row.getIsExpanded() && (
-                    <TableRow className="hover:bg-transparent">
-                      <TableCell colSpan={columns.length} className="p-0">
-                        <ExpandedOrderDetails order={row.original} />
+                    <TableRow className="hover:bg-transparent border-none !overflow-visible">
+                      <TableCell colSpan={columns.length} className="p-0 border-none align-top">
+                        <div className="overflow-visible">
+                          <ExpandedOrderDetails order={row.original} />
+                        </div>
                       </TableCell>
                     </TableRow>
                   )}

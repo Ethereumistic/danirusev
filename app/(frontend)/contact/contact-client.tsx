@@ -28,7 +28,7 @@ export default function ContactClient() {
   ];
 
   return (
-    <main className="min-h-screen bg-slate-950 relative overflow-hidden">
+    <main className="min-h-screen bg-slate-950 relative overflow-hidden -mt-20 pt-10">
       {/* Background Gradients */}
       <div className="absolute inset-0 bg-gradient-to-br from-main/5 via-transparent to-taxi/5" />
 
@@ -186,8 +186,8 @@ export default function ContactClient() {
       </section>
 
       {/* Bottom CTA Section */}
-      <section className="relative py-24 px-4">
-        <div className="absolute inset-0 bg-gradient-to-r from-main/10 via-transparent to-taxi/10" />
+      <section className="relative py-32 px-4">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-main/10 to-transparent" />
 
         <motion.div
           initial={{ opacity: 0, y: 30 }}

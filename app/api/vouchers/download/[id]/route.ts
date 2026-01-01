@@ -113,7 +113,7 @@ export async function GET(request: NextRequest, { params }: DownloadRouteProps) 
         // Draw Recipient Name at specific coordinates
         // Design is 1920x1080, but PDF reports 1440x810 (Scale: 0.75)
         const scale = width / 1920;
-        const recipientName = (voucher.voucher_recipient_name || 'GUEST').toUpperCase()
+        const recipientName = (voucher.voucher_recipient_name || '').toUpperCase()
         const fontSize = 104 * scale
         const posX = 680 * scale
         const posY = 146 * scale // Moved 3px lower (149 -> 146)

@@ -106,7 +106,7 @@ export async function createCheckoutSession(
       // }
       return {
         price_data: {
-          currency: 'bgn', // Change currency if needed
+          currency: 'eur', // Change currency if needed
           product_data: {
             name: item.title,
             // You can add more product details here if you want

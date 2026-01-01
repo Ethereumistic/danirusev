@@ -58,7 +58,7 @@ export default async function DashLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${gagalin.variable} antialiased bg-muted/40`}
+        className={`${geistSans.variable} ${geistMono.variable} ${gagalin.variable} antialiased bg-slate-950`}
       >
         <AuthProvider initialUser={sanitizedUser as any} initialRole={role}>
           <Navbar />

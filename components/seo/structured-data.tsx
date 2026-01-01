@@ -47,7 +47,7 @@ export function ProductSchema({ product, url }: ProductSchemaProps) {
     offers: {
       '@type': 'Offer',
       url: url,
-      priceCurrency: 'BGN',
+      priceCurrency: 'EUR',
       price: product.price,
       priceValidUntil: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
       availability: 'https://schema.org/InStock',
@@ -162,7 +162,7 @@ export function ExperienceSchema({ experience, url }: ExperienceSchemaProps) {
     offers: {
       '@type': 'Offer',
       url: url,
-      priceCurrency: 'BGN',
+      priceCurrency: 'EUR',
       price: experience.price,
       availability: 'https://schema.org/InStock',
       validFrom: new Date().toISOString(),
