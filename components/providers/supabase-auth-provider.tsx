@@ -250,7 +250,7 @@ export function AuthProvider({
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -259,19 +259,27 @@ export function AuthProvider({
 
       toast.success('Вие се вписахте успешно!');
 
-      // Update the server components with the new session
+      // Update local state immediately to avoid waiting for onAuthStateChange
+      if (data.user) {
+        setUser(data.user);
+        setIsAuthenticated(true);
+        // We'll let onAuthStateChange handle the role fetch and refresh
+        // but we push the navigation immediately
+      }
+
+      // 1. Try SPA navigation first
+      router.push('/');
       router.refresh();
 
-      // Redirect immediately
-      router.push('/');
-
-      // Complete the login by forcing a reload to ensure all state is synced
-      // We use a small delay to allow the push to register
+      // 2. Fallback: Force a hard redirect after a short delay if we're still on the sign-in page
+      // This ensures the user is DEFINITELY redirected even if SPA navigation fails
       setTimeout(() => {
-        if (window.location.pathname === '/' || window.location.pathname === '/sign-in') {
-          window.location.href = '/';
+        const currentPath = window.location.pathname;
+        if (currentPath.includes('sign-in')) {
+          window.location.replace('/');
         }
-      }, 100);
+      }, 500);
+
     } catch (error) {
       console.error('Sign in error:', error);
       toast.error('Грешка при влизане');

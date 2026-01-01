@@ -1,166 +1,104 @@
 'use client'
 
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Ticket, Phone, Mail } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Ticket, Calendar, MapPin, Clock, CheckCircle, AlertCircle, Download } from 'lucide-react'
 import Link from 'next/link'
-
-type Voucher = {
-    id: string
-    order_item_id: number
-    product_slug: string
-    selected_date: string
-    expiry_date: string
-    addons: string[] | null
-    voucher_recipient_name: string | null
-    location: string | null
-    pdf_url: string | null
-    status: string
-    redeemed_at: string | null
-    created_at: string
-}
+import { VoucherCard, type Voucher } from '@/components/vouchers/voucher-card'
+import { motion } from 'framer-motion'
 
 interface VouchersClientProps {
     vouchers: Voucher[]
 }
 
-const statusConfig: Record<string, { color: string; bgColor: string; icon: React.ComponentType<{ className?: string }> }> = {
-    'active': { color: 'text-green-400', bgColor: 'bg-green-400/10 border-green-400/30', icon: CheckCircle },
-    'pending': { color: 'text-yellow-400', bgColor: 'bg-yellow-400/10 border-yellow-400/30', icon: Clock },
-    'redeemed': { color: 'text-blue-400', bgColor: 'bg-blue-400/10 border-blue-400/30', icon: CheckCircle },
-    'expired': { color: 'text-red-400', bgColor: 'bg-red-400/10 border-red-400/30', icon: AlertCircle },
-}
-
-const productNames: Record<string, string> = {
-    'drift-taxi': 'Drift Taxi',
-    'drift-rent': 'Наеми Дрифтачка',
-    'drift-mix': 'Drift Mix',
-}
-
 export function VouchersClient({ vouchers }: VouchersClientProps) {
     return (
-        <div className="bg-slate-950 py-8 px-4">
-            <div className="container mx-auto max-w-4xl">
-                <div className="flex items-center gap-3 mb-8">
-                    <div className="p-3 bg-main/10 rounded-xl">
-                        <Ticket className="h-8 w-8 text-main" />
-                    </div>
-                    <div>
-                        <h1 className="text-3xl font-black text-white uppercase">Моите Ваучери</h1>
-                        <p className="text-slate-400 text-sm">Управлявайте и преглеждайте вашите дрифт ваучери</p>
+        <div className="bg-slate-950 min-h-screen py-8 px-4">
+            <div className="container mx-auto max-w-5xl">
+                {/* Header Section */}
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+                    <div className="flex items-center gap-5">
+                        <div className="p-4 bg-main/10 rounded-2xl border-2 border-main/20 shadow-[0_0_20px_rgba(255,107,0,0.1)]">
+                            <Ticket className="h-10 w-10 text-main" />
+                        </div>
+                        <div>
+                            <h1 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter">
+                                Моите Ваучери
+                            </h1>
+                            <p className="text-slate-500 font-bold uppercase text-xs tracking-[0.2em] mt-2">
+                                Управлявайте вашите дрифт преживявания
+                            </p>
+                        </div>
                     </div>
                 </div>
 
                 {vouchers.length === 0 ? (
-                    <div className="text-center py-8 border-2 border-dashed border-slate-700 rounded-xl bg-slate-900/50">
-                        <Ticket className="h-16 w-16 text-slate-600 mx-auto mb-4" />
-                        <h2 className="text-xl font-bold text-white mb-2">Нямате ваучери</h2>
-                        <p className="text-slate-500 mb-8 max-w-md mx-auto">
-                            Когато закупиш преживяване и <span className="font-bold underline text-slate-400">датата ти бъде потвърдена</span>, твоите ваучери ще се появят тук!
+                    <div className="text-center py-20 border-2 border-dashed border-slate-800 rounded-[2.5rem] bg-slate-900/30 backdrop-blur-sm">
+                        <div className="relative inline-block mb-6">
+                            <Ticket className="h-20 w-20 text-slate-800 mx-auto" />
+                            <div className="absolute -top-2 -right-2 bg-main w-6 h-6 rounded-full animate-pulse" />
+                        </div>
+                        <h2 className="text-2xl font-black text-white mb-3 uppercase tracking-tight">Нямате налични ваучери</h2>
+                        <p className="text-slate-500 mb-10 max-w-md mx-auto font-medium">
+                            Когато закупите преживяване и датата бъде потвърдена, вашите уникални ваучери ще се генерират тук веднага!
                         </p>
                         <div className="flex flex-wrap items-center justify-center gap-4">
-                            <Button asChild className="bg-main hover:bg-main/90 text-black font-bold px-8">
-                                <Link href="/#drift-experiences">Разгледай преживяванията</Link>
-                            </Button>
-                            <Button asChild variant="outline" className="border-slate-700 hover:bg-slate-800 text-white font-bold px-8">
-                                <Link href="/shop">Магазин</Link>
+                            <Button asChild className="bg-main hover:bg-main/90 text-black font-black px-10 h-14 rounded-xl uppercase text-xs tracking-widest shadow-lg shadow-main/20">
+                                <Link href="/#drift-experiences">Разгледай към преживявания</Link>
                             </Button>
                         </div>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {vouchers.map((voucher) => {
-                            const status = statusConfig[voucher.status] || statusConfig['pending']
-                            const StatusIcon = status.icon
-                            const isExpired = new Date(voucher.expiry_date) < new Date()
-                            const displayStatus = isExpired ? 'expired' : voucher.status
-                            const finalStatus = statusConfig[displayStatus] || statusConfig['pending']
-                            const FinalIcon = finalStatus.icon
-
-                            return (
-                                <Card key={voucher.id} className="bg-slate-900 border-slate-800 hover:border-slate-700 transition-all">
-                                    <CardHeader className="pb-3">
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <Ticket className="h-5 w-5 text-main" />
-                                                <CardTitle className="text-lg font-bold text-white">
-                                                    {productNames[voucher.product_slug] || voucher.product_slug}
-                                                </CardTitle>
-                                            </div>
-                                            <Badge className={`${finalStatus.bgColor} ${finalStatus.color} border`}>
-                                                <FinalIcon className="h-3 w-3 mr-1" />
-                                                {displayStatus === 'active' ? 'Активен' :
-                                                    displayStatus === 'redeemed' ? 'Използван' :
-                                                        displayStatus === 'expired' ? 'Изтекъл' : 'Чакащ'}
-                                            </Badge>
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent className="space-y-4">
-                                        {/* Date info */}
-                                        <div className="space-y-2 text-sm">
-                                            <div className="flex items-center gap-2 text-slate-300">
-                                                <Calendar className="h-4 w-4 text-main" />
-                                                <span>
-                                                    {new Date(voucher.selected_date).toLocaleDateString('bg-BG', {
-                                                        weekday: 'long',
-                                                        day: 'numeric',
-                                                        month: 'long',
-                                                        year: 'numeric'
-                                                    })}
-                                                </span>
-                                            </div>
-                                            {voucher.location && (
-                                                <div className="flex items-center gap-2 text-slate-400">
-                                                    <MapPin className="h-4 w-4" />
-                                                    <span>{voucher.location}</span>
-                                                </div>
-                                            )}
-                                            <div className="flex items-center gap-2 text-slate-500 text-xs">
-                                                <Clock className="h-3 w-3" />
-                                                <span>Валиден до: {new Date(voucher.expiry_date).toLocaleDateString('bg-BG')}</span>
-                                            </div>
-                                        </div>
-
-                                        {/* Addons */}
-                                        {voucher.addons && voucher.addons.length > 0 && (
-                                            <div className="flex flex-wrap gap-1">
-                                                {voucher.addons.map((addon, idx) => (
-                                                    <Badge key={idx} className="text-xs bg-slate-800 text-slate-300 border-slate-700">
-                                                        {addon}
-                                                    </Badge>
-                                                ))}
-                                            </div>
-                                        )}
-
-                                        {/* Recipient name */}
-                                        {voucher.voucher_recipient_name && (
-                                            <p className="text-sm text-slate-400">
-                                                Получател: <span className="text-white font-semibold">{voucher.voucher_recipient_name}</span>
-                                            </p>
-                                        )}
-
-                                        {/* Action buttons */}
-                                        <div className="flex gap-2 pt-2">
-                                            <Button asChild variant="outline" className="flex-1 border-slate-700 hover:bg-slate-800">
-                                                <Link href={`/vouchers/${voucher.id}`}>
-                                                    Преглед
-                                                </Link>
-                                            </Button>
-                                            <Button asChild className="flex-1 bg-main hover:bg-main/90 text-black font-bold">
-                                                <a href={`/api/vouchers/download/${voucher.id}`} download>
-                                                    <Download className="h-4 w-4 mr-1" />
-                                                    PDF
-                                                </a>
-                                            </Button>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            )
-                        })}
+                    <div className="flex flex-col gap-8">
+                        {vouchers.map((voucher) => (
+                            <VoucherCard
+                                key={voucher.id}
+                                voucher={voucher}
+                            />
+                        ))}
                     </div>
                 )}
+
+
             </div>
+            {/* Information Footer */}
+            {vouchers.length > 0 && (
+                <section className="relative w-full py-24 px-4 overflow-hidden mt-8 ">
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-main/5 to-transparent" />
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.8 }}
+                        className="max-w-4xl mx-auto text-center relative z-10"
+                    >
+                        <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter italic mb-6">
+                            Имате въпроси за <span className="text-main">Ваучера</span>?
+                        </h2>
+                        <p className="text-lg text-slate-400 mb-10 max-w-2xl mx-auto font-medium leading-relaxed">
+                            Не чакайте повече. Свържете се с нас днес и ние ще Ви съдействаме с Вашия ваучер или резервация!
+                        </p>
+
+                        {/* Quick contact buttons */}
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+                            <a
+                                href="tel:+359882726020"
+                                className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-main hover:bg-main/90 text-black font-black uppercase tracking-widest h-16 px-10 text-sm rounded-2xl shadow-[0_0_40px_-10px_rgba(255,107,0,0.4)] transition-all hover:scale-105 active:scale-95"
+                            >
+                                <Phone className="w-5 h-5 fill-current" />
+                                Обади се сега
+                            </a>
+                            <a
+                                href="mailto:contact@danirusev.com"
+                                className="w-full sm:w-auto inline-flex items-center justify-center gap-3 border-2 border-main/30 text-main hover:text-white hover:bg-main/10 font-black uppercase tracking-widest h-16 px-10 text-sm rounded-2xl transition-all hover:border-main active:scale-95"
+                            >
+                                <Mail className="w-5 h-5" />
+                                Изпрати имейл
+                            </a>
+                        </div>
+                    </motion.div>
+                </section>
+            )}
         </div>
     )
 }

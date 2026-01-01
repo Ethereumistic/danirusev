@@ -6,9 +6,7 @@ import { TestimonialsCarousel } from '@/components/landing/testimonials-carousel
 import { UrgencyCTA } from '@/components/landing/urgency-cta'
 import { WhyChooseUsV2 } from '@/components/experience/why-choose-us-v2'
 import { ExperienceSectionWrapper, ExperienceSectionSkeleton } from '@/components/experience'
-import { PromoBanner } from '@/components/landing/promo-banner'
-import { getPayloadClient } from '@/lib/get-payload'
-import type { PromoBanner as PromoBannerType } from '@/types/payload-types'
+import { PromoBannersList } from '@/components/landing/promo-banners-list'
 
 export const metadata: Metadata = {
   title: 'Начало',
@@ -27,23 +25,13 @@ export const metadata: Metadata = {
   },
 }
 
-export default async function Home() {
-  // Fetch active promo banners from Payload CMS
-  const payload = await getPayloadClient()
-  const { docs: promoBanners } = await payload.find({
-    collection: 'promo-banners',
-    where: { isActive: { equals: true } },
-    limit: 10,
-  })
-
+export default function Home() {
   return (
     <main className="min-h-screen ">
       {/* Hero with rotating quotes */}
       <Hero />
 
       <WhyChooseUsV2 />
-      {/* Show how easy it is to book */}
-
 
       <Suspense fallback={<ExperienceSectionSkeleton />}>
         <ExperienceSectionWrapper linkPrefix="/experience" />
@@ -51,20 +39,15 @@ export default async function Home() {
 
       <HowItWorks />
 
-      {/* Main drift experiences - the core offering */}
-      {/* Wrapped in Suspense so the rest of the page loads instantly */}
-
-
-      {/* Build trust with social proof */}
       <TestimonialsCarousel />
 
-      {/* Final push with urgency */}
       <UrgencyCTA />
 
-      {/* CMS-driven promo banners */}
-      {promoBanners.map((banner) => (
-        <PromoBanner key={banner.id} banner={banner as unknown as PromoBannerType} />
-      ))}
+      {/* CMS-driven promo banners - wrapped in Suspense to prevent blocking */}
+      <Suspense fallback={null}>
+        <PromoBannersList />
+      </Suspense>
     </main>
   )
 }
+
