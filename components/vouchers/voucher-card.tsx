@@ -100,7 +100,10 @@ export function VoucherCard({ voucher }: VoucherCardProps) {
     }, [voucher.id])
 
     return (
-        <div className={`relative rounded-[2rem] overflow-hidden border-2 ${theme.borderFaded} ${theme.shadow} transition-all w-full`}>
+        <div
+            id={`voucher-${voucher.id}`}
+            className={`relative rounded-[2rem] overflow-hidden border-2 ${theme.borderFaded} ${theme.shadow} transition-all w-full`}
+        >
             {/* Gradient background */}
             <div className={`absolute inset-0 bg-gradient-to-br ${theme.gradient} pointer-events-none`} />
 

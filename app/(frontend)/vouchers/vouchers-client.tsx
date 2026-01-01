@@ -6,11 +6,33 @@ import Link from 'next/link'
 import { VoucherCard, type Voucher } from '@/components/vouchers/voucher-card'
 import { motion } from 'framer-motion'
 
+import { useEffect } from 'react'
+
 interface VouchersClientProps {
     vouchers: Voucher[]
 }
 
 export function VouchersClient({ vouchers }: VouchersClientProps) {
+    useEffect(() => {
+        // Handle smooth scroll to voucher if hash is present
+        const hash = window.location.hash
+        if (hash) {
+            const targetId = hash.replace('#', '')
+            // Small delay to ensure elements are rendered
+            setTimeout(() => {
+                const element = document.getElementById(targetId)
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                    // Optional: Add a brief highlight effect
+                    element.classList.add('ring-4', 'ring-main/20')
+                    setTimeout(() => {
+                        element.classList.remove('ring-4', 'ring-main/20')
+                    }, 2000)
+                }
+            }, 300)
+        }
+    }, [])
+
     return (
         <div className="bg-slate-950 min-h-screen py-8 px-4">
             <div className="container mx-auto max-w-5xl">

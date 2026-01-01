@@ -150,69 +150,20 @@ export function AuthProvider({
       if (!currentUser) {
         clearAuth();
         setUserRole(null);
-      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+      } else if (['SIGNED_IN', 'TOKEN_REFRESHED', 'USER_UPDATED'].includes(event)) {
         await fetchUserRole(currentUser.email);
       }
 
-      // Only refresh if the event is significant to avoid infinite loops
+      // Refresh server components to sync cookies
       if (['SIGNED_IN', 'SIGNED_OUT', 'USER_UPDATED'].includes(event)) {
         router.refresh();
       }
     });
 
-    // Listen for storage changes (for cross-tab logout/login sync)
-    const handleStorageChange = (e: StorageEvent) => {
-      // 1. Listen for Supabase session changes
-      // The key usually starts with 'sb-' and ends with '-auth-token'
-      if (e.key?.includes('-auth-token')) {
-        if (!e.newValue) {
-          // Session was cleared in another tab (LOGOUT)
-          console.log('Detected session removal in another tab, signing out...');
-          setUser(null);
-          setUserRole(null);
-          clearAuth();
-
-          // Force a complete refresh to clear all server-side cookies
-          window.location.reload();
-        } else {
-          // Session was created in another tab (LOGIN)
-          // We could try to parse and set the user, but a refresh is safer to sync everything
-          console.log('Detected session creation in another tab, refreshing...');
-          router.refresh();
-        }
-      }
-
-      // 2. Listen for our own store changes
-      if (e.key === 'auth-storage' && e.newValue) {
-        try {
-          const newValue = JSON.parse(e.newValue);
-          const oldValue = e.oldValue ? JSON.parse(e.oldValue) : null;
-
-          // If authentication state changed in another tab
-          if (newValue?.state?.isAuthenticated !== oldValue?.state?.isAuthenticated) {
-            if (!newValue?.state?.isAuthenticated) {
-              console.log('Detected logout in another tab via store...');
-              setUser(null);
-              setUserRole(null);
-              clearAuth();
-              router.refresh();
-            } else {
-              router.refresh();
-            }
-          }
-        } catch (err) {
-          // Ignore parsing errors
-        }
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-
     getUser();
 
     return () => {
       subscription.unsubscribe();
-      window.removeEventListener('storage', handleStorageChange);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router, supabase, initialUser, initialRole]);
@@ -259,26 +210,22 @@ export function AuthProvider({
 
       toast.success('Вие се вписахте успешно!');
 
-      // Update local state immediately to avoid waiting for onAuthStateChange
+      // Update state
       if (data.user) {
         setUser(data.user);
         setIsAuthenticated(true);
-        // We'll let onAuthStateChange handle the role fetch and refresh
-        // but we push the navigation immediately
       }
 
-      // 1. Try SPA navigation first
+      // Redirect and Refresh
       router.push('/');
       router.refresh();
 
-      // 2. Fallback: Force a hard redirect after a short delay if we're still on the sign-in page
-      // This ensures the user is DEFINITELY redirected even if SPA navigation fails
+      // Reliable hard redirect if SPA fails
       setTimeout(() => {
-        const currentPath = window.location.pathname;
-        if (currentPath.includes('sign-in')) {
-          window.location.replace('/');
+        if (window.location.pathname.includes('sign-in')) {
+          window.location.href = '/';
         }
-      }, 500);
+      }, 800);
 
     } catch (error) {
       console.error('Sign in error:', error);
@@ -289,30 +236,25 @@ export function AuthProvider({
 
   const signOut = async () => {
     try {
-      // 1. Clear client state FIRST
+      // 1. Clear local state and start navigation immediately for better UX
       setUser(null);
       setUserRole(null);
       clearAuth();
+      router.push('/');
 
-      // 2. Call server-side sign-out route to clear cookies RELIABLY
-      const response = await fetch('/api/auth/sign-out', { method: 'POST' });
-      if (!response.ok) {
-        console.error('Server-side sign out failed');
-      }
+      // 2. Clear cookies server-side
+      await fetch('/api/auth/sign-out', { method: 'POST' });
 
-      // 3. Just in case, also call the client-side sign out
-      await supabase.auth.signOut({ scope: 'global' });
+      // 3. Complete client-side sign out
+      await supabase.auth.signOut();
 
       toast.success('Излязохте успешно!');
 
-      // 4. Force a hard reload to ensure a fresh server-side state
+      // 4. Final hard redirect to ensure everything is flushed and we are at /
       window.location.href = '/';
     } catch (error) {
       console.error('Sign out error:', error);
       toast.error('Грешка при излизане');
-      setUser(null);
-      setUserRole(null);
-      clearAuth();
       window.location.href = '/';
     }
   };

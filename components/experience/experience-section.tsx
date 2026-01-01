@@ -31,7 +31,7 @@ export function ExperienceSection({
     const reversedExperiences = [...experiences].reverse()
 
     return (
-        <section id="drift-experiences" className="py-24 px-4 scroll-mt-20 bg-slate-950 relative overflow-hidden">
+        <section id="drift-experiences" className="py-24 px-4 scroll-mt-6 bg-slate-950 relative overflow-hidden">
             {/* Background Gradient similar to testimonials */}
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-main/5 to-transparent" />
 

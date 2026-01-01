@@ -293,7 +293,7 @@ export function OrdersList({ orders }: OrdersListProps) {
                                               asChild
                                               className="w-full bg-main hover:bg-main/80 text-slate-950 font-black uppercase text-[11px] tracking-widest gap-2 shadow-lg shadow-main/20"
                                             >
-                                              <Link href={`/vouchers/${item.voucher_id}`}>
+                                              <Link href={`/vouchers#voucher-${item.voucher_id}`}>
                                                 <Ticket className="h-4 w-4" />
                                                 Виж Ваучер
                                               </Link>

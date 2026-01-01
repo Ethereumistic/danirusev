@@ -19,9 +19,7 @@ export async function middleware(request: NextRequest) {
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
           response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
+            request,
           })
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options)
@@ -31,29 +29,25 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // Refresh session if expired - essential for SSR
+  // This will also refresh the session if it's expired
   const { data: { user } } = await supabase.auth.getUser()
 
+  const { pathname } = request.nextUrl
+
   // 1. Redirect authenticated users away from auth pages
-  if (user && (request.nextUrl.pathname.startsWith('/sign-in') || request.nextUrl.pathname.startsWith('/sign-up'))) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/'
-    return NextResponse.redirect(url)
+  if (user && (pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up') || pathname.startsWith('/forgot-password'))) {
+    return NextResponse.redirect(new URL('/', request.url))
   }
 
   // 2. Protect the /account page
-  if (!user && request.nextUrl.pathname.startsWith('/account')) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/sign-in'
-    return NextResponse.redirect(url)
+  if (!user && pathname.startsWith('/account')) {
+    return NextResponse.redirect(new URL('/sign-in', request.url))
   }
 
   // 3. Protect the /dash route (Admin only)
-  if (request.nextUrl.pathname.startsWith('/dash')) {
+  if (pathname.startsWith('/dash')) {
     if (!user) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/sign-in'
-      return NextResponse.redirect(url)
+      return NextResponse.redirect(new URL('/sign-in', request.url))
     }
 
     // Check if the user is the Payload admin
@@ -64,14 +58,12 @@ export async function middleware(request: NextRequest) {
       .single()
 
     if (error || !adminUser) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/'
-      return NextResponse.redirect(url)
+      return NextResponse.redirect(new URL('/', request.url))
     }
   }
 
   // Only allow test routes in development
-  if (request.nextUrl.pathname.startsWith('/api/test-') && process.env.NODE_ENV === 'production') {
+  if (pathname.startsWith('/api/test-') && process.env.NODE_ENV === 'production') {
     return new NextResponse('Not Found', { status: 404 });
   }
 
