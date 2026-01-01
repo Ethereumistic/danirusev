@@ -91,7 +91,7 @@ export function getExperienceThumbnail(themeColor: ThemeColor): string {
     case 'taxi': return 'https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/taxi/0.png'
     case 'rent': return 'https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/rent/1.png'
     case 'mix': return 'https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/mix/2.png'
-    case 'event': return 'https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/taxi/0.png' // Fallback for event
+    case 'event': return 'https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/event/1.png' // Fallback for event
     default: return 'https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/taxi/0.png'
   }
 }
