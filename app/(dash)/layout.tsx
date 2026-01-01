@@ -27,17 +27,40 @@ export const metadata: Metadata = {
   description: 'Order management dashboard',
 }
 
-export default function DashLayout({
+export default async function DashLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const { createClient } = await import('@/utils/supabase/server');
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  let role = null;
+  if (user) {
+    const { data } = await supabase
+      .from('users')
+      .select('role')
+      .eq('email', user.email)
+      .single();
+    role = data?.role || 'customer';
+  }
+
+  // Sanitize user object for serialization
+  const sanitizedUser = user ? {
+    id: user.id,
+    email: user.email,
+    user_metadata: user.user_metadata,
+    aud: user.aud,
+    role: user.role,
+  } : null;
+
   return (
     <html lang="en" className="dark">
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${gagalin.variable} antialiased bg-muted/40`}
       >
-        <AuthProvider>
+        <AuthProvider initialUser={sanitizedUser as any} initialRole={role}>
           <Navbar />
           {/* A simple header could go here if needed in the future */}
           <Suspense fallback={<div className="flex justify-center items-center h-screen">Loading...</div>}>

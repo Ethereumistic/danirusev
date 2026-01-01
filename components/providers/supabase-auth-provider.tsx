@@ -162,23 +162,47 @@ export function AuthProvider({
 
     // Listen for storage changes (for cross-tab logout/login sync)
     const handleStorageChange = (e: StorageEvent) => {
-      // Listen for our own store changes
-      if (e.key === 'auth-storage') {
-        router.refresh();
+      // 1. Listen for Supabase session changes
+      // The key usually starts with 'sb-' and ends with '-auth-token'
+      if (e.key?.includes('-auth-token')) {
+        if (!e.newValue) {
+          // Session was cleared in another tab (LOGOUT)
+          console.log('Detected session removal in another tab, signing out...');
+          setUser(null);
+          setUserRole(null);
+          clearAuth();
+
+          // Force a complete refresh to clear all server-side cookies
+          window.location.reload();
+        } else {
+          // Session was created in another tab (LOGIN)
+          // We could try to parse and set the user, but a refresh is safer to sync everything
+          console.log('Detected session creation in another tab, refreshing...');
+          router.refresh();
+        }
       }
 
-      // Listen for Supabase session changes (immediate cross-tab logout)
-      // The key usually starts with 'sb-' and ends with '-auth-token'
-      if (e.key?.includes('-auth-token') && !e.newValue) {
-        // Session was cleared in another tab
-        console.log('Detected session removal in another tab, signing out...');
-        setUser(null);
-        setUserRole(null);
-        clearAuth();
+      // 2. Listen for our own store changes
+      if (e.key === 'auth-storage' && e.newValue) {
+        try {
+          const newValue = JSON.parse(e.newValue);
+          const oldValue = e.oldValue ? JSON.parse(e.oldValue) : null;
 
-        // Use window.location.href to force a complete reset of the app state
-        // This is the most robust way to ensure all tabs are immediately kicked out
-        window.location.href = '/sign-in';
+          // If authentication state changed in another tab
+          if (newValue?.state?.isAuthenticated !== oldValue?.state?.isAuthenticated) {
+            if (!newValue?.state?.isAuthenticated) {
+              console.log('Detected logout in another tab via store...');
+              setUser(null);
+              setUserRole(null);
+              clearAuth();
+              router.refresh();
+            } else {
+              router.refresh();
+            }
+          }
+        } catch (err) {
+          // Ignore parsing errors
+        }
       }
     };
 
@@ -234,17 +258,20 @@ export function AuthProvider({
       if (error) throw error;
 
       toast.success('Вие се вписахте успешно!');
-      // Redirection is handled by the middleware redirecting away from /sign-in
-      // or by the onAuthStateChange listener below.
-      // We use refresh() to update all server components with the new session.
+
+      // Update the server components with the new session
       router.refresh();
 
-      // Give the session a moment to be persisted and the middleware to catch up
+      // Redirect immediately
+      router.push('/');
+
+      // Complete the login by forcing a reload to ensure all state is synced
+      // We use a small delay to allow the push to register
       setTimeout(() => {
-        if (window.location.pathname === '/sign-in') {
+        if (window.location.pathname === '/' || window.location.pathname === '/sign-in') {
           window.location.href = '/';
         }
-      }, 500);
+      }, 100);
     } catch (error) {
       console.error('Sign in error:', error);
       toast.error('Грешка при влизане');
