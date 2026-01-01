@@ -14,6 +14,8 @@ import {
     ExperienceGallery,
     ExperienceStatsGrid,
     ExperienceBookingSidebar,
+    ExperienceSectionWrapper,
+    ExperienceSectionSkeleton,
     getThemeClasses,
     type ThemeColor
 } from "@/components/experience"
@@ -129,6 +131,15 @@ export default async function ExperienceDetailPage({
                     </div>
                 </div>
             </div>
+
+            {/* Other Experiences Section */}
+            <React.Suspense fallback={<ExperienceSectionSkeleton />}>
+                <ExperienceSectionWrapper
+                    excludeSlug={slug}
+                    title="Още Преживявания"
+                    subtitle="Разгледайте и другите ни предложения"
+                />
+            </React.Suspense>
         </div>
     )
 }

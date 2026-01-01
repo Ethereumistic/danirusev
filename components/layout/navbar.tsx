@@ -44,7 +44,7 @@ export function Navbar() {
       const targetId = item.href.replace('/#', '');
       document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth' });
     }
-    // Otherwise, let the browser handle navigation to /#hash
+
   };
 
   return (

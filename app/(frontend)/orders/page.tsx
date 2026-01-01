@@ -1,8 +1,8 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import { OrdersList } from './orders-list'
-import { Package } from 'lucide-react'
-
+import { Link, Package, Ticket } from 'lucide-react'
+import { Button } from 'react-day-picker'
 export default async function OrdersPage() {
   const supabase = await createClient()
 
@@ -51,6 +51,7 @@ export default async function OrdersPage() {
           <div>
             <h1 className="text-3xl font-black text-white uppercase">Моите поръчки</h1>
             <p className="text-slate-400 text-sm">Следете статуса на вашите поръчки и покупки</p>
+
           </div>
         </div>
         <OrdersList orders={orders} />

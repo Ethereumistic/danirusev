@@ -6,6 +6,7 @@ interface ExperienceSectionWrapperProps {
     linkPrefix?: string
     title?: string
     subtitle?: string
+    excludeSlug?: string
 }
 
 /**
@@ -15,14 +16,19 @@ interface ExperienceSectionWrapperProps {
 export async function ExperienceSectionWrapper({
     linkPrefix = "/experience",
     title,
-    subtitle
+    subtitle,
+    excludeSlug
 }: ExperienceSectionWrapperProps) {
     const products = await getProducts('experience')
     const experiences = products as ExperienceProduct[]
 
+    const filteredExperiences = excludeSlug
+        ? experiences.filter(exp => exp.slug !== excludeSlug)
+        : experiences
+
     return (
         <ExperienceSection
-            experiences={experiences}
+            experiences={filteredExperiences}
             linkPrefix={linkPrefix}
             title={title}
             subtitle={subtitle}
