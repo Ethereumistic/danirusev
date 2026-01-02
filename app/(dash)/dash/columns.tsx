@@ -532,7 +532,7 @@ export function ExpandedOrderDetails({ order }: { order: Order }) {
                             {/* Location Badge */}
                             {item.location && (
                               <div className="flex items-center gap-2 text-slate-300 text-xs font-black uppercase tracking-widest bg-slate-900 px-3 py-2 rounded-xl border border-white/5 w-fit">
-                                <MapPin className="h-3.5 w-3.5 text-main" />
+                                <MapPin className={cn("h-3.5 w-3.5", theme.text)} />
                                 {item.location}
                               </div>
                             )}
@@ -551,11 +551,10 @@ export function ExpandedOrderDetails({ order }: { order: Order }) {
                                 })}
                                 {item.voucher_type && (
                                   <Badge className={cn(
-                                    "bg-white/5 text-[10px] font-black uppercase border px-3 py-1.5 rounded-xl gap-2 shadow-lg",
-                                    theme.text,
+                                    "bg-slate-900 hover:bg-slate-800 text-[10px] font-black text-slate-300 border border-white/5 px-3 py-1.5 gap-2 rounded-xl",
                                     theme.borderFaded
                                   )}>
-                                    <Ticket className="h-3.5 w-3.5" />
+                                    <Ticket className={cn("h-3.5 w-3.5", theme.text)} />
                                     {item.voucher_type}
                                   </Badge>
                                 )}

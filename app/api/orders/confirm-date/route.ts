@@ -43,7 +43,8 @@ export async function POST(request: NextRequest) {
                     p_selected_date: voucherDate,
                     p_addons: orderItem.addons,
                     p_voucher_recipient_name: orderItem.voucher_recipient_name,
-                    p_location: orderItem.location
+                    p_location: orderItem.location,
+                    p_voucher_type: orderItem.voucher_type // Now passing this explicitly
                 })
 
                 if (voucherError) {

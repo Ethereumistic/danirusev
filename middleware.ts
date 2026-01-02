@@ -34,6 +34,11 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
+  // Block access to /shop for now
+  if (pathname === '/shop' || pathname.startsWith('/shop/')) {
+    return NextResponse.redirect(new URL('/', request.url))
+  }
+
   // 1. Redirect authenticated users away from auth pages
   if (user && (pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up') || pathname.startsWith('/forgot-password'))) {
     return NextResponse.redirect(new URL('/', request.url))

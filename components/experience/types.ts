@@ -11,8 +11,10 @@ import type {
     HybridImage,
     Media
 } from '@/types/payload-types'
+import { getAddonIcon } from '@/lib/utils'
 
 // Re-export for convenience
+export { getAddonIcon }
 export type { ExperienceProduct, AdditionalItem, ExperienceLocation, ProgramItem }
 
 // Theme colors supported by experience components

@@ -63,8 +63,16 @@ import {
   Gauge,
   PartyPopper,
   Shirt,
-  Flag
+  Flag,
+  Smartphone,
+  Video,
+  Disc,
+  Gift,
+  Clock,
+  MapPin,
+  type LucideIcon
 } from 'lucide-react'
+import * as LucideIcons from "lucide-react"
 
 /**
  * Drift Experience Theme Color Utilities
@@ -214,4 +222,33 @@ export function getThemeRGB(themeColor: ThemeColor): [number, number, number] {
     default:
       return [208 / 255, 246 / 255, 26 / 255]; // Default to mix/main neon
   }
+}
+/**
+ * Smart Addon Icon Mapping
+ * Centralized logic to determine the best icon for an addon based on its name, icon name from CMS, and type.
+ */
+export function getAddonIcon(name: string, iconName?: string, type?: string): LucideIcon | null {
+  const lowerName = name.toLowerCase();
+
+  // 1. Priority mapping based on specific keywords in name (Highest priority)
+  if (lowerName.includes('дигитален') || iconName === 'Smartphone') return Smartphone;
+  if (lowerName.includes('gopro') || lowerName.includes('заснемане') || lowerName.includes('видео') || iconName === 'Video') return Video;
+  if (lowerName.includes('гуми') || iconName === 'Disc') return Disc;
+
+  // 2. Mapping based on Explicit Type
+  if (type === 'voucher') return Gift;
+  if (type === 'duration') return Clock;
+
+  // 3. Mapping based on Lucide Icon Name from CMS
+  if (iconName) {
+    const Icon = (LucideIcons as any)[iconName];
+    if (Icon) return Icon;
+  }
+
+  // 4. Broad keyword fallback
+  if (lowerName.includes('ваучер') || lowerName.includes('voucher')) return Gift;
+  if (lowerName.includes('време') || lowerName.includes('минути') || lowerName.includes('час')) return Clock;
+  if (lowerName.includes('локация') || lowerName.includes('писта')) return MapPin;
+
+  return null;
 }

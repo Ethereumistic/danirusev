@@ -4,6 +4,7 @@ import {
   getExperienceThemeColor,
   getDriftThemeClasses,
   getExperienceIcon,
+  getAddonIcon,
   type ThemeColor
 } from '@/lib/utils'
 
@@ -237,7 +238,7 @@ export function OrdersList({ orders }: OrdersListProps) {
                                           </div>
                                           <div className="flex flex-col">
                                             <span className="text-[9px] uppercase font-black text-slate-500 tracking-wider mb-0.5">Име на ваучер:</span>
-                                            <span className={`font-black tracking-tight ${theme.text}`}>{item.voucher_recipient_name}</span>
+                                            <span className={`font-black tracking-tight uppercase ${theme.text}`}>{item.voucher_recipient_name}</span>
                                           </div>
                                         </div>
                                       </div>
@@ -251,23 +252,37 @@ export function OrdersList({ orders }: OrdersListProps) {
                                       <div className="flex flex-col gap-4">
                                         <span className="text-[10px] uppercase font-black text-slate-500 tracking-widest pl-1">Добавки към пакет</span>
                                         <div className="flex flex-col gap-2.5">
-                                          {item.addons?.map((addon, idx) => (
-                                            <div
-                                              key={idx}
-                                              className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-tight ${theme.bgFaded} ${theme.text} border-2 ${theme.borderFaded} w-fit flex items-center gap-2`}
-                                            >
-                                              <div className={`w-1.5 h-1.5 rounded-full ${theme.bg} shadow-sm shadow-black`} />
-                                              {addon}
-                                            </div>
-                                          ))}
-                                          {item.voucher_type && (
-                                            <div
-                                              className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-tight ${theme.bgFaded} ${theme.text} border-2 ${theme.borderFaded} w-fit flex items-center gap-2`}
-                                            >
-                                              <div className={`w-1.5 h-1.5 rounded-full ${theme.bg} shadow-sm shadow-black`} />
-                                              {item.voucher_type}
-                                            </div>
-                                          )}
+                                          {item.addons?.map((addon, idx) => {
+                                            const IconComponent = getAddonIcon(addon);
+                                            return (
+                                              <div
+                                                key={idx}
+                                                className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-tight ${theme.bgFaded} ${theme.text} border-2 ${theme.borderFaded} w-fit flex items-center gap-3 transition-all`}
+                                              >
+                                                {IconComponent ? (
+                                                  <IconComponent className="h-4 w-4" />
+                                                ) : (
+                                                  <div className={`w-1.5 h-1.5 rounded-full ${theme.bg} shadow-sm shadow-black shrink-0`} />
+                                                )}
+                                                {addon}
+                                              </div>
+                                            )
+                                          })}
+                                          {item.voucher_type && (() => {
+                                            const IconComponent = getAddonIcon(item.voucher_type, undefined, 'voucher');
+                                            return (
+                                              <div
+                                                className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-tight ${theme.bgFaded} ${theme.text} border-2 ${theme.borderFaded} w-fit flex items-center gap-3 transition-all`}
+                                              >
+                                                {IconComponent ? (
+                                                  <IconComponent className="h-4 w-4" />
+                                                ) : (
+                                                  <div className={`w-1.5 h-1.5 rounded-full ${theme.bg} shadow-sm shadow-black shrink-0`} />
+                                                )}
+                                                {item.voucher_type}
+                                              </div>
+                                            )
+                                          })()}
                                         </div>
                                       </div>
                                     )}

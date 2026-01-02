@@ -89,8 +89,8 @@ export function ExperienceScrollableTabs({
     return (
         <div className="relative">
             {/* Sticky Navigation */}
-            <div className="sticky top-20 z-30 bg-slate-950/90 backdrop-blur-md pb-4 pt-2 border-b border-transparent mb-6 transition-all duration-300">
-                <div className="inline-flex items-center justify-start bg-slate-900 p-1 rounded-lg border border-slate-800 w-full overflow-x-auto no-scrollbar">
+            <div className="sticky top-16 z-30 backdrop-blur-md rounded-lg border-b border-transparent mb-6 transition-all duration-300">
+                <div className="inline-flex items-center justify-start bg-slate-900/30 p-1 rounded-lg border border-slate-800 w-full overflow-x-auto no-scrollbar">
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}

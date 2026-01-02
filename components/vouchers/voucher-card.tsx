@@ -12,7 +12,11 @@ import {
     Download,
     Gift,
     Copy,
-    Check
+    Check,
+    Video,
+    Disc,
+    Smartphone,
+    Package
 } from 'lucide-react'
 import Link from 'next/link'
 import QRCode from 'qrcode'
@@ -55,8 +59,18 @@ const productNames: Record<string, string> = {
 const statusConfig: Record<string, { label: string; icon: any }> = {
     'active': { label: 'Активен', icon: CheckCircle },
     'pending': { label: 'Чакащ', icon: Clock },
-    'redeemed': { label: 'Използван', icon: CheckCircle },
     'expired': { label: 'Изтекъл', icon: AlertCircle },
+}
+
+// Icon mapping for addons (matching dash/columns.tsx)
+const addonIcons: Record<string, React.ComponentType<{ className?: string }>> = {
+    'GoPro Заснемане': Video,
+    'Допълнителни Гуми': Disc,
+    'Ваучер Дигитален': Smartphone,
+    'Ваучер Физически': Gift,
+    '30 мин': Clock,
+    '60 мин': Clock,
+    '90 мин': Clock,
 }
 
 export function VoucherCard({ voucher }: VoucherCardProps) {
@@ -158,7 +172,7 @@ export function VoucherCard({ voucher }: VoucherCardProps) {
                                     </div>
                                     <div className="flex flex-col">
                                         <span className="text-[9px] uppercase font-black text-slate-500 tracking-wider mb-0.5">Получател:</span>
-                                        <span className={`font-black tracking-tight ${theme.text} leading-tight`}>{voucher.voucher_recipient_name}</span>
+                                        <span className={`font-black tracking-tight uppercase ${theme.text} leading-tight`}>{voucher.voucher_recipient_name}</span>
                                     </div>
                                 </div>
                             )}
@@ -208,12 +222,18 @@ export function VoucherCard({ voucher }: VoucherCardProps) {
                                 <div className="space-y-4">
                                     <span className="text-[10px] uppercase font-black text-slate-500 tracking-widest pl-1">Включени добавки</span>
                                     <div className="flex flex-wrap gap-2.5">
-                                        {voucher.addons?.map((addon, idx) => (
-                                            <div key={idx} className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-tight ${theme.bgFaded} ${theme.text} border-2 ${theme.borderFaded} w-fit flex items-center gap-2`}>
-                                                <div className={`w-1.5 h-1.5 rounded-full ${theme.bg} shadow-sm shadow-black`} />
-                                                {addon}
-                                            </div>
-                                        ))}
+                                        {voucher.addons?.map((addon, idx) => {
+                                            const AddonIcon = addonIcons[addon] || Package
+                                            return (
+                                                <Badge
+                                                    key={idx}
+                                                    className={`bg-slate-900 hover:bg-slate-800 text-[10px] font-black text-slate-300 border-2 ${theme.borderFaded} px-3 py-1.5 gap-2 rounded-xl h-auto shrink-0 shadow-lg`}
+                                                >
+                                                    <AddonIcon className={`h-3.5 w-3.5 ${theme.text}`} />
+                                                    {addon}
+                                                </Badge>
+                                            )
+                                        })}
                                     </div>
                                 </div>
                             )}

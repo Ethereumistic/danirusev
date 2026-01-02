@@ -140,7 +140,7 @@ export function ExperienceAdditionalItems({
                         <Check className="h-3 w-3 text-black font-bold" />
                     </div>
                 )}
-                <CardContent className="px-4 flex items-center gap-4">
+                <CardContent className="p-4 flex items-center gap-4">
                     {IconComponent && (
                         <div className={cn("p-3 rounded-xl flex-shrink-0", isSelected ? theme.bgFaded : 'bg-slate-800')}>
                             <IconComponent className={cn("h-6 w-6", isSelected ? theme.text : 'text-slate-400')} />
@@ -154,7 +154,7 @@ export function ExperienceAdditionalItems({
                     </div>
                     {/* Price - only if > 0 */}
                     {item.price && item.price > 0 && (
-                        <div className={cn("text-xl font-black", isSelected ? theme.text : 'text-slate-400')}>
+                        <div className={cn("text-lg sm:text-xl font-black", isSelected ? theme.text : 'text-slate-400')}>
                             +{item.price} €
                         </div>
                     )}
@@ -164,7 +164,7 @@ export function ExperienceAdditionalItems({
     }
 
     const renderDurationGrid = (isCompact: boolean = false) => (
-        <div className={cn("grid grid-cols-3 gap-2", !isCompact && "col-span-2")}>
+        <div className={cn("grid grid-cols-3 gap-2", !isCompact && "sm:col-span-2")}>
             {durationItems.map((item) => {
                 const itemId = item.id || item.name.toLowerCase().replace(/\s+/g, '-')
                 const isSelected = selections.selectedDuration === itemId
@@ -202,10 +202,9 @@ export function ExperienceAdditionalItems({
                             </h4>
                         </div>
 
-                        {/* PRICE AT BOTTOM */}
                         <div
                             className={cn(
-                                "text-xs font-black -mt-8",
+                                "text-[10px] sm:text-xs font-black mt-auto",
                                 isSelected ? theme.text : 'text-slate-500'
                             )}
                         >
@@ -226,7 +225,7 @@ export function ExperienceAdditionalItems({
 
             {/* Single Choice Items (Vouchers & Locations) with Dynamic Duration Placement */}
             {singleChoiceCards.length > 0 ? (
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {singleChoiceCards.map((item, index) => {
                         const itemId = item.id || item.name.toLowerCase().replace(/\s+/g, '-')
                         const isSelected = item.type === 'location'
@@ -250,7 +249,7 @@ export function ExperienceAdditionalItems({
             )}
 
             {/* Date Picker Section */}
-            <Card className={cn("bg-slate-900 border-2", selections.selectedDate ? `${theme.border} ${theme.bgFaded}` : 'border-slate-800')}>
+            <Card id={`date-selector-${experienceId}`} className={cn("bg-slate-900 border-2", selections.selectedDate ? `${theme.border} ${theme.bgFaded}` : 'border-slate-800')}>
                 <CardContent className="p-4">
                     <div className="flex items-center gap-3 mb-3">
                         <div className={cn("p-3 rounded-xl", selections.selectedDate ? theme.bgFaded : 'bg-slate-800')}>

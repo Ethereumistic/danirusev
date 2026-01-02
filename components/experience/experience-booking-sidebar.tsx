@@ -1,11 +1,13 @@
 'use client'
 
 import * as React from "react"
-import { ShoppingCart, Trophy, MapPin, ExternalLink } from "lucide-react"
+import { ShoppingCart, Trophy, MapPin, ExternalLink, Clock } from "lucide-react"
+import * as LucideIcons from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { getThemeClasses, getImageUrl, type ThemeColor } from "./types"
+import { getThemeClasses, getImageUrl, type ThemeColor, getAddonIcon } from "./types"
 import { PATTERN_COMPONENTS } from "@/components/experience/patterns"
 import { useCartStore } from "@/lib/stores/cart-store"
 import type { ExperienceProduct } from "@/types/payload-types"
@@ -58,6 +60,23 @@ export function ExperienceBookingSidebar({ experience }: ExperienceBookingSideba
 
     // Function to add experience to cart
     const handleAddToCart = () => {
+        // Validation: Check if date is selected
+        if (!selections.selectedDate) {
+            toast.error("Моля, изберете дата за вашето преживяване", {
+                description: "Избраната дата е предпочитана и ще бъде потвърдена по телефон след покупката.",
+                position: "bottom-right",
+            })
+
+            const dateSelector = document.getElementById(`date-selector-${experience.id}`)
+            if (dateSelector) {
+                dateSelector.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                dateSelector.classList.add('wiggle')
+                setTimeout(() => {
+                    dateSelector.classList.remove('wiggle')
+                }, 4000)
+            }
+            return
+        }
         // Build whatYouGet array from included items + selected additional items
         const whatYouGet = experience.included?.map(i => i.item) || []
 
@@ -211,7 +230,7 @@ export function ExperienceBookingSidebar({ experience }: ExperienceBookingSideba
                     )}
 
                     {/* Selected Additional Items */}
-                    {selections.additionalItems.length > 0 && (
+                    {(selections.additionalItems.length > 0 || selections.selectedDuration) && (
                         <>
                             <Separator className="bg-slate-800" />
                             <div className="space-y-3">
@@ -221,19 +240,30 @@ export function ExperienceBookingSidebar({ experience }: ExperienceBookingSideba
                                 {experience.additionalItems
                                     ?.filter(item => {
                                         const itemId = item.id || item.name.toLowerCase().replace(/\s+/g, '-')
-                                        return selections.additionalItems.includes(itemId) && item.type !== 'location'
+                                        // Include regular selected addons OR the selected duration
+                                        return (selections.additionalItems.includes(itemId) && item.type !== 'location') ||
+                                            (item.type === 'duration' && itemId === selections.selectedDuration)
                                     })
                                     .map(item => {
                                         const itemId = item.id || item.name.toLowerCase().replace(/\s+/g, '-')
+                                        const IconComponent = getAddonIcon(item.name, item.icon, item.type)
+
                                         return (
-                                            <div key={itemId} className="flex items-center justify-between text-sm">
-                                                <span className="text-slate-300">{item.name}</span>
+                                            <div key={itemId} className={`flex items-center justify-between p-3 rounded-lg border-2 ${theme.border} ${theme.bgFaded} transition-all`}>
+                                                <div className="flex items-center gap-3">
+                                                    {IconComponent ? (
+                                                        <IconComponent className={`w-5 h-5 ${theme.text}`} />
+                                                    ) : (
+                                                        <div className={`w-5 h-5 rounded-full ${theme.bg}`} />
+                                                    )}
+                                                    <span className="text-white font-medium text-sm">{item.name}</span>
+                                                </div>
                                                 {item.price && item.price > 0 ? (
-                                                    <span className={`font-bold ${theme.text}`}>
+                                                    <span className={`font-bold text-sm ${theme.text}`}>
                                                         +{item.price} €
                                                     </span>
                                                 ) : (
-                                                    <span className="text-slate-500 text-xs">Включено</span>
+                                                    <span className="text-slate-400 text-xs font-bold uppercase">Вкл.</span>
                                                 )}
                                             </div>
                                         )

@@ -31,7 +31,7 @@ export function Navbar() {
   const navItems = [
     { label: 'За Нас', href: '/about' },
     { label: 'Преживявания', href: '/#drift-experiences', isHashLink: true },
-    { label: 'Магазин', href: '/shop', },
+    { label: 'Магазин 🔒', href: '/shop', disabled: true },
     { label: 'Абонамент 🔒', href: '/subscription', disabled: true },
     { label: 'Контакти', href: '/contact' },
   ];

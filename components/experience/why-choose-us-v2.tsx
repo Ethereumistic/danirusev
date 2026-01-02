@@ -41,8 +41,9 @@ const FEATURES: FeatureBlock[] = [
         images: [
             "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/rent/1.png",
             "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/rent/2.png",
-            "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/rent/3.png",
-            "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/rent/4.png",
+            "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/mix/3.png",
+            "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/event/12.png",
+            "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/event/8.png",
         ],
         icon: Zap,
     },
@@ -57,10 +58,10 @@ const FEATURES: FeatureBlock[] = [
             { value: "1:1", label: "инструктор" },
         ],
         images: [
-            "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/mix/1.png",
-            "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/mix/2.png",
-            "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/mix/3.png",
-            "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/mix/4.png",
+            "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/whyus/1.png",
+            "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/day/2.png",
+            "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/day/3.png",
+            "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/day/4.png",
         ],
         icon: Shield,
         reversed: true,
@@ -204,8 +205,8 @@ function FeatureSection({ feature, index }: { feature: FeatureBlock; index: numb
                 >
                     {/* Large background number */}
                     <div
-                        className={`absolute ${feature.reversed ? "right-0" : "left-0"
-                            } top-0 text-[12rem] font-black text-slate-900/30 pointer-events-none hidden lg:block leading-none -translate-y-12`}
+                        className={`absolute ${feature.reversed ? "-right-4" : "-right-4"
+                            } -top-16 text-[16rem] font-black text-white/[0.03] pointer-events-none hidden lg:block leading-none select-none italic transition-all duration-700`}
                     >
                         0{index + 1}
                     </div>
@@ -307,7 +308,7 @@ export function WhyChooseUsV2() {
                         className="flex flex-wrap justify-center gap-8 mt-12"
                     >
                         {[
-                            { icon: Users, text: "500+ доволни клиента" },
+                            { icon: Users, text: "Много доволни клиенти" },
                             { icon: Award, text: "Проф. инструктор" },
                             { icon: Flame, text: "Гарантиран адреналин" },
                         ].map((item, idx) => (
