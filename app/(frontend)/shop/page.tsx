@@ -95,11 +95,11 @@ export default async function ShopPage() {
                                             <div className="flex items-center gap-2">
                                                 {product.compareAtPrice && (
                                                     <span className="text-muted-foreground line-through text-sm">
-                                                        {product.compareAtPrice} BGN
+                                                        {product.compareAtPrice} €
                                                     </span>
                                                 )}
                                                 <span className="text-xl font-bold">
-                                                    {product.price} BGN
+                                                    {product.price} €
                                                 </span>
                                             </div>
 

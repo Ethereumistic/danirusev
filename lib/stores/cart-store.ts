@@ -38,11 +38,12 @@ export interface CartItem {
     name: string;
     price: number;
     icon?: string;
-    type: 'standard' | 'location' | 'voucher';
+    type: 'standard' | 'location' | 'voucher' | 'duration';
     googleMapsUrl?: string;
   }[];
   storedLocationName?: string; // Display name of selected location
   storedVoucherName?: string; // Display name of selected voucher
+  storedDurationName?: string; // Display name of selected duration
   storedLocationUrl?: string; // Google Maps URL for selected location
   storedSelectedDate?: string; // Display string for selected date
 }
@@ -69,6 +70,7 @@ interface CartState {
     [experienceId: string]: {
       additionalItems: string[];
       selectedLocation: string | null;
+      selectedDuration: string | null;
       selectedDate: string | null;
     }
   }
@@ -78,7 +80,7 @@ interface CartState {
   decreaseQuantity: (cartItemId: string) => void
   clearCart: () => void
   // Drift experience actions
-  updateDriftSelections: (experienceId: string, additionalItems: string[], selectedLocation: string | null, selectedDate?: string | null) => void
+  updateDriftSelections: (experienceId: string, additionalItems: string[], selectedLocation: string | null, selectedDuration: string | null, selectedDate?: string | null) => void
   toggleCartItemAdditional: (cartItemId: string, additionalItemId: string) => void
   updateCartItemLocation: (cartItemId: string, locationId: string) => void
   updateCartItemVoucher: (cartItemId: string, voucherId: string) => void
@@ -126,14 +128,15 @@ export const useCartStore = create<CartState>()(
         set({ items: updatedItems })
       },
       clearCart: () => set({ items: [] }),
-      updateDriftSelections: (experienceId, additionalItems, selectedLocation, selectedDate) => {
-        const currentSelections = get().driftSelections[experienceId] || { additionalItems: [], selectedLocation: null, selectedDate: null }
+      updateDriftSelections: (experienceId, additionalItems, selectedLocation, selectedDuration, selectedDate) => {
+        const currentSelections = get().driftSelections[experienceId] || { additionalItems: [], selectedLocation: null, selectedDuration: null, selectedDate: null }
         set({
           driftSelections: {
             ...get().driftSelections,
             [experienceId]: {
               additionalItems,
               selectedLocation,
+              selectedDuration,
               selectedDate: selectedDate !== undefined ? selectedDate : currentSelections.selectedDate
             }
           }

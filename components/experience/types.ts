@@ -16,10 +16,10 @@ import type {
 export type { ExperienceProduct, AdditionalItem, ExperienceLocation, ProgramItem }
 
 // Theme colors supported by experience components
-export type ThemeColor = 'taxi' | 'rent' | 'mix' | 'event' | 'main'
+export type ThemeColor = 'taxi' | 'rent' | 'mix' | 'event' | 'day' | 'main'
 
 // Pattern types
-export type PatternType = 'taxi-checker' | 'tyre-pattern' | 'event' | 'none'
+export type PatternType = 'taxi-checker' | 'tyre-pattern' | 'event' | 'day' | 'mix' | 'none'
 
 // Icon names from Lucide
 export type IconName = 'CarTaxiFront' | 'Car' | 'Gauge'
@@ -115,31 +115,39 @@ export function getThemeClasses(themeColor: ThemeColor = 'main') {
         text: themeColor === 'taxi' ? 'text-taxi' :
             themeColor === 'rent' ? 'text-rent' :
                 themeColor === 'mix' ? 'text-mix' :
-                    themeColor === 'event' ? 'text-event' : 'text-main',
+                    themeColor === 'event' ? 'text-event' :
+                        themeColor === 'day' ? 'text-day' : 'text-main',
         bg: themeColor === 'taxi' ? 'bg-taxi' :
             themeColor === 'rent' ? 'bg-rent' :
                 themeColor === 'mix' ? 'bg-mix' :
-                    themeColor === 'event' ? 'bg-event' : 'bg-main',
+                    themeColor === 'event' ? 'bg-event' :
+                        themeColor === 'day' ? 'bg-day' : 'bg-main',
         bgFaded: themeColor === 'taxi' ? 'bg-taxi/10' :
             themeColor === 'rent' ? 'bg-rent/10' :
                 themeColor === 'mix' ? 'bg-mix/10' :
-                    themeColor === 'event' ? 'bg-event/10' : 'bg-main/10',
+                    themeColor === 'event' ? 'bg-event/10' :
+                        themeColor === 'day' ? 'bg-day/10' : 'bg-main/10',
         border: themeColor === 'taxi' ? 'border-taxi' :
             themeColor === 'rent' ? 'border-rent' :
                 themeColor === 'mix' ? 'border-mix' :
-                    themeColor === 'event' ? 'border-event' : 'border-main',
+                    themeColor === 'event' ? 'border-event' :
+                        themeColor === 'day' ? 'border-day' : 'border-main',
         borderFaded: themeColor === 'taxi' ? 'border-taxi/30' :
             themeColor === 'rent' ? 'border-rent/30' :
                 themeColor === 'mix' ? 'border-mix/30' :
-                    themeColor === 'event' ? 'border-event/30' : 'border-main/30',
-        shadow: themeColor === 'taxi' ? 'shadow-[0_0_40px_-10px_rgba(234,179,8,0.4)]' :
-            themeColor === 'rent' ? 'shadow-[0_0_40px_-10px_rgba(239,68,68,0.4)]' :
-                themeColor === 'mix' ? 'shadow-[0_0_40px_-10px_rgba(168,85,247,0.4)]' :
-                    themeColor === 'event' ? 'shadow-[0_0_40px_-10px_rgba(255,255,255,0.2)]' :
-                        'shadow-[0_0_40px_-10px_rgba(16,185,129,0.4)]',
+                    themeColor === 'event' ? 'border-event/30' :
+                        themeColor === 'day' ? 'border-day/30' : 'border-main/30',
+        shadow: themeColor === 'taxi' ? 'shadow-[0_0_40px_-10px] shadow-taxi/40' :
+            themeColor === 'rent' ? 'shadow-[0_0_40px_-10px] shadow-rent/40' :
+                themeColor === 'mix' ? 'shadow-[0_0_40px_-10px] shadow-mix/40' :
+                    themeColor === 'day' ? 'shadow-[0_0_40px_-10px] shadow-day/40' :
+                        themeColor === 'event' ? 'shadow-[0_0_40px_-10px_rgba(255,255,255,0.2)]' :
+                            'shadow-[0_0_40px_-10px] shadow-main/40',
         hover: themeColor === 'taxi' ? 'hover:bg-taxi/90' :
             themeColor === 'rent' ? 'hover:bg-rent/90' :
                 themeColor === 'mix' ? 'hover:bg-mix/90' :
-                    themeColor === 'event' ? 'hover:bg-event/90' : 'hover:bg-main/90',
+                    themeColor === 'event' ? 'hover:bg-event/90' :
+                        themeColor === 'day' ? 'hover:bg-day/90' : 'hover:bg-main/90',
     }
 }
+

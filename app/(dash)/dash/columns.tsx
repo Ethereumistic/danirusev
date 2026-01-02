@@ -85,6 +85,9 @@ const addonIcons: Record<string, React.ComponentType<{ className?: string }>> = 
   'Допълнителни Гуми': Disc,
   'Ваучер Дигитален': Smartphone,
   'Ваучер Физически': Gift,
+  '30 мин': Clock,
+  '60 мин': Clock,
+  '90 мин': Clock,
 }
 
 export const columns: ColumnDef<Order>[] = [

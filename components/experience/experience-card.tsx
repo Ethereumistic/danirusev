@@ -57,7 +57,8 @@ export function ExperienceCard({
         themeColor === 'taxi' ? 'border-solid hover:border-dashed' :
             themeColor === 'rent' ? 'border-solid hover:border-double' :
                 themeColor === 'mix' ? 'border-solid hover:border-dotted' :
-                    'border-solid'
+                    themeColor === 'day' ? 'border-solid hover:border-dotted' :
+                        'border-solid'
 
     return (
         <Link href={`${linkPrefix}/${experience.slug}`} className="block">
@@ -69,7 +70,7 @@ export function ExperienceCard({
                     {experience.price && experience.price > 0 ? (
                         <>
                             {experience.price}
-                            <span className="text-xl ml-1 font-bold">BGN</span>
+                            <span className="text-xl ml-1 font-bold">€</span>
                         </>
                     ) : (
                         <span className="text-lg uppercase">ПО ДОГОВАРЯНЕ</span>

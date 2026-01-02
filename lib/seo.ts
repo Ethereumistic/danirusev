@@ -82,7 +82,7 @@ export function generateProductDescription(
   if (description) return description.slice(0, 160)
 
   let desc = `Купете ${productName} - екстремно автомобилно преживяване.`
-  if (price) desc += ` Цена: ${price} лв.`
+  if (price) desc += ` Цена: ${price} €`
   desc += ' Подарете незабравимо изживяване с адреналин.'
 
   return desc

@@ -49,6 +49,7 @@ const productNames: Record<string, string> = {
     'drift-rent': 'Наеми Дрифтачка',
     'drift-mix': 'Дрифт Микс',
     'drift-event': 'Дрифт Събитие',
+    'drift-day': 'Дрифт Ден',
 }
 
 const statusConfig: Record<string, { label: string; icon: any }> = {

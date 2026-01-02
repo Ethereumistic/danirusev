@@ -1,8 +1,8 @@
 // lib/drift-data.ts
 import { Car, Trophy, Timer, Gauge, ShieldCheck, Fuel, CarTaxiFront, Smartphone, Gift } from "lucide-react";
 
-export type PatternType = 'taxi-checker' | 'tyre-pattern' | 'none';
-export type ThemeColor = 'taxi' | 'rent' | 'mix' | 'main';
+export type PatternType = 'taxi-checker' | 'tyre-pattern' | 'event' | 'day' | 'mix' | 'none';
+export type ThemeColor = 'taxi' | 'rent' | 'mix' | 'event' | 'day' | 'main';
 
 export type AdditionalItem = {
     id: string;
@@ -12,6 +12,7 @@ export type AdditionalItem = {
     description: string;
     isLocation?: boolean; // Flag for location items (single choice)
     isVoucher?: boolean; // Flag for voucher items (single choice)
+    isDuration?: boolean; // Flag for duration items (single choice)
 };
 
 export type DriftExperience = {
@@ -43,7 +44,7 @@ export const DRIFT_EXPERIENCES: DriftExperience[] = [
         title: "Дрифт Такси",
         subtitle: "Пасажерско Изживяване",
         price: 325,
-        currency: "BGN",
+        currency: "€",
         duration: "60 мин",
         carModel: "BMW E46 V6",
         horsePower: 450,
@@ -83,7 +84,7 @@ export const DRIFT_EXPERIENCES: DriftExperience[] = [
         title: "Наеми Дрифтачка",
         subtitle: "Карай Сам",
         price: 649,
-        currency: "BGN",
+        currency: "€",
         duration: "60 мин",
         carModel: "BMW E36 V6",
         horsePower: 400,
@@ -121,7 +122,7 @@ export const DRIFT_EXPERIENCES: DriftExperience[] = [
         title: "Дрифт Микс",
         subtitle: "Двата свята",
         price: 649,
-        currency: "BGN",
+        currency: "€",
         duration: "60 мин",
         carModel: "BMW E36 V6",
         horsePower: 400,

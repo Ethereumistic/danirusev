@@ -72,7 +72,7 @@ export function ExperienceCardSkeleton() {
  */
 export function ExperienceSectionSkeleton() {
     return (
-        <section id="drift-experiences" className="py-8 px-4 scroll-mt-20 bg-slate-950">
+        <section id="drift-experiences" className="py-24 px-4 scroll-mt-6 bg-slate-950">
             <div className="max-w-7xl mx-auto">
                 {/* Section Header */}
                 <div className="text-center mb-16">

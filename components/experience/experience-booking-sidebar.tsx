@@ -20,22 +20,29 @@ export function ExperienceBookingSidebar({ experience }: ExperienceBookingSideba
     const pattern = experience.visuals?.pattern || 'none'
 
     // Read selections from Zustand store
-    const { driftSelections, addItem } = useCartStore()
-    const selections = driftSelections[experience.id] || { additionalItems: [], selectedLocation: null, selectedDate: null }
+    const { driftSelections, updateDriftSelections, addItem } = useCartStore()
+    const selections = driftSelections[experience.id] || { additionalItems: [], selectedLocation: null, selectedDuration: null, selectedDate: null }
 
     // Calculate total price
     const basePrice = experience.price || 0
     const hasPrice = typeof experience.price === 'number' && experience.price > 0
 
+    // Get duration add-ons
+    const durationAddons = experience.additionalItems?.filter(item => item.type === 'duration') || []
+    const selectedDurationItem = durationAddons.find(item => {
+        const itemId = item.id || item.name.toLowerCase().replace(/\s+/g, '-')
+        return itemId === selections.selectedDuration
+    })
+
     const additionalPrice = experience.additionalItems
         ?.filter(item => {
             const itemId = item.id || item.name.toLowerCase().replace(/\s+/g, '-')
-            return selections.additionalItems.includes(itemId)
+            return selections.additionalItems.includes(itemId) || itemId === selections.selectedDuration
         })
         .reduce((sum, item) => sum + (item.price || 0), 0) || 0
 
-    // Only calculate total if base price exists
-    const totalPrice = hasPrice ? basePrice + additionalPrice : 0
+    // Only calculate total if base price exists OR if a duration is selected (for by requirements case)
+    const totalPrice = (hasPrice || selectedDurationItem) ? basePrice + additionalPrice : 0
 
     // Get selected location details
     const selectedLocationItem = experience.additionalItems?.find(item => {
@@ -58,14 +65,14 @@ export function ExperienceBookingSidebar({ experience }: ExperienceBookingSideba
         const selectedAddonsData = experience.additionalItems
             ?.filter(item => {
                 const itemId = item.id || item.name.toLowerCase().replace(/\s+/g, '-')
-                return selections.additionalItems.includes(itemId) || itemId === selections.selectedLocation
+                return selections.additionalItems.includes(itemId) || itemId === selections.selectedLocation || itemId === selections.selectedDuration
             })
             .map(item => ({
                 id: item.id || item.name.toLowerCase().replace(/\s+/g, '-'),
                 name: item.name,
                 price: item.price || 0,
                 icon: item.icon,
-                type: item.type,
+                type: item.type as any,
                 googleMapsUrl: item.googleMapsUrl,
             })) || []
 
@@ -107,6 +114,7 @@ export function ExperienceBookingSidebar({ experience }: ExperienceBookingSideba
             storedAddons: selectedAddonsData,
             storedLocationName: selectedLocationName !== 'Не е избрана локация' ? selectedLocationName : undefined,
             storedVoucherName: selectedVoucherItem?.name,
+            storedDurationName: selectedDurationItem?.name,
             storedLocationUrl: googleMapsUrl,
             storedSelectedDate: selections.selectedDate
                 ? new Date(selections.selectedDate).toLocaleDateString('bg-BG', {
@@ -159,7 +167,7 @@ export function ExperienceBookingSidebar({ experience }: ExperienceBookingSideba
                                 <span className="text-2xl font-black text-white tracking-tighter">
                                     {experience.price}
                                     <span className={`text-sm font-bold ml-1 ${theme.text}`}>
-                                        BGN
+                                        €
                                     </span>
                                 </span>
                             ) : (
@@ -169,7 +177,7 @@ export function ExperienceBookingSidebar({ experience }: ExperienceBookingSideba
                             )}
                         </div>
                         <div className="bg-slate-800 px-3 py-1 rounded text-xs font-medium text-slate-300">
-                            {experience.duration || '60 мин'}
+                            {selectedDurationItem ? selectedDurationItem.name : (experience.duration || '60 мин')}
                         </div>
                     </div>
 
@@ -222,7 +230,7 @@ export function ExperienceBookingSidebar({ experience }: ExperienceBookingSideba
                                                 <span className="text-slate-300">{item.name}</span>
                                                 {item.price && item.price > 0 ? (
                                                     <span className={`font-bold ${theme.text}`}>
-                                                        +{item.price} BGN
+                                                        +{item.price} €
                                                     </span>
                                                 ) : (
                                                     <span className="text-slate-500 text-xs">Включено</span>
@@ -234,8 +242,8 @@ export function ExperienceBookingSidebar({ experience }: ExperienceBookingSideba
                         </>
                     )}
 
-                    {/* Total Price - Only show if has base price */}
-                    {hasPrice && (
+                    {/* Total Price - Only show if has base price OR duration is selected */}
+                    {(hasPrice || selectedDurationItem) && (
                         <>
                             <Separator className="bg-slate-800" />
                             <div className="flex items-center justify-between">
@@ -243,7 +251,7 @@ export function ExperienceBookingSidebar({ experience }: ExperienceBookingSideba
                                 <span className="text-3xl font-black text-white tracking-tighter">
                                     {totalPrice}
                                     <span className={`text-lg font-bold ml-1 ${theme.text}`}>
-                                        BGN
+                                        €
                                     </span>
                                 </span>
                             </div>

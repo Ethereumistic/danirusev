@@ -222,11 +222,11 @@ export default function ProductClient({ product }: ProductClientProps) {
                             <div className="flex items-center gap-3 mb-4">
                                 {product.compareAtPrice && (
                                     <span className="text-2xl text-muted-foreground line-through">
-                                        {product.compareAtPrice} BGN
+                                        {product.compareAtPrice} €
                                     </span>
                                 )}
                                 <span className="text-3xl font-bold">
-                                    {finalPrice.toFixed(2)} BGN
+                                    {finalPrice.toFixed(2)} €
                                 </span>
                             </div>
 

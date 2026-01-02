@@ -12,13 +12,13 @@ export function ExperienceStatsGrid({ experience }: ExperienceStatsGridProps) {
     const theme = getThemeClasses(themeColor)
 
     return (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sq">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
             {/* Duration */}
             <Card className="bg-slate-900 border-slate-800 shadow-lg aspect-square items-center justify-center">
                 <CardContent className="flex flex-col items-center justify-center text-center ">
                     <Clock className={`w-8 h-8 ${theme.text} mb-2`} />
                     <span className="text-xs text-slate-400 uppercase font-bold tracking-wider">Време</span>
-                    <span className="text-base md:text-lg font-bold text-white">{experience.duration || '60 мин'}</span>
+                    <span className="text-base md:text-lg font-bold text-nowrap text-white">{experience.duration || '60 мин'}</span>
                 </CardContent>
             </Card>
 

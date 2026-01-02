@@ -83,7 +83,7 @@ export default async function ExperienceDetailPage({
                 {/* Main Content Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
                     {/* LEFT COLUMN - GALLERY */}
-                    <div className="lg:col-span-5 space-y-2 lg:sticky lg:top-20 lg:self-start">
+                    <div className="lg:col-span-5 space-y-2 lg:sticky lg:top-17.5 lg:self-start">
                         <ExperienceGallery
                             images={experience.gallery || []}
                             title={experience.title}

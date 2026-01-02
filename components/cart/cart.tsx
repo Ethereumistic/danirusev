@@ -79,7 +79,7 @@ export function Cart({ closeSheet }: { closeSheet: () => void }) {
                               <span className={`text-2xl font-black ${getTextColor(item.themeColor)}`}>
                                 {getItemTotalPrice(item).toFixed(2)}
                               </span>
-                              <span className="text-sm font-bold text-slate-400">BGN</span>
+                              <span className="text-sm font-bold text-slate-400">€</span>
                             </div>
 
                             {/* Quantity Controls */}
@@ -177,7 +177,7 @@ export function Cart({ closeSheet }: { closeSheet: () => void }) {
                                       </div>
                                       {addon.price > 0 && (
                                         <span className={`text-base font-black ${getTextColor(item.themeColor)}`}>
-                                          +{addon.price} BGN
+                                          +{addon.price} €
                                         </span>
                                       )}
                                     </div>
@@ -226,7 +226,7 @@ export function Cart({ closeSheet }: { closeSheet: () => void }) {
             <div className="relative space-y-2 bg-slate-900 p-4 rounded-lg border border-slate-800">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-slate-400">Междинна сума</span>
-                <span className="text-sm font-medium text-white">{subtotal.toFixed(2)} BGN</span>
+                <span className="text-sm font-medium text-white">{subtotal.toFixed(2)} €</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-slate-400">Доставка</span>
@@ -235,7 +235,7 @@ export function Cart({ closeSheet }: { closeSheet: () => void }) {
               <Separator className="bg-slate-800 my-2" />
               <div className="flex items-center justify-between">
                 <span className="text-lg font-black text-white uppercase">Общо</span>
-                <span className="text-2xl font-black text-main">{subtotal.toFixed(2)} BGN</span>
+                <span className="text-2xl font-black text-main">{subtotal.toFixed(2)} €</span>
               </div>
             </div>
             <SheetFooter>

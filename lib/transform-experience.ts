@@ -32,6 +32,7 @@ function transformAdditionalItem(item: CMSAdditionalItem): AdditionalItem {
         description: item.description,
         isLocation: item.type === 'location',
         isVoucher: item.type === 'voucher',
+        isDuration: item.type === 'duration',
     }
 }
 

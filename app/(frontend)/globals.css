@@ -36,7 +36,7 @@
   --color-rent: var(--rent);
   --color-mix: var(--mix);
   --color-event: var(--event);
-  --color-course: var(--course);
+  --color-day: var(--day);
 
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
@@ -81,7 +81,7 @@
   --rent: oklch(0.741 0.149861 239.5917);
   --mix: oklch(0.9137 0.214 120.48);
   --event: oklch(0.6453 0.2302 24.39);
-  --course: oklch(0.7527 0.1303 169.95);
+  --day: oklch(0.6236 0.1158 323.57);
 
   --neon-blue: oklch(0.5703 0.2363 261);
   --toxic: oklch(0.5703 0.2363 261);
@@ -125,7 +125,7 @@
   --rent: oklch(0.741 0.149861 239.5917);
   --mix: oklch(0.9137 0.214 120.48);
   --event: oklch(0.6453 0.2302 24.39);
-  --course: oklch(0.7527 0.1303 169.95);
+  --day: oklch(0.6236 0.1158 323.57);
   --neon-blue: oklch(0.5703 0.2363 261);
   --toxic: oklch(0.9137 0.214 120.48);
   --border: oklch(1 0 0 / 10%);

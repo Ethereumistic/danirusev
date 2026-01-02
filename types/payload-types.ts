@@ -76,7 +76,7 @@ export interface AdditionalItem {
   price?: number        // Optional - leave empty for free items
   description?: string  // Optional
   icon?: string         // Optional Lucide icon name
-  type: 'standard' | 'location' | 'voucher'
+  type: 'standard' | 'location' | 'voucher' | 'duration'
   googleMapsUrl?: string // For location type items
   id?: string
 }
@@ -105,8 +105,8 @@ export interface TechSpecs {
 // Visuals for experiences
 export interface Visuals {
   iconName?: 'CarTaxiFront' | 'Car' | 'Gauge'
-  themeColor?: 'taxi' | 'rent' | 'mix' | 'main'
-  pattern?: 'taxi-checker' | 'tyre-pattern' | 'none'
+  themeColor?: 'taxi' | 'rent' | 'mix' | 'event' | 'day' | 'main'
+  pattern?: 'taxi-checker' | 'tyre-pattern' | 'event' | 'day' | 'mix' | 'none'
 }
 
 /**

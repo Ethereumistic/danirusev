@@ -11,7 +11,7 @@ const storedAddonSchema = z.object({
     name: z.string(),
     price: z.number(),
     icon: z.string().optional().nullable(),
-    type: z.enum(['standard', 'location', 'voucher']),
+    type: z.enum(['standard', 'location', 'voucher', 'duration']),
     googleMapsUrl: z.string().optional().nullable(),
 })
 
@@ -38,6 +38,7 @@ const cartItemSchema = z.object({
     storedAddons: z.array(storedAddonSchema).optional().nullable(),
     storedLocationName: z.string().optional().nullable(),
     storedVoucherName: z.string().optional().nullable(),
+    storedDurationName: z.string().optional().nullable(),
     storedLocationUrl: z.string().optional().nullable(),
     selectedDate: z.string().optional().nullable(), // Raw ISO date for database
     storedSelectedDate: z.string().optional().nullable(), // Formatted for display
@@ -145,9 +146,15 @@ export async function POST(request: NextRequest) {
                 totalAmount += itemTotal
 
                 // Get addon names from storedAddons (CMS data stored in cart)
+                // Filter for standard and duration addons
                 const addonNames = item.storedAddons
-                    ?.filter(addon => addon.type === 'standard')
+                    ?.filter(addon => addon.type === 'standard' || addon.type === 'duration')
                     .map(addon => addon.name) || []
+
+                // If we have a stored duration name that isn't already in addons, add it
+                if (item.storedDurationName && !addonNames.includes(item.storedDurationName)) {
+                    addonNames.push(item.storedDurationName)
+                }
 
                 // Get location name from storedLocationName
                 const locationName = item.storedLocationName || 'N/A'
