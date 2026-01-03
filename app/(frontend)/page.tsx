@@ -7,6 +7,7 @@ import { UrgencyCTA } from '@/components/landing/urgency-cta'
 import { WhyChooseUsV2 } from '@/components/experience/why-choose-us-v2'
 import { ExperienceSectionWrapper, ExperienceSectionSkeleton } from '@/components/experience'
 import { PromoBannersList } from '@/components/landing/promo-banners-list'
+import { AboutSection } from '@/components/landing/about-section'
 
 export const metadata: Metadata = {
   title: 'Начало',
@@ -33,6 +34,7 @@ export default function Home() {
 
       <WhyChooseUsV2 />
 
+
       <Suspense fallback={<ExperienceSectionSkeleton />}>
         <ExperienceSectionWrapper linkPrefix="/experience" />
       </Suspense>
@@ -41,12 +43,15 @@ export default function Home() {
 
       <TestimonialsCarousel />
 
-      <UrgencyCTA />
+      {/* <UrgencyCTA /> */}
 
       {/* CMS-driven promo banners - wrapped in Suspense to prevent blocking */}
       <Suspense fallback={null}>
         <PromoBannersList />
       </Suspense>
+
+      <AboutSection />
+
     </main>
   )
 }

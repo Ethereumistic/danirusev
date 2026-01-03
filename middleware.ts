@@ -55,14 +55,10 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/sign-in', request.url))
     }
 
-    // Check if the user is the Payload admin
-    const { data: adminUser, error } = await supabase
-      .from('users')
-      .select('id')
-      .eq('email', user.email)
-      .single()
+    // Check if the user is an admin via JWT App Metadata (Super Robust & Fast)
+    const isAdmin = user.app_metadata?.role === 'admin'
 
-    if (error || !adminUser) {
+    if (!isAdmin) {
       return NextResponse.redirect(new URL('/', request.url))
     }
   }

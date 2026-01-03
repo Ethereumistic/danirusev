@@ -16,8 +16,14 @@ export default async function VerifyVoucherPage({ params }: VerifyVoucherPagePro
         redirect("/sign-in")
     }
 
-    // TODO: Add admin role check here
-    // For now, any authenticated user can verify
+    // Admin role check
+    const { data: role } = await supabase.rpc('get_user_role', {
+        p_email: user.email
+    })
+
+    if (role !== 'admin') {
+        redirect("/")
+    }
 
     // Get voucher details
     const { data: vouchers, error } = await supabase.rpc('get_voucher_by_id', {

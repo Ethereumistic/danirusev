@@ -39,8 +39,11 @@ const FEATURES: FeatureBlock[] = [
         ],
         // TODO: Replace with actual car images when provided
         images: [
-            "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/rent/1.png",
+            "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/about/4.jpg",
+            "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/about/bmw.png",
             "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/rent/2.png",
+            "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/about/suzuki3.JPG",
+            "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/about/SUZUKI_BACK.png",
             "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/mix/3.png",
             "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/event/12.png",
             "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/event/8.png",
@@ -58,9 +61,9 @@ const FEATURES: FeatureBlock[] = [
             { value: "1:1", label: "инструктор" },
         ],
         images: [
-            "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/whyus/1.png",
-            "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/day/2.png",
             "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/day/3.png",
+            "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/day/2.png",
+            "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/whyus/1.png",
             "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/experiences/day/4.png",
         ],
         icon: Shield,
@@ -77,6 +80,8 @@ const FEATURES: FeatureBlock[] = [
             { value: "∞", label: "спомени" },
         ],
         images: [
+            "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/about/1.jpg",
+            "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/about/DR11_Shirts.png",
             "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/bd/reni.png",
             "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/bd/milena.png",
             "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/bd/janeta.png",

@@ -70,7 +70,6 @@ interface OrdersListProps {
 
 // Status configuration
 const statusConfig: Record<string, { color: string, icon: React.ElementType, bgColor: string }> = {
-  'Pending': { color: 'text-yellow-400', icon: Clock, bgColor: 'bg-yellow-400/10 border-yellow-400/30' },
   'pending': { color: 'text-yellow-400', icon: Clock, bgColor: 'bg-yellow-400/10 border-yellow-400/30' },
   'approved': { color: 'text-blue-400', icon: CheckCircle, bgColor: 'bg-blue-400/10 border-blue-400/30' },
   'shipped': { color: 'text-purple-400', icon: Truck, bgColor: 'bg-purple-400/10 border-purple-400/30' },
@@ -104,7 +103,7 @@ export function OrdersList({ orders }: OrdersListProps) {
     <div className="space-y-4">
       {orders.map(order => {
         const isExpanded = expandedOrder === order.id
-        const status = statusConfig[order.status] || statusConfig['Pending']
+        const status = statusConfig[order.status] || statusConfig['pending']
         const StatusIcon = status.icon
 
         return (
@@ -137,7 +136,7 @@ export function OrdersList({ orders }: OrdersListProps) {
                 <Badge
                   className={`${status.bgColor} ${status.color} border font-bold uppercase text-xs px-3 py-1`}
                 >
-                  {order.status === 'Pending' ? 'Изчакване' :
+                  {order.status === 'pending' ? 'Изчакване' :
                     order.status === 'approved' ? 'Одобрена' :
                       order.status === 'shipped' ? 'Изпратена' :
                         order.status === 'delivered' ? 'Доставена' : order.status}

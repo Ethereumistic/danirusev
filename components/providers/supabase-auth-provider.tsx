@@ -56,62 +56,27 @@ export function AuthProvider({
   const {
     userRole: storedRole,
     setUserRole: setStoredRole,
+    setUserEmail: setStoredEmail,
     setIsAuthenticated,
     clearAuth
   } = useAuthStore();
 
-  // Fetch user role - checks public.users (Payload CMS) for admin, defaults to 'customer' for regular users
-  const fetchUserRole = async (userEmail: string | undefined) => {
-    if (!userEmail) {
+  // Fetch user role - checks app_metadata for role
+  const fetchUserRole = async (currentUser: User | null) => {
+    if (!currentUser) {
       setUserRole(null);
       setStoredRole(null);
+      setStoredEmail(null);
       return;
     }
 
-    // First check if we already have the role in store (for quick navigation)
-    // But if we have an initialRole from server, that takes priority
-    if (initialRole && !userRole) {
-      setUserRole(initialRole);
-      setStoredRole(initialRole);
-      return;
-    }
+    setStoredEmail(currentUser.email || null);
 
-    if (storedRole && !userRole) {
-      setUserRole(storedRole);
-    }
+    // Get role from metadata (it's built into the user object!)
+    const role = currentUser.app_metadata?.role || 'customer';
 
-    try {
-      // Check if user exists in public.users (Payload CMS users - typically admins)
-      const { data, error } = await supabase
-        .from('users')
-        .select('role')
-        .eq('email', userEmail)
-        .single();
-
-      if (error) {
-        // PGRST116 = "no rows returned" - this is expected for regular customers
-        if (error.code === 'PGRST116') {
-          const customerRole = 'customer';
-          setUserRole(customerRole);
-          setStoredRole(customerRole);
-          return;
-        }
-        console.error('Error fetching user role:', error);
-        const customerRole = 'customer';
-        setUserRole(customerRole);
-        setStoredRole(customerRole);
-        return;
-      }
-
-      const role = data?.role || 'customer';
-      setUserRole(role);
-      setStoredRole(role);
-    } catch (err) {
-      console.error('Error fetching user role:', err);
-      const customerRole = 'customer';
-      setUserRole(customerRole);
-      setStoredRole(customerRole);
-    }
+    setUserRole(role);
+    setStoredRole(role);
   };
 
   useEffect(() => {
@@ -123,7 +88,7 @@ export function AuthProvider({
           setUserRole(initialRole);
           setStoredRole(initialRole);
         } else {
-          await fetchUserRole(initialUser.email);
+          await fetchUserRole(initialUser as any);
         }
         setIsLoading(false);
         return;
@@ -137,7 +102,7 @@ export function AuthProvider({
         setUserRole(storedRole);
       }
 
-      await fetchUserRole(user?.email);
+      await fetchUserRole(user);
       setIsLoading(false);
     };
 
@@ -151,7 +116,7 @@ export function AuthProvider({
         clearAuth();
         setUserRole(null);
       } else if (['SIGNED_IN', 'TOKEN_REFRESHED', 'USER_UPDATED'].includes(event)) {
-        await fetchUserRole(currentUser.email);
+        await fetchUserRole(currentUser);
       }
 
       // Refresh server components to sync cookies

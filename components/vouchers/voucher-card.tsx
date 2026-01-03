@@ -58,7 +58,7 @@ const productNames: Record<string, string> = {
 
 const statusConfig: Record<string, { label: string; icon: any }> = {
     'active': { label: 'Активен', icon: CheckCircle },
-    'pending': { label: 'Чакащ', icon: Clock },
+    'pending': { label: 'Използван', icon: Clock },
     'expired': { label: 'Изтекъл', icon: AlertCircle },
 }
 

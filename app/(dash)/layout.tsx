@@ -36,15 +36,7 @@ export default async function DashLayout({
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  let role = null;
-  if (user) {
-    const { data } = await supabase
-      .from('users')
-      .select('role')
-      .eq('email', user.email)
-      .single();
-    role = data?.role || 'customer';
-  }
+  const role = user?.app_metadata?.role || 'customer';
 
   // Sanitize user object for serialization
   const sanitizedUser = user ? {
