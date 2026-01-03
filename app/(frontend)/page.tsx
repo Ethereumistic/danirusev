@@ -43,14 +43,12 @@ export default function Home() {
 
       <TestimonialsCarousel />
 
-      {/* <UrgencyCTA /> */}
+      <AboutSection />
 
       {/* CMS-driven promo banners - wrapped in Suspense to prevent blocking */}
       <Suspense fallback={null}>
         <PromoBannersList />
       </Suspense>
-
-      <AboutSection />
 
     </main>
   )
