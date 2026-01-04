@@ -8,23 +8,21 @@ import { Pool } from 'pg'
 import dotenv from 'dotenv'
 import path from 'path'
 
-dotenv.config({
-    path: path.resolve(__dirname, '../.env.local'),
-})
+dotenv.config()
 
 async function resetPayloadSchema() {
-    const pool = new Pool({
-        connectionString: process.env.DATABASE_URI,
-        ssl: {
-            rejectUnauthorized: false,
-        },
-    })
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URI,
+    ssl: {
+      rejectUnauthorized: false,
+    },
+  })
 
-    try {
-        console.log('🔄 Resetting Payload schema...\n')
+  try {
+    console.log('🔄 Resetting Payload schema...\n')
 
-        // Drop all Payload tables
-        const dropTablesQuery = `
+    // Drop all Payload tables
+    const dropTablesQuery = `
       DROP TABLE IF EXISTS 
         payload_locked_documents,
         payload_locked_documents_rels,
@@ -61,11 +59,11 @@ async function resetPayloadSchema() {
       CASCADE;
     `
 
-        await pool.query(dropTablesQuery)
-        console.log('✅ All Payload tables dropped successfully')
+    await pool.query(dropTablesQuery)
+    console.log('✅ All Payload tables dropped successfully')
 
-        // Drop Payload-related enums
-        const dropEnumsQuery = `
+    // Drop Payload-related enums
+    const dropEnumsQuery = `
       DROP TYPE IF EXISTS
         enum_products_product_type,
         enum_products_gallery_type,
@@ -79,20 +77,20 @@ async function resetPayloadSchema() {
       CASCADE;
     `
 
-        await pool.query(dropEnumsQuery)
-        console.log('✅ All Payload enums dropped successfully')
+    await pool.query(dropEnumsQuery)
+    console.log('✅ All Payload enums dropped successfully')
 
-        console.log('\n✨ Schema reset complete! You can now restart your dev server.\n')
-        console.log('📝 Next steps:')
-        console.log('   1. Restart your dev server: pnpm dev')
-        console.log('   2. Visit /admin to create your first admin user')
-        console.log('   3. Payload will automatically create all new tables\n')
-    } catch (error) {
-        console.error('❌ Error resetting schema:', error)
-        throw error
-    } finally {
-        await pool.end()
-    }
+    console.log('\n✨ Schema reset complete! You can now restart your dev server.\n')
+    console.log('📝 Next steps:')
+    console.log('   1. Restart your dev server: pnpm dev')
+    console.log('   2. Visit /admin to create your first admin user')
+    console.log('   3. Payload will automatically create all new tables\n')
+  } catch (error) {
+    console.error('❌ Error resetting schema:', error)
+    throw error
+  } finally {
+    await pool.end()
+  }
 }
 
 resetPayloadSchema()

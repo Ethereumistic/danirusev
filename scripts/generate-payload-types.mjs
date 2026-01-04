@@ -10,9 +10,7 @@ const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
 // Load environment variables BEFORE running payload
-dotenv.config({
-    path: path.resolve(dirname, '../.env.local'),
-})
+dotenv.config()
 
 console.log('🔧 Generating Payload types with environment loaded...\n')
 

@@ -3,9 +3,7 @@ import path from 'path'
 import payload, { Payload, type InitOptions } from 'payload'
 import config from '../payload.config'
 
-dotenv.config({
-  path: path.resolve(__dirname, '../.env.local'),
-})
+dotenv.config()
 
 let cached = (global as any).payload
 
