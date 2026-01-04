@@ -11,18 +11,17 @@ import { useAuthStore } from '@/lib/stores/auth-store';
 const getSiteUrl = () => {
   if (typeof window === 'undefined') return ''; // Handle server-side
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
-  if (!siteUrl) {
-    console.error('NEXT_PUBLIC_SITE_URL is not set!');
-    // In development, fall back to localhost
-    if (process.env.NODE_ENV === 'development') {
-      return 'http://localhost:3000';
-    }
-    // In production, we must have the environment variable
-    throw new Error('NEXT_PUBLIC_SITE_URL must be set in production!');
+  // Use environment variables if set
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_SERVER_URL;
+  if (siteUrl) return siteUrl;
+
+  // Fallback to location.origin in browser if no env var is set
+  // This is much safer than hardcoding localhost:3000
+  if (typeof window !== 'undefined') {
+    return window.location.origin;
   }
 
-  return siteUrl;
+  return 'https://danirusev.com'; // Absolute fallback for safety
 };
 
 type AuthContextType = {

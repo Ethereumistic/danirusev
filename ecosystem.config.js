@@ -3,7 +3,6 @@ module.exports = {
         name: "danirusev",
         script: "node_modules/next/dist/bin/next",
         args: "start --port 3000",
-        interpreter: "bun",
         exec_mode: "fork",            // Fork mode is perfect for single instances
         instances: 1,                 // Leaving the other core free for Nginx & future sites
         watch: false,
