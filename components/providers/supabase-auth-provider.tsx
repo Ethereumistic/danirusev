@@ -135,30 +135,11 @@ export function AuthProvider({
 
   const signUp = async (email: string, password: string, name: string, redirectTo?: string) => {
     try {
-      const siteUrl = getSiteUrl();
-      const emailRedirectTo = redirectTo
-        ? `${siteUrl}/auth/callback?next=${encodeURIComponent(redirectTo)}`
-        : `${siteUrl}/auth/callback`;
+      const { sendCustomConfirmationEmail } = await import('@/app/actions/auth');
 
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name,
-            role: 'customer',
-          },
-          emailRedirectTo,
-        },
-      });
+      const res = await sendCustomConfirmationEmail(email, password, name, redirectTo);
 
-      if (error) throw error;
-
-      await fetch('/api/emails/welcome', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, name }),
-      });
+      if (!res.success) throw new Error(res.error);
 
       toast.success('Проверете имейла си за връзка за потвърждение!');
     } catch (error) {
@@ -232,25 +213,13 @@ export function AuthProvider({
 
   const resetPassword = async (email: string) => {
     try {
-      const siteUrl = getSiteUrl();
-      console.log('Using site URL for reset password:', siteUrl); // Debug log
+      const { sendCustomPasswordResetEmail } = await import('@/app/actions/auth');
 
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${siteUrl}/auth/callback`,
-      });
+      const res = await sendCustomPasswordResetEmail(email);
 
-      if (error) throw error;
+      if (!res.success) throw new Error(res.error);
 
-      // Send password reset email using our API route
-      await fetch('/api/emails/reset-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      toast.success('Password reset instructions sent to your email!');
+      toast.success('Инструкциите за нулиране са изпратени на вашия имейл!');
     } catch (error) {
       console.error('Reset password error:', error);
       toast.error('Error sending reset password email');
