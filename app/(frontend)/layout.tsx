@@ -48,7 +48,7 @@ export const metadata: Metadata = {
     siteName: 'Dani Rusev 11',
     images: [
       {
-        url: 'https://danirusev.vercel.app/og-image.jpg', // **ВАЖНО**: Създайте и качете такова изображение!
+        url: 'https://danirusev.vercel.app/og-image.png', // **ВАЖНО**: Създайте и качете такова изображение!
         width: 1200,
         height: 630,
         alt: 'Дрифт автомобил на писта - Dani Rusev 11',

@@ -100,7 +100,7 @@ export function OrganizationSchema() {
     name: 'Dani Rusev 11',
     alternateName: 'Dani Rusev Extreme Experiences',
     url: process.env.NEXT_PUBLIC_SERVER_URL || 'https://danirusev.vercel.app',
-    logo: `${process.env.NEXT_PUBLIC_SERVER_URL}/og-image.jpg`,
+    logo: `${process.env.NEXT_PUBLIC_SERVER_URL}/og-image.png`,
     description: 'Екстремни автомобилни преживявания - дрифт, рали и каране на писта в България',
     address: {
       '@type': 'PostalAddress',
