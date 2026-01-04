@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/components/providers/supabase-auth-provider';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Mail, Lock, User, Loader2, UserPlus, ArrowRight } from 'lucide-react';
 
@@ -23,6 +24,8 @@ type SignUpFormValues = z.infer<typeof signUpSchema>;
 export default function SignUpForm() {
   const [isLoading, setIsLoading] = useState(false);
   const { signUp } = useAuth();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirect_to') || undefined;
 
   const {
     register,
@@ -35,7 +38,7 @@ export default function SignUpForm() {
   const onSubmit = async (data: SignUpFormValues) => {
     try {
       setIsLoading(true);
-      await signUp(data.email, data.password, data.name);
+      await signUp(data.email, data.password, data.name, redirectTo);
     } catch (error) {
       console.error('Sign up error:', error);
     } finally {
@@ -164,7 +167,10 @@ export default function SignUpForm() {
         className="mt-8 text-center text-sm"
       >
         <span className="text-slate-500">Вече имате профил?</span>{' '}
-        <Link href="/sign-in" className="text-white font-bold hover:text-main transition-colors underline underline-offset-4 decoration-main/30 hover:decoration-main">
+        <Link
+          href={redirectTo ? `/sign-in?redirect_to=${encodeURIComponent(redirectTo)}` : "/sign-in"}
+          className="text-white font-bold hover:text-main transition-colors underline underline-offset-4 decoration-main/30 hover:decoration-main"
+        >
           Влезте тук
         </Link>
       </motion.div>

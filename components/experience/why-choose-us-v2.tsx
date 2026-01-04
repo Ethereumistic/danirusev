@@ -11,7 +11,7 @@ import {
     CarouselPrevious,
     type CarouselApi,
 } from "@/components/ui/carousel";
-import { Flame, Shield, Video, ChevronRight, Zap, Users, Award } from "lucide-react";
+import { Flame, Shield, Video, ChevronRight, Zap, Users, Award, Trophy, Hourglass, Star, ShieldCheck } from "lucide-react";
 import Image from "next/image";
 
 interface FeatureBlock {
@@ -163,7 +163,7 @@ function FeatureSection({ feature, index }: { feature: FeatureBlock; index: numb
         <div className="max-w-7xl mx-auto px-4">
             <div
                 className={`relative flex flex-col ${feature.reversed ? "lg:flex-row-reverse" : "lg:flex-row"
-                    } gap-8 lg:gap-16 py-16 lg:py-24 items-center`}
+                    } gap-8 lg:gap-16 py-8 items-center`}
             >
                 {/* Carousel Side */}
                 <motion.div
@@ -175,29 +175,6 @@ function FeatureSection({ feature, index }: { feature: FeatureBlock; index: numb
                 >
                     <FeatureCarousel images={feature.images} title={feature.title} />
 
-                    {/* Floating stat cards */}
-                    {/* <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.4, duration: 0.5 }}
-                        className={`absolute -bottom-6 ${feature.reversed ? "right-4 lg:right-8" : "left-4 lg:left-8"
-                            } flex gap-3 z-10`}
-                    >
-                        {feature.stats.map((stat, idx) => (
-                            <div
-                                key={idx}
-                                className="bg-slate-900/90 backdrop-blur-md border border-slate-700 rounded-xl px-4 py-2.5 shadow-xl"
-                            >
-                                <div className="text-2xl font-black text-main">
-                                    {stat.value}
-                                </div>
-                                <div className="text-xs text-slate-400 uppercase tracking-wide">
-                                    {stat.label}
-                                </div>
-                            </div>
-                        ))}
-                    </motion.div> */}
                 </motion.div>
 
                 {/* Content Side */}
@@ -239,9 +216,9 @@ function FeatureSection({ feature, index }: { feature: FeatureBlock; index: numb
 
                         {/* CTA */}
                         <Button
-                            variant="outline"
+                            variant="default"
                             size="lg"
-                            className="border-main/50 text-main hover:text-main/80  font-bold uppercase tracking-wide group"
+                            className="bg-main font-black uppercase tracking-wide group"
                             onClick={() => {
                                 document
                                     .getElementById("drift-experiences")
@@ -267,7 +244,7 @@ export function WhyChooseUsV2() {
     return (
         <section className="relative bg-slate-950 overflow-hidden">
             {/* Section Header */}
-            <div className="relative z-10 pt-24 pb-16 px-4">
+            <div className="relative z-10 py-8 px-4">
                 <div className="max-w-7xl mx-auto text-center">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -301,11 +278,11 @@ export function WhyChooseUsV2() {
                         transition={{ duration: 0.6, delay: 0.2 }}
                         className="text-xl text-slate-400 max-w-3xl mx-auto"
                     >
-                        Три неща, които ни правят различни от всички останали
+                        Четири неща, които ни правят различни от всички останали
                     </motion.p>
 
                     {/* Trust indicators */}
-                    <motion.div
+                    {/* <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
@@ -325,12 +302,32 @@ export function WhyChooseUsV2() {
                                 <span className="text-sm font-medium">{item.text}</span>
                             </div>
                         ))}
+                    </motion.div> */}
+                    {/* Social Proof Stats */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8, delay: 0.4 }}
+                        className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto pt-8"
+                    >
+                        {[
+                            { icon: Trophy, value: "СУПЕР", label: "Доволни Клиенти" },
+                            { icon: Hourglass, value: "+15 г.", label: "Мотор Спорт" },
+                            { icon: Star, value: "ТОП", label: "Рейтинг" },
+                            { icon: ShieldCheck, value: "МАКС", label: "Безопасност" },
+                        ].map((stat, idx) => (
+                            <div key={idx} className="bg-slate-900/50 backdrop-blur-md border border-slate-800 rounded-xl p-4">
+                                <stat.icon className="w-6 h-6 text-main mb-2 mx-auto" />
+                                <div className="text-3xl font-black text-white mb-1">{stat.value}</div>
+                                <div className="text-sm text-slate-400 uppercase tracking-wide">{stat.label}</div>
+                            </div>
+                        ))}
                     </motion.div>
                 </div>
             </div>
 
             {/* Feature Blocks */}
-            <div className="relative">
+            <div className="relative  -mt-8">
                 {FEATURES.map((feature, index) => (
                     <FeatureSection key={feature.id} feature={feature} index={index} />
                 ))}

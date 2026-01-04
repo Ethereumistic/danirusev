@@ -11,7 +11,7 @@ export default async function OrdersPage() {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect('/sign-in?redirect_to=/orders')
+    redirect(`/sign-in?redirect_to=${encodeURIComponent('/orders')}`)
   }
 
   // Fetch orders using the RPC call

@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/components/providers/supabase-auth-provider';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Mail, Loader2, Send, ArrowLeft } from 'lucide-react';
 
@@ -21,6 +22,8 @@ type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 export default function ForgotPasswordForm() {
   const [isLoading, setIsLoading] = useState(false);
   const { resetPassword } = useAuth();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirect_to') || undefined;
 
   const {
     register,
@@ -104,7 +107,10 @@ export default function ForgotPasswordForm() {
         transition={{ delay: 0.3 }}
         className="mt-8 text-center text-sm"
       >
-        <Link href="/sign-in" className="inline-flex items-center gap-2 text-slate-500 font-bold hover:text-white transition-colors">
+        <Link
+          href={redirectTo ? `/sign-in?redirect_to=${encodeURIComponent(redirectTo)}` : "/sign-in"}
+          className="inline-flex items-center gap-2 text-slate-500 font-bold hover:text-white transition-colors"
+        >
           <ArrowLeft className="h-4 w-4" />
           Върнете се към Вход
         </Link>

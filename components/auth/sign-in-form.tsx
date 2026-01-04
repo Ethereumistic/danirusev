@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/components/providers/supabase-auth-provider';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Loader2, ArrowRight } from 'lucide-react';
 
@@ -22,6 +23,8 @@ type SignInFormValues = z.infer<typeof signInSchema>;
 export default function SignInForm() {
   const [isLoading, setIsLoading] = useState(false);
   const { signIn } = useAuth();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirect_to') || undefined;
 
   const {
     register,
@@ -34,7 +37,7 @@ export default function SignInForm() {
   const onSubmit = async (data: SignInFormValues) => {
     try {
       setIsLoading(true);
-      await signIn(data.email, data.password);
+      await signIn(data.email, data.password, redirectTo);
     } catch (error) {
       console.error('Sign in error:', error);
     } finally {
@@ -86,7 +89,7 @@ export default function SignInForm() {
               Парола
             </Label>
             <Link
-              href="/forgot-password"
+              href={redirectTo ? `/forgot-password?redirect_to=${encodeURIComponent(redirectTo)}` : "/forgot-password"}
               className="text-[10px] font-bold text-main uppercase tracking-wider hover:underline"
             >
               Забравена парола?
@@ -142,7 +145,10 @@ export default function SignInForm() {
         className="mt-8 text-center text-sm"
       >
         <span className="text-slate-500">Нямате профил?</span>{' '}
-        <Link href="/sign-up" className="text-white font-bold hover:text-main transition-colors underline underline-offset-4 decoration-main/30 hover:decoration-main">
+        <Link
+          href={redirectTo ? `/sign-up?redirect_to=${encodeURIComponent(redirectTo)}` : "/sign-up"}
+          className="text-white font-bold hover:text-main transition-colors underline underline-offset-4 decoration-main/30 hover:decoration-main"
+        >
           Създайте го тук
         </Link>
       </motion.div>

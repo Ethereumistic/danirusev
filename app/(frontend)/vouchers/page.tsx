@@ -9,7 +9,7 @@ export default async function VouchersPage() {
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
-        redirect("/sign-in")
+        redirect(`/sign-in?redirect_to=${encodeURIComponent('/vouchers')}`)
     }
 
     // Get user's vouchers

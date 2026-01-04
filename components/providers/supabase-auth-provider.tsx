@@ -29,8 +29,8 @@ type AuthContextType = {
   user: User | null;
   userRole: string | null;
   isLoading: boolean;
-  signUp: (email: string, password: string, name: string) => Promise<void>;
-  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, name: string, redirectTo?: string) => Promise<void>;
+  signIn: (email: string, password: string, redirectTo?: string) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
 };
@@ -133,9 +133,13 @@ export function AuthProvider({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router, supabase, initialUser, initialRole]);
 
-  const signUp = async (email: string, password: string, name: string) => {
+  const signUp = async (email: string, password: string, name: string, redirectTo?: string) => {
     try {
       const siteUrl = getSiteUrl();
+      const emailRedirectTo = redirectTo
+        ? `${siteUrl}/auth/callback?next=${encodeURIComponent(redirectTo)}`
+        : `${siteUrl}/auth/callback`;
+
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -144,7 +148,7 @@ export function AuthProvider({
             name,
             role: 'customer',
           },
-          emailRedirectTo: `${siteUrl}/auth/callback`,
+          emailRedirectTo,
         },
       });
 
@@ -164,7 +168,7 @@ export function AuthProvider({
     }
   };
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string, redirectTo?: string) => {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -181,14 +185,16 @@ export function AuthProvider({
         setIsAuthenticated(true);
       }
 
+      const targetPath = redirectTo || '/';
+
       // Redirect and Refresh
-      router.push('/');
+      router.push(targetPath);
       router.refresh();
 
       // Reliable hard redirect if SPA fails
       setTimeout(() => {
         if (window.location.pathname.includes('sign-in')) {
-          window.location.href = '/';
+          window.location.href = targetPath;
         }
       }, 800);
 

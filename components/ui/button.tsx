@@ -10,7 +10,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground shadow-xs hover:bg-primary/90",
+          "bg-main text-primary-foreground shadow-xs hover:bg-main/90",
         taxi:
           "bg-taxi text-primary-foreground shadow-xs hover:bg-taxi/90",
         rent:

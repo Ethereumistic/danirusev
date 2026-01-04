@@ -46,18 +46,8 @@ const Hero = () => {
 
       {/* Hero Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 py-20 text-center">
-        {/* Pre-title badge */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="mb-6 inline-flex items-center gap-2 bg-main/10 border border-main/30 px-6 py-2 rounded-full backdrop-blur-md"
-        >
-          <Flame className="w-4 h-4 text-main" />
-          <span className="text-main font-bold uppercase tracking-wider text-sm">
-            Оригинални Дрифт Преживявания
-          </span>
-        </motion.div>
+
+
 
         {/* Main Headline */}
         <motion.h1
@@ -106,26 +96,7 @@ const Hero = () => {
           </Button>
         </motion.div>
 
-        {/* Social Proof Stats */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto"
-        >
-          {[
-            { icon: Trophy, value: "СУПЕР", label: "Доволни Клиенти" },
-            { icon: Hourglass, value: "+15 г.", label: "Мотор Спорт" },
-            { icon: Star, value: "ТОП", label: "Рейтинг" },
-            { icon: ShieldCheck, value: "МАКС", label: "Безопасност" },
-          ].map((stat, idx) => (
-            <div key={idx} className="bg-slate-900/50 backdrop-blur-md border border-slate-800 rounded-xl p-4">
-              <stat.icon className="w-6 h-6 text-main mb-2 mx-auto" />
-              <div className="text-3xl font-black text-white mb-1">{stat.value}</div>
-              <div className="text-sm text-slate-400 uppercase tracking-wide">{stat.label}</div>
-            </div>
-          ))}
-        </motion.div>
+
       </div>
 
       {/* Scroll indicator */}

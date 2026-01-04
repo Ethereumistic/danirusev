@@ -12,7 +12,7 @@ export default async function AccountPage() {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect("/sign-in")
+    redirect(`/sign-in?redirect_to=${encodeURIComponent('/account')}`)
   }
 
   const { data: profile, error } = await supabase

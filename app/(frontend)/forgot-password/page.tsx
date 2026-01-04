@@ -3,8 +3,12 @@
 import ForgotPasswordForm from '@/components/auth/forgot-password-form';
 import { motion } from 'framer-motion';
 import { KeyRound } from 'lucide-react';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 
 export default function ForgotPasswordPage() {
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirect_to') || undefined;
   return (
     <div className="min-h-[90vh] flex flex-col items-center justify-center py-12 px-4 relative overflow-hidden">
       {/* Background Decorative Elements */}
@@ -48,7 +52,7 @@ export default function ForgotPasswordPage() {
           transition={{ delay: 0.6 }}
           className="text-center mt-10 text-[10px] text-slate-600 font-black uppercase tracking-widest"
         >
-          Върнете се към <a href="/sign-in" className="text-slate-400 hover:text-white underline decoration-main/30 hover:decoration-main underline-offset-4">началото</a>
+          Върнете се към <Link href={redirectTo ? `/sign-in?redirect_to=${encodeURIComponent(redirectTo)}` : "/sign-in"} className="text-slate-400 hover:text-white underline decoration-main/30 hover:decoration-main underline-offset-4">началото</Link>
         </motion.p>
       </motion.div>
     </div>
