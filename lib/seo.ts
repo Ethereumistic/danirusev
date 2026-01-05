@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 
-const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'https://danirusev.vercel.app'
+const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'https://danirusev.com'
 const siteName = 'Dani Rusev 11'
 const defaultDescription = 'Екстремни автомобилни преживявания в България. Дрифт, рали и каране на писта с професионални инструктори.'
 
@@ -20,6 +20,10 @@ export const defaultMetadata: Metadata = {
     'подарък за мъж',
     'ваучер за преживяване',
     'България',
+    'дани русев',
+    'данаил русев',
+    'rally driving experience',
+    'drift driving experience',
   ],
   authors: [{ name: 'Dani Rusev' }],
   creator: 'Dani Rusev',
@@ -49,6 +53,7 @@ export const defaultMetadata: Metadata = {
     card: 'summary_large_image',
     title: siteName,
     description: defaultDescription,
+    images: ['/og-image.png'],
   },
   robots: {
     index: true,

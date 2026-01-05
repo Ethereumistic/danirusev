@@ -20,15 +20,15 @@ export const metadata: Metadata = {
 };
 
 export default function ContactPage() {
-  const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'https://danirusev.vercel.app';
-  
+  const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'https://danirusev.com';
+
   return (
     <>
-      <BreadcrumbSchema 
+      <BreadcrumbSchema
         items={[
           { name: 'Начало', url: baseUrl },
           { name: 'Контакти', url: `${baseUrl}/contact` }
-        ]} 
+        ]}
       />
       <ContactClient />
     </>

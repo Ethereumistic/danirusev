@@ -294,7 +294,7 @@ export function Navbar() {
           </div>
 
           {/* Sticky Footer User Section */}
-          <div className="p-4 border-t border-white/5 bg-slate-950/50 backdrop-blur-xl shrink-0 pb-[calc(env(safe-area-inset-bottom)+2rem)]">
+          <div className="p-4 border-t border-white/5 bg-slate-950/50 backdrop-blur-xl shrink-0 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
             {user ? (
               <div className="space-y-3">
                 {/* User Profile "Button" leading to Account */}
@@ -380,7 +380,7 @@ export function Navbar() {
                 </Button>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <Button variant="main" className="w-full h-14 text-alt font-black uppercase tracking-tighter italic bg-main rounded-2xl shadow-[0_0_20px_rgba(208,246,26,0.2)]" asChild onClick={() => setIsMobileMenuOpen(false)}>
                   <Link href="/sign-in">Влез в профила →</Link>
                 </Button>

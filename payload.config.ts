@@ -12,6 +12,7 @@ import { Media } from './collections/Media'
 import { Products } from './collections/Products'
 import { Categories } from './collections/Categories'
 import { PromoBanners } from './collections/PromoBanners'
+import { Testimonials } from './collections/Testimonials'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -33,7 +34,7 @@ export default buildConfig({
       titleSuffix: '- E-Commerce Admin',
     },
   },
-  collections: [Users, Media, Products, Categories, PromoBanners],
+  collections: [Users, Media, Products, Categories, PromoBanners, Testimonials],
   editor: lexicalEditor({}),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {

@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next'
 import { getPayloadClient } from '@/lib/get-payload'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'https://danirusev.vercel.app'
+  const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'https://danirusev.com'
   const payload = await getPayloadClient()
 
   // Get all products

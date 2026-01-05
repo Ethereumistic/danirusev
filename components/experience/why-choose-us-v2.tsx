@@ -332,39 +332,6 @@ export function WhyChooseUsV2() {
                     <FeatureSection key={feature.id} feature={feature} index={index} />
                 ))}
             </div>
-
-            {/* Bottom CTA */}
-            {/* <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
-                className="relative z-10 py-24 px-4"
-            >
-                <div className="max-w-4xl mx-auto text-center">
-                    <h3 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter italic mb-6">
-                        Готов ли си да усетиш <span className="text-main">разликата</span>?
-                    </h3>
-                    <p className="text-lg text-slate-400 mb-8 max-w-2xl mx-auto">
-                        Не чакай повече. Избери своето преживяване и стани част от
-                        дрифт общността.
-                    </p>
-                    <Button
-                        size="lg"
-                        className="bg-main hover:bg-main/90 text-black font-extrabold uppercase tracking-wider h-16 px-12 text-lg rounded-xl group relative overflow-hidden shadow-[0_0_40px_-10px_rgba(16,185,129,0.6)]"
-                        onClick={() => {
-                            document
-                                .getElementById("drift-experiences")
-                                ?.scrollIntoView({ behavior: "smooth" });
-                        }}
-                    >
-                        <span className="relative z-10 flex items-center gap-2">
-                            Избери Преживяване
-                            <Flame className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-                        </span>
-                    </Button>
-                </div>
-            </motion.div> */}
         </section>
     );
 }

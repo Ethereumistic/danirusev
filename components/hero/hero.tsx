@@ -13,7 +13,7 @@ import {
 
 const Hero = () => {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden mt-[-4rem]">
+    <section className="relative min-h-screen  flex items-center justify-center overflow-hidden mt-[-4rem]">
       {/* Background Video/Image */}
       <div className="absolute inset-0 z-0 bg-slate-950">
         <video
@@ -30,23 +30,12 @@ const Hero = () => {
           <source src="/hero.mp4" type="video/mp4" />
           Your browser does not support the video tag.
         </video>
-
-        {/* Animated accent overlay */}
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-tr from-main/20 via-transparent to-taxi/10 mix-blend-overlay z-20"
-          animate={{
-            opacity: [0.3, 0.5, 0.3],
-          }}
-          transition={{
-            duration: 4,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
+        {/* Overlay for better text readability */}
+        <div className="absolute inset-0 bg-slate-950/20 z-20" />
       </div>
 
       {/* Hero Content */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 py-20 text-center">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 py-20 text-center ">
 
 
 

@@ -698,7 +698,48 @@ export function CheckoutForm({ profile }: CheckoutFormProps) {
                       {isLoadingPayment ? 'Подготовка...' : 'Продължи към плащане →'}
                     </Button>
                   ) : (
-                    <Elements stripe={stripePromise} options={{ clientSecret }}>
+                    <Elements
+                      stripe={stripePromise}
+                      options={{
+                        clientSecret,
+                        appearance: {
+                          theme: 'night',
+                          variables: {
+                            colorPrimary: '#fff', // Your main lime color
+                            colorBackground: '#020617', // bg-slate-950
+                            colorText: '#fff',
+                            colorDanger: '#ef4444',
+                            fontFamily: 'Inter, system-ui, sans-serif',
+                            spacingUnit: '4px',
+                            borderRadius: '12px',
+                          },
+                          rules: {
+                            '.Input': {
+                              backgroundColor: '#020617',
+                              border: '1px solid #1e293b', // slate-800
+                              transition: 'border 0.2s ease',
+                            },
+                            '.Input:focus': {
+                              border: '1px solid #D0F61A',
+                            },
+                            '.Label': {
+                              fontWeight: '700',
+                              textTransform: 'uppercase',
+                              fontSize: '11px',
+                              letterSpacing: '0.05em',
+                              color: '#94a3b8', // slate-400
+                            },
+                            '.Tab': {
+                              backgroundColor: '#020617', // slate-900
+                              border: '1px solid #1e293b',
+                            },
+                            '.Tab--selected': {
+                              border: '1px solid #D0F61A',
+                            }
+                          }
+                        }
+                      }}
+                    >
                       <PaymentForm
                         personalInfo={{ fullName, email, phoneNumber, address, city, postalCode, country }}
                         onSuccess={clearCart}

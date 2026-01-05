@@ -252,3 +252,42 @@ export function getAddonIcon(name: string, iconName?: string, type?: string): Lu
 
   return null;
 }
+
+/**
+ * Premium Legal Content Styles
+ * Centralized Typography for Legal Pages (Terms, Privacy, Cookies)
+ * Uses Tailwind v4 child selectors to ensure consistent styling without external plugins.
+ */
+export const LEGAL_PROSE_CLASSES = cn(
+  "relative z-10",
+  // H2 Styles: Large, Neon, Italic, with a decorative glow line
+  "[&_h2]:text-2xl [&_h2]:sm:text-4xl [&_h2]:font-black [&_h2]:uppercase [&_h2]:italic [&_h2]:tracking-tighter",
+  "[&_h2]:text-alt dark:[&_h2]:text-main [&_h2]:mt-20 [&_h2]:mb-10 [&_h2]:flex [&_h2]:items-center [&_h2]:gap-4",
+  "[&_h2]:before:content-[''] [&_h2]:before:w-2 [&_h2]:before:h-10 [&_h2]:before:bg-main [&_h2]:before:rounded-full [&_h2]:before:shadow-[0_0_20px_rgba(208,246,26,0.6)]",
+
+  // H3 Styles: Slightly smaller, bold
+  "[&_h3]:text-xl [&_h3]:sm:text-2xl [&_h3]:font-black [&_h3]:uppercase [&_h3]:italic [&_h3]:tracking-tighter",
+  "[&_h3]:text-white [&_h3]:mt-12 [&_h3]:mb-6",
+
+  // Paragraph Styles: Readable, spaced, slate colors
+  "[&_p]:text-slate-600 dark:[&_p]:text-slate-400 [&_p]:leading-relaxed [&_p]:mb-6 [&_p]:text-base sm:[&_p]:text-lg [&_p]:font-medium",
+
+  // Strong/Bold: High contrast
+  "[&_strong]:text-foreground dark:[&_strong]:text-white [&_strong]:font-black [&_strong]:italic",
+
+  // List Styles: Custom neon markers
+  "[&_ul]:list-none [&_ul]:pl-0 [&_ul]:space-y-4 [&_ul]:mb-10",
+  "[&_li]:relative [&_li]:pl-10 [&_li]:text-slate-600 dark:[&_li]:text-slate-400 [&_li]:text-base sm:[&_li]:text-lg",
+  "[&_li]:before:content-['→'] [&_li]:before:absolute [&_li]:before:left-2 [&_li]:before:text-main [&_li]:before:font-black [&_li]:before:text-xl",
+
+  // Link Styles: Animated, neon underline
+  "[&_a]:text-main [&_a]:font-black [&_a]:italic [&_a]:uppercase [&_a]:tracking-tighter [&_a]:transition-all",
+  "[&_a]:border-b-2 [&_a]:border-main/20 hover:[&_a]:border-main hover:[&_a]:shadow-[0_5px_15px_-5px_rgba(208,246,26,0.4)]",
+
+  // Blockquote Styles: Ghostly background with neon accent
+  "[&_blockquote]:border-l-4 [&_blockquote]:border-main [&_blockquote]:bg-main/5 [&_blockquote]:py-8 [&_blockquote]:px-10 [&_blockquote]:rounded-2xl [&_blockquote]:italic [&_blockquote]:text-slate-300 [&_blockquote]:my-12 [&_blockquote]:shadow-inner [&_blockquote]:relative",
+  "[&_blockquote]:after:content-['\"'] [&_blockquote]:after:absolute [&_blockquote]:after:top-2 [&_blockquote]:after:right-6 [&_blockquote]:after:text-6xl [&_blockquote]:after:text-main/10 [&_blockquote]:after:font-black",
+
+  // Spacing & Smooth Transitions
+  "mb-24 transition-all duration-300"
+);

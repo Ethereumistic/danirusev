@@ -87,7 +87,7 @@ export const emailTemplates = {
             Радваме се, че се присъединихте към нас. В ${STORE_NAME} вярваме, че животът трябва да бъде изпълнен с адреналин, скорост и незабравими моменти на пистата.
           </p>
           
-          <a href="https://danirusev.vercel.app" style="display: inline-block; background-color: #bef264; color: #020617; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-weight: 900; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px;">
+          <a href="https://danirusev.com" style="display: inline-block; background-color: #bef264; color: #020617; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-weight: 900; font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px;">
             Разгледай преживяванията
           </a>
           

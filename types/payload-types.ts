@@ -192,6 +192,24 @@ export interface PromoBanner {
   updatedAt: string
 }
 
+// Testimonial type
+export interface Testimonial {
+  id: string
+  name: string
+  experience?: string
+  rating: number
+  quote: string
+  location?: string
+  avatar?: {
+    type: 'upload' | 'url'
+    media?: string | Media
+    url?: string
+  }
+  createdAt: string
+  updatedAt: string
+}
+
+
 // Type guards
 export function isPhysicalProduct(product: Product): product is PhysicalProduct {
   return product.productType === 'physical'
