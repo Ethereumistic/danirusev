@@ -15,24 +15,25 @@ const Hero = () => {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden mt-[-4rem]">
       {/* Background Video/Image */}
-      <div className="absolute inset-0 z-0">
+      <div className="absolute inset-0 z-0 bg-slate-950">
         <video
           autoPlay
           loop
           muted
           playsInline
+          preload="auto"
+          disablePictureInPicture
+          disableRemotePlayback
+          aria-hidden="true"
           className="absolute top-0 left-0 w-full h-full object-cover z-10"
-          src="/bg.mp4"
-          onCanPlay={() => console.log('Video can play')}
         >
-          <source src="/bg.mp4" type="video/mp4" />
+          <source src="/hero.mp4" type="video/mp4" />
           Your browser does not support the video tag.
         </video>
-        <div className="relative z-20 flex flex-col items-center justify-center h-full text-center text-white bg-black/60" />
 
         {/* Animated accent overlay */}
         <motion.div
-          className="absolute inset-0 bg-gradient-to-tr from-main/20 via-transparent to-taxi/10 mix-blend-overlay"
+          className="absolute inset-0 bg-gradient-to-tr from-main/20 via-transparent to-taxi/10 mix-blend-overlay z-20"
           animate={{
             opacity: [0.3, 0.5, 0.3],
           }}
