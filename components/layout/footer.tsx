@@ -14,7 +14,7 @@ interface SocialLink {
 export function Footer() {
   const navItems = [
     { label: 'Начало', href: '/' },
-    { label: 'Преживявания', href: '/experiences' },
+    { label: 'Преживявания', href: '/#drift-experiences' },
     { label: 'Магазин 🔒', href: '/shop', locked: true },
     { label: 'Абонамент 🔒', href: '/subscription', locked: true },
     { label: 'Контакти', href: '/contact' },

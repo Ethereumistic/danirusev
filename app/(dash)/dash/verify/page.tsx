@@ -14,11 +14,13 @@ export default function VerifyPage() {
     const [error, setError] = useState<string | null>(null)
     const scannerRef = useRef<Html5Qrcode | null>(null)
     const qrBoxId = 'qr-reader'
+    const isStoppingRef = useRef(false)
 
     const startScanning = async () => {
         try {
             setError(null)
             setIsScanning(true)
+            isStoppingRef.current = false
 
             // Wait for DOM to update
             await new Promise(resolve => setTimeout(resolve, 100))
@@ -33,33 +35,39 @@ export default function VerifyPage() {
                     fps: 10,
                     qrbox: { width: 250, height: 250 }
                 },
-                (decodedText) => {
+                async (decodedText) => {
+                    // Prevent concurrent stop calls
+                    if (isStoppingRef.current) return
+                    isStoppingRef.current = true
+
                     // Handle successful scan
                     console.log('QR Code scanned:', decodedText)
 
-                    // Stop scanning
-                    if (scannerRef.current) {
-                        scannerRef.current.stop()
+                    // Stop scanning first, wait for it to finish
+                    if (scannerRef.current && isScanning) {
+                        try {
+                            await scannerRef.current.stop()
+                        } catch (err) {
+                            console.error('Error stopping scanner during success:', err)
+                        }
                     }
                     setIsScanning(false)
 
                     // Extract voucher ID from URL
                     try {
                         const url = new URL(decodedText)
-
-                        // Get current host from window for flexible validation across deployments
                         const currentHost = window.location.host
-                        // Check multiple fallback env vars to be resilient for the expected host
+
                         const siteUrlEnv = process.env.NEXT_PUBLIC_BASE_URL ||
                             process.env.NEXT_PUBLIC_SITE_URL ||
                             process.env.NEXT_PUBLIC_SERVER_URL
                         const expectedHostFromEnv = siteUrlEnv ? new URL(siteUrlEnv).host : null
 
-                        // Validate the QR code is from our domain (either current host OR the configured site URL)
                         const isAuthorizedHost = url.host === currentHost || (expectedHostFromEnv && url.host === expectedHostFromEnv)
 
                         if (!isAuthorizedHost) {
                             setError(`Невалиден QR код - не е от ${currentHost}`)
+                            isStoppingRef.current = false
                             return
                         }
 
@@ -70,13 +78,14 @@ export default function VerifyPage() {
                             router.push(`/dash/verify/${voucherId}`)
                         } else {
                             setError('Невалиден QR код - не е ваучер')
+                            isStoppingRef.current = false
                         }
                     } catch {
-                        // Maybe it's just the voucher ID directly
                         if (decodedText.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
                             router.push(`/dash/verify/${decodedText}`)
                         } else {
                             setError('Невалиден QR код формат')
+                            isStoppingRef.current = false
                         }
                     }
                 },
@@ -92,24 +101,28 @@ export default function VerifyPage() {
     }
 
     const stopScanning = async () => {
+        if (isStoppingRef.current) return
+        isStoppingRef.current = true
+
         if (scannerRef.current && isScanning) {
             try {
                 await scannerRef.current.stop()
             } catch (err) {
-                console.error('Error stopping scanner:', err)
+                console.error('Error stopping scanner manually:', err)
             }
         }
         setIsScanning(false)
+        isStoppingRef.current = false
     }
 
     // Cleanup on unmount
     useEffect(() => {
         return () => {
-            if (scannerRef.current) {
+            if (scannerRef.current && isScanning) {
                 scannerRef.current.stop().catch(() => { })
             }
         }
-    }, [])
+    }, [isScanning])
 
     return (
         <div className="container mx-auto px-4 py-8 max-w-2xl">

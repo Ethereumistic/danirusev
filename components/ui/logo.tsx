@@ -1,10 +1,23 @@
 import React from 'react';
+import { cn } from '@/lib/utils';
 
-const Logo = () => {
+interface LogoProps {
+  className?: string;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+}
+
+const Logo = ({ className, size = 'md' }: LogoProps) => {
+  const sizeClasses = {
+    sm: 'text-2xl',
+    md: 'text-4xl md:text-5xl',
+    lg: 'text-5xl md:text-6xl',
+    xl: 'text-6xl md:text-8xl'
+  };
+
   return (
-    <div className="font-gagalin text-4xl md:text-5xl ">
-      <span className="hidden xl:inline text-main font-outline text-nowrap">Dani Rusev 11</span>
-      <span className="xl:hidden text-main font-outline">DR11</span>
+    <div className={cn("font-gagalin", sizeClasses[size], className)}>
+      <span className="lg:hidden xl:inline inline text-main font-outline text-nowrap">Dani Rusev 11</span>
+      <span className="lg:inline xl:hidden hidden text-main font-outline">DR11</span>
     </div>
   );
 };

@@ -28,7 +28,7 @@ export function Cart({ closeSheet }: { closeSheet: () => void }) {
   };
 
   return (
-    <SheetContent className="flex w-full flex-col px-6 sm:max-w-lg z-[50000] bg-slate-950">
+    <SheetContent className="flex w-full flex-col px-6 sm:max-w-lg z-[50000] bg-slate-950 [&>button]:top-3 [&>button]:right-8 [&>button]:w-10 [&>button]:h-10 [&>button]:flex [&>button]:items-center [&>button]:justify-center [&>button>svg]:size-6 [&>button>svg]:m-0">
       <SheetHeader className="space-y-2.5 pr-6 pb-4">
         <SheetTitle className="text-2xl font-black text-white">Количка ({items.length})</SheetTitle>
         <p className="text-sm text-slate-400">Прегледайте вашите избрани преживявания</p>
