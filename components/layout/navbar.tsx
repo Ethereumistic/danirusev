@@ -234,19 +234,18 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Navigation (Sheet - Right Side) */}
       <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
         <SheetContent
           side="right"
-          className="w-full sm:max-w-sm bg-slate-950 border-l-slate-800 p-0 flex flex-col shadow-2xl [&>button]:top-3 [&>button]:right-8 [&>button]:w-10 [&>button]:h-10 [&>button]:flex [&>button]:items-center [&>button]:justify-center [&>button>svg]:size-6 [&>button>svg]:m-0"
+          className="w-full sm:max-w-sm bg-slate-950 border-l-slate-800 p-0 flex flex-col h-[100dvh] shadow-2xl [&>button]:top-3 [&>button]:right-8 [&>button]:w-10 [&>button]:h-10 [&>button]:flex [&>button]:items-center [&>button]:justify-center [&>button>svg]:size-6 [&>button>svg]:m-0"
         >
           {/* Header designed to perfectly overlay the navbar ribbon */}
-          <div className="h-16 flex items-center justify-between px-4 border-b border-white/5">
+          <div className="h-16 flex items-center justify-between px-4 border-b border-white/5 shrink-0">
             <Logo />
           </div>
 
-          <div className="flex-1 overflow-y-auto px-4 space-y-4 custom-scrollbar">
-            {/* Primary Nav Items - Simplified (No 'Menu' heading) */}
+          {/* Primary Scrollable Content */}
+          <div className="flex-1 overflow-y-auto px-4 custom-scrollbar">
             <div className="space-y-1">
               {navItems.map((item) => {
                 const Icon = item.icon;
@@ -292,106 +291,104 @@ export function Navbar() {
                 );
               })}
             </div>
+          </div>
 
-            {/* User Section - Minimalist */}
-            <div className="pt-2 border-t border-white/5 pb-8">
-              {user ? (
-                <div className="space-y-2">
-                  {/* User Profile "Button" leading to Account */}
+          {/* Sticky Footer User Section */}
+          <div className="p-4 border-t border-white/5 bg-slate-950/50 backdrop-blur-xl shrink-0 pb-[calc(env(safe-area-inset-bottom)+2rem)]">
+            {user ? (
+              <div className="space-y-3">
+                {/* User Profile "Button" leading to Account */}
+                <Link
+                  href="/account"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center justify-between p-3 bg-slate-900/40 rounded-2xl border border-white/5 hover:bg-slate-900 transition-all active:scale-[0.98]"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-full bg-main/10 border border-main/20 flex items-center justify-center shrink-0">
+                      <User className="h-5 w-5 text-main" />
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-sm font-black uppercase tracking-tighter italic text-white truncate leading-tight">{user.user_metadata?.name || 'Customer'}</span>
+                      <span className="text-[10px] text-slate-500 font-bold truncate tracking-wide">{user.email}</span>
+                    </div>
+                  </div>
+                  <Settings className="h-5 w-5 text-slate-500 hover:text-main transition-colors shrink-0" />
+                </Link>
+
+                {/* 2 Columns Grid for Orders & Vouchers */}
+                <div className="grid grid-cols-2 gap-2">
                   <Link
-                    href="/account"
+                    href="/orders"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center justify-between p-3 bg-slate-900/40 rounded-2xl border border-white/5 hover:bg-slate-900 transition-all active:scale-[0.98]"
+                    className="flex items-center justify-center gap-3 p-4 rounded-2xl bg-slate-900 border border-slate-800 hover:bg-slate-800 hover:border-slate-700 transition-all active:scale-95 group"
                   >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-full bg-main/10 border border-main/20 flex items-center justify-center shrink-0">
-                        <User className="h-5 w-5 text-main" />
-                      </div>
-                      <div className="flex flex-col min-w-0">
-                        <span className="text-sm font-black uppercase tracking-tighter italic text-white truncate leading-tight">{user.user_metadata?.name || 'Customer'}</span>
-                        <span className="text-[9px] text-slate-500 font-bold truncate tracking-wide">{user.email}</span>
-                      </div>
-                    </div>
-                    <Settings className="h-5 w-5 text-slate-500 hover:text-main transition-colors shrink-0" />
+                    <Package className="h-5 w-5 text-main group-hover:scale-110 transition-transform" />
+                    <span className="text-[11px] font-black uppercase tracking-widest text-slate-300">Поръчки</span>
                   </Link>
+                  <Link
+                    href="/vouchers"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center justify-center gap-3 p-4 rounded-2xl bg-slate-900 border border-slate-800 hover:bg-slate-800 hover:border-slate-700 transition-all active:scale-95 group"
+                  >
+                    <Ticket className="h-5 w-5 text-main group-hover:scale-110 transition-transform" />
+                    <span className="text-[11px] font-black uppercase tracking-widest text-slate-300">Ваучери</span>
+                  </Link>
+                </div>
 
-                  {/* 2 Columns Grid for Orders & Vouchers */}
-                  <div className="grid grid-cols-2 gap-2">
+                {/* 3 Columns Admin Grid */}
+                {userRole === 'admin' && (
+                  <div className="grid grid-cols-3 gap-2 ">
                     <Link
-                      href="/orders"
+                      href="/admin"
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center justify-center gap-3 p-4 rounded-2xl bg-slate-900 border border-slate-800 hover:bg-slate-800 hover:border-slate-700 transition-all active:scale-95 group"
+                      className="flex flex-col items-center justify-center p-3 rounded-2xl bg-main/5 border border-main/10 hover:bg-main/10 transition-all active:scale-95 group"
                     >
-                      <Package className="h-5 w-5 text-main group-hover:scale-110 transition-transform" />
-                      <span className="text-[11px] font-black uppercase tracking-widest text-slate-300">Поръчки</span>
+                      <Shield className="h-5 w-5 text-main group-hover:rotate-12 transition-transform mb-1" />
+                      <span className="text-[8px] font-black uppercase tracking-tight text-white">Admin</span>
                     </Link>
                     <Link
-                      href="/vouchers"
+                      href="/dash"
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center justify-center gap-3 p-4 rounded-2xl bg-slate-900 border border-slate-800 hover:bg-slate-800 hover:border-slate-700 transition-all active:scale-95 group"
+                      className="flex flex-col items-center justify-center p-3 rounded-2xl bg-slate-900 border border-slate-800 hover:bg-slate-800 transition-all active:scale-95 group"
                     >
-                      <Ticket className="h-5 w-5 text-main group-hover:scale-110 transition-transform" />
-                      <span className="text-[11px] font-black uppercase tracking-widest text-slate-300">Ваучери</span>
+                      <LayoutDashboard className="h-5 w-5 text-main group-hover:scale-110 transition-transform mb-1" />
+                      <span className="text-[8px] font-black uppercase tracking-tight text-slate-400">Dash</span>
+                    </Link>
+                    <Link
+                      href="/dash/verify"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex flex-col items-center justify-center p-3 rounded-2xl bg-slate-900 border border-slate-800 hover:bg-slate-800 transition-all active:scale-95 group"
+                    >
+                      <ScanLine className="h-5 w-5 text-main group-hover:scale-110 transition-transform mb-1" />
+                      <span className="text-[8px] font-black uppercase tracking-tight text-slate-400">Scan</span>
                     </Link>
                   </div>
+                )}
 
-                  {/* 3 Columns Admin Grid */}
-                  {userRole === 'admin' && (
-                    <div className="grid grid-cols-3 gap-2 ">
-                      <Link
-                        href="/admin"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                        className="flex flex-col items-center justify-center p-3 rounded-2xl bg-main/5 border border-main/10 hover:bg-main/10 transition-all active:scale-95 group"
-                      >
-                        <Shield className="h-5 w-5 text-main group-hover:rotate-12 transition-transform mb-1" />
-                        <span className="text-[8px] font-black uppercase tracking-tight text-white">Admin</span>
-                      </Link>
-                      <Link
-                        href="/dash"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                        className="flex flex-col items-center justify-center p-3 rounded-2xl bg-slate-900 border border-slate-800 hover:bg-slate-800 transition-all active:scale-95 group"
-                      >
-                        <LayoutDashboard className="h-5 w-5 text-main group-hover:scale-110 transition-transform mb-1" />
-                        <span className="text-[8px] font-black uppercase tracking-tight text-slate-400">Dash</span>
-                      </Link>
-                      <Link
-                        href="/dash/verify"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                        className="flex flex-col items-center justify-center p-3 rounded-2xl bg-slate-900 border border-slate-800 hover:bg-slate-800 transition-all active:scale-95 group"
-                      >
-                        <ScanLine className="h-5 w-5 text-main group-hover:scale-110 transition-transform mb-1" />
-                        <span className="text-[8px] font-black uppercase tracking-tight text-slate-400">Scan</span>
-                      </Link>
-                    </div>
-                  )}
-
-                  {/* Logout Section */}
-                  <div className="">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      className="w-full h-12 bg-slate-900/50 hover:bg-red-500/10 text-red-500 border border-white/5 hover:border-red-500/20 rounded-xl font-black uppercase italic tracking-tighter transition-all"
-                      onClick={() => {
-                        setIsMobileMenuOpen(false);
-                        signOut();
-                      }}
-                    >
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Изход от профила
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-3 px-1">
-                  <Button variant="main" className="w-full h-14 text-alt font-black uppercase tracking-tighter italic bg-main rounded-2xl shadow-[0_0_20px_rgba(208,246,26,0.2)]" asChild onClick={() => setIsMobileMenuOpen(false)}>
-                    <Link href="/sign-in">Влез в профила →</Link>
-                  </Button>
-                  <Button variant="ghost" className="w-full h-12 text-slate-400 hover:text-white font-black uppercase tracking-tighter italic rounded-2xl border border-white/5 hover:bg-white/5" asChild onClick={() => setIsMobileMenuOpen(false)}>
-                    <Link href="/sign-up">Регистрация</Link>
-                  </Button>
-                </div>
-              )}
-            </div>
+                {/* Logout Button */}
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="w-full h-12 bg-slate-900/50 hover:bg-red-500/10 text-red-500 border border-white/5 hover:border-red-500/20 rounded-xl font-black uppercase italic tracking-tighter transition-all"
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    signOut();
+                  }}
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Изход от профила
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <Button variant="main" className="w-full h-14 text-alt font-black uppercase tracking-tighter italic bg-main rounded-2xl shadow-[0_0_20px_rgba(208,246,26,0.2)]" asChild onClick={() => setIsMobileMenuOpen(false)}>
+                  <Link href="/sign-in">Влез в профила →</Link>
+                </Button>
+                <Button variant="ghost" className="w-full h-12 hover:text-slate-400 text-white font-black uppercase tracking-tighter italic rounded-2xl border border-white/5 bg-white/5" asChild onClick={() => setIsMobileMenuOpen(false)}>
+                  <Link href="/sign-up">Регистрация</Link>
+                </Button>
+              </div>
+            )}
           </div>
         </SheetContent>
       </Sheet>
