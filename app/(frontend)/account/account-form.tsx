@@ -53,7 +53,7 @@ export function AccountForm({ user, profile }: AccountFormProps) {
     >
       {/* User Info Sidebar */}
       <div className="lg:col-span-4 space-y-6">
-        <div className="bg-slate-900/40 backdrop-blur-xl border border-white/5 p-6 md:p-8 rounded-[2rem] shadow-2xl relative overflow-hidden h-full">
+        <div className="bg-slate-900/40 backdrop-blur-xl border border-white/5 p-6 md:p-8 rounded-[2rem] shadow-2xl relative overflow-hidden h-full flex flex-col">
           <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
 
           <div className="flex flex-col items-center mb-6 md:mb-8">
@@ -92,12 +92,20 @@ export function AccountForm({ user, profile }: AccountFormProps) {
             </div>
           </div>
 
-          <Button variant="main" className=" bg-main absolute bottom-8 left-8 ">
-            <Link href="/orders" className="flex items-center text-black gap-2"><Package className="h-4 w-4 " />Поръчки</Link>
-          </Button>
-          <Button variant="main" className="bg-main absolute bottom-8 right-8 ">
-            <Link href="/vouchers" className="flex items-center text-black gap-2"><Ticket className="h-4 w-4" />Ваучери</Link>
-          </Button>
+          <div className="grid grid-cols-2 gap-4 mt-auto pt-10">
+            <Button variant="main" asChild className="bg-main w-full">
+              <Link href="/orders" className="flex items-center text-black gap-2">
+                <Package className="h-4 w-4" />
+                <span>Поръчки</span>
+              </Link>
+            </Button>
+            <Button variant="main" asChild className="bg-main w-full">
+              <Link href="/vouchers" className="flex items-center text-black gap-2">
+                <Ticket className="h-4 w-4" />
+                <span>Ваучери</span>
+              </Link>
+            </Button>
+          </div>
         </div>
 
       </div>
