@@ -37,14 +37,16 @@ export async function GET(request: NextRequest, { params }: DownloadRouteProps) 
         // SECURITY: Verify the voucher belongs to the current user
         if (voucher.user_id !== user.id) {
             console.warn(`[Security] User ${user.id} attempted to download voucher ${voucherId} belonging to user ${voucher.user_id}`)
-            return NextResponse.json({ error: 'Forbidden: This voucher does not belong to you' }, { status: 403 })
+            return NextResponse.json({ error: 'ЗАБРАНЕНО: Този ваучер не принадлежи на Вас!' }, { status: 403 })
         }
 
         // Determine which PDF template to use
         const pdfMap: Record<string, string> = {
             'drift-taxi': 'drift-taxi.pdf',
             'drift-rent': 'drift-rent.pdf',
-            'drift-mix': 'drift-mix.pdf'
+            'drift-mix': 'drift-mix.pdf',
+            'drift-day': 'drift-day.pdf',
+            'drift-event': 'drift-event.pdf'
         }
 
         const pdfFileName = pdfMap[voucher.product_slug] || 'drift-taxi.pdf'

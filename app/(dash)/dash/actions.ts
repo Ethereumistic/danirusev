@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/utils/supabase/server'
+import { createAdminClient } from '@/utils/supabase/admin'
 import { revalidatePath } from 'next/cache'
 
 export async function deleteOrder(orderId: string) {
@@ -83,7 +84,8 @@ export async function confirmOrderDate(params: {
   if (orderItem && orderItem.item_type === 'experience' && userId) {
     const voucherDate = selectedDate || orderItem.selected_date
 
-    const { error: voucherError } = await supabase.rpc('create_voucher', {
+    // Use standard client to call RPC bridge in public schema
+    const { data: voucherId, error: voucherError } = await supabase.rpc('create_voucher', {
       p_order_item_id: orderItemId,
       p_user_id: userId,
       p_product_slug: orderItem.product_id,
@@ -94,7 +96,44 @@ export async function confirmOrderDate(params: {
     })
 
     if (voucherError) {
-      console.error('Voucher creation failed:', voucherError)
+      console.error('[Dash] Voucher creation failed:', voucherError)
+    } else if (voucherId) {
+      // Use the RPC bridge to get notification details securely
+      try {
+        console.log('[Dash] Fetching details for email...')
+        const { data: details, error: detailsError } = await supabase.rpc('get_voucher_notification_details', {
+          p_voucher_id: voucherId
+        })
+
+        if (!detailsError && details?.[0]?.user_email) {
+          const info = details[0]
+          const { resend, emailTemplates } = await import('@/lib/resend')
+          const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://danirusev.com'
+
+          console.log(`[Dash] Triggering Resend for: ${info.user_email}`)
+          const { data: emailData, error: emailErr } = await resend.emails.send(
+            emailTemplates.voucherConfirmed({
+              to: info.user_email,
+              experienceName: orderItem.title || info.experience_title || 'Преживяване',
+              recipientName: info.recipient_name || info.user_full_name || 'Клиент',
+              experienceDate: new Date(voucherDate).toLocaleDateString('bg-BG', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+              }),
+              expiryDate: new Date(info.expiry_date).toLocaleDateString('bg-BG'),
+              voucherUrl: `${baseUrl}/vouchers#voucher-${voucherId}`
+            })
+          )
+
+          if (emailErr) console.error('[Dash] Resend error:', emailErr)
+          else console.log('[Dash] Email sent successfully!', emailData?.id)
+        } else {
+          console.error('[Dash] Details fetch failed or email missing:', detailsError?.message)
+        }
+      } catch (err) {
+        console.error('[Dash] Email flow exception:', err)
+      }
     }
   }
 

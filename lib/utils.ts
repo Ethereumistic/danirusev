@@ -259,6 +259,8 @@ export function getThemeRGB(themeColor: ThemeColor): [number, number, number] {
       return [57 / 255, 182 / 255, 255 / 255]; // rgb(57, 182, 255)
     case 'day':
       return [151 / 255, 87 / 255, 158 / 255]; // rgb(151, 87, 158)
+    case 'event':
+      return [251 / 255, 54 / 255, 64 / 255]; // rgb(251, 54, 64)
     default:
       return [208 / 255, 246 / 255, 26 / 255]; // Default to mix/main neon
   }

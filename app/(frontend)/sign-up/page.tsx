@@ -49,7 +49,7 @@ export default function SignUpPage() {
           transition={{ delay: 0.6 }}
           className="text-center mt-10 text-[10px] text-slate-600 font-black uppercase tracking-widest"
         >
-          Нуждаете се от помощ? <span className="text-slate-400">info@danirusev.com</span>
+          Нуждаете се от помощ? <span className="text-slate-400">contact@danirusev.com</span>
         </motion.p>
       </motion.div>
     </div>

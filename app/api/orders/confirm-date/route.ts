@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
+import { createAdminClient } from '@/utils/supabase/admin'
 
 export async function POST(request: NextRequest) {
     try {
@@ -48,13 +49,52 @@ export async function POST(request: NextRequest) {
                 })
 
                 if (voucherError) {
-                    console.error('Voucher creation failed:', voucherError)
+                    console.error('[Voucher] RPC create_voucher failed:', voucherError)
                     // Don't fail the whole request - voucher can be regenerated
                 } else {
                     console.log('[Voucher] Generated successfully via RPC:', voucherId)
+
+                    // RPC Bridge: Call the public function to get data from ecommerce schema
+                    console.log(`[Voucher] Fetching notification details for: ${voucherId}`)
+                    const { data: details, error: detailsError } = await supabase.rpc('get_voucher_notification_details', {
+                        p_voucher_id: voucherId
+                    })
+
+                    if (detailsError) {
+                        console.error('[Voucher] RPC Error:', detailsError.message)
+                    } else if (!details || details.length === 0) {
+                        console.warn('[Voucher] No data returned from RPC for ID:', voucherId)
+                    } else {
+                        const info = details[0]
+                        if (info.user_email) {
+                            console.log(`[Voucher] Sending email to: ${info.user_email}`)
+                            const { resend, emailTemplates } = await import('@/lib/resend')
+                            const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://danirusev.com'
+
+                            const { data: emailRes, error: emailError } = await resend.emails.send(
+                                emailTemplates.voucherConfirmed({
+                                    to: info.user_email,
+                                    experienceName: orderItem.title || info.experience_title || 'Преживяване',
+                                    recipientName: info.recipient_name || info.user_full_name || 'Клиент',
+                                    experienceDate: new Date(voucherDate).toLocaleDateString('bg-BG', {
+                                        day: 'numeric',
+                                        month: 'long',
+                                        year: 'numeric'
+                                    }),
+                                    expiryDate: new Date(info.expiry_date).toLocaleDateString('bg-BG'),
+                                    voucherUrl: `${baseUrl}/vouchers#voucher-${voucherId}`
+                                })
+                            )
+
+                            if (emailError) console.error('[Voucher] Resend error:', emailError)
+                            else console.log('[Voucher] Email successfully sent!', emailRes?.id)
+                        } else {
+                            console.error('[Voucher] RPC returned data but email was empty.')
+                        }
+                    }
                 }
             } catch (voucherError) {
-                console.error('Error in voucher generation logic:', voucherError)
+                console.error('Error in voucher generation/email logic:', voucherError)
                 // Don't fail the whole request
             }
         }

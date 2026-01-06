@@ -126,57 +126,155 @@ export function VoucherCard({ voucher }: VoucherCardProps) {
             <div className={`absolute left-0 top-0 bottom-0 w-2 ${theme.bg}`} />
 
             <div className="relative bg-slate-950/90 p-6 md:p-8 lg:p-10 ml-2">
-                {/* Main Content Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 items-start">
+                {/* Main Content Grid - Refactored to 2 columns for symmetry */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-start">
 
-                    {/* Column 1: Title, Image, Recipient, Status */}
-                    <div className="flex flex-col h-full">
-                        <div className="space-y-6">
-                            <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tighter leading-none">
-                                {title}
-                            </h2>
+                    {/* Column 1: Title, Image, Recipient, Dates & Addons */}
+                    <div className="flex flex-col h-full space-y-6">
+                        <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tighter leading-none">
+                            {title}
+                        </h2>
 
-                            {/* Image with absolute badges */}
-                            <div className={`relative w-full aspect-video lg:aspect-square rounded-2xl md:rounded-[2rem] overflow-hidden border-4 ${theme.border} ${theme.borderStyle} ${theme.shadow} bg-slate-900 ring-1 ring-white/5`}>
-                                <Image
-                                    src={thumbnail}
-                                    alt={title}
-                                    fill
-                                    className="object-cover scale-105"
-                                />
+                        {/* Image with absolute badges */}
+                        <div className={`relative w-full aspect-square rounded-2xl md:rounded-[2rem] overflow-hidden border-4 ${theme.border} ${theme.borderStyle} ${theme.shadow} bg-slate-900 ring-1 ring-white/5`}>
+                            <Image
+                                src={thumbnail}
+                                alt={title}
+                                fill
+                                className="object-cover scale-105"
+                            />
 
-                                <div className="absolute top-4 right-4">
-                                    <Badge className={`text-[10px] font-black uppercase px-2 py-1 ${theme.bg} text-black border-none shadow-lg`}>
-                                        Преживяване
-                                    </Badge>
-                                </div>
-
-                                {/* Location Badge */}
-                                {voucher.location && (
-                                    <div className="absolute bottom-4 left-4 bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 flex items-center gap-2">
-                                        <MapPin className={`h-4 w-4 ${theme.text}`} />
-                                        <span className="text-white text-[11px] font-black uppercase leading-none">
-                                            {voucher.location}
-                                        </span>
-                                    </div>
-                                )}
+                            <div className="absolute top-4 right-4">
+                                <Badge className={`text-[10px] font-black uppercase px-2 py-1 ${theme.bg} text-black border-none shadow-lg`}>
+                                    Преживяване
+                                </Badge>
                             </div>
+
+                            {/* Location Badge */}
+                            {voucher.location && (
+                                <div className="absolute bottom-4 left-4 bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 flex items-center gap-2">
+                                    <MapPin className={`h-4 w-4 ${theme.text}`} />
+                                    <span className="text-white text-[11px] font-black uppercase leading-none">
+                                        {voucher.location}
+                                    </span>
+                                </div>
+                            )}
                         </div>
 
-                        {/* Recipient & Status - PUSHED TO BOTTOM */}
-                        <div className="mt-8 space-y-4">
+                        {/* Info Section: Recipient & Dates */}
+                        <div className="space-y-4">
                             {voucher.voucher_recipient_name && (
-                                <div className={`p-4 rounded-2xl ${theme.bgFaded} border border-white/5 flex items-center gap-4`}>
-                                    <div className={`p-2.5 rounded-xl bg-black/40 border ${theme.borderFaded}`}>
-                                        <Gift className={`h-5 w-5 ${theme.text}`} />
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <span className="text-[9px] uppercase font-black text-slate-500 tracking-wider mb-0.5">Получател:</span>
-                                        <span className={`font-black tracking-tight uppercase ${theme.text} leading-tight`}>{voucher.voucher_recipient_name}</span>
+                                <div className={`p-4 rounded-2xl border-2 ${theme.borderFaded} ${theme.bgFaded}`}>
+                                    <div className="flex items-center gap-3">
+                                        <div className={`p-1.5 rounded-lg ${theme.bgFaded} ${theme.text}`}>
+                                            <Gift className="h-5 w-5" />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-[9px] uppercase font-black text-slate-500 tracking-wider mb-0.5">Получател:</span>
+                                            <span className={`font-black tracking-tight uppercase ${theme.text} leading-tight`}>
+                                                {voucher.voucher_recipient_name}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                             )}
 
+                            {/* Selected Date - Matches Status styling with Theme Color */}
+                            <div className={`p-4 rounded-2xl border-2 border-main/30 bg-main/5`}>
+                                <div className="flex items-center gap-3">
+                                    <div className={`p-1.5 rounded-lg bg-main/15 text-main`}>
+                                        <Calendar className="h-5 w-5" />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-[9px] uppercase font-black text-slate-500 tracking-wider mb-0.5">Дата на преживяване:</span>
+                                        <span className={`font-black uppercase tracking-tight leading-none text-main`}>
+                                            {new Date(voucher.selected_date).toLocaleDateString('bg-BG', {
+                                                day: 'numeric',
+                                                month: 'long',
+                                                year: 'numeric'
+                                            })}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Expiry Date - Matches Status styling with Event (Red) Color */}
+                            <div className="p-4 rounded-2xl border-2 border-event/30 bg-event/5">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-1.5 rounded-lg bg-event/20 text-event">
+                                        <Clock className="h-5 w-5" />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-[9px] uppercase font-black text-slate-500 tracking-wider mb-0.5">Валиден до:</span>
+                                        <span className="font-black uppercase tracking-tight leading-none text-event">
+                                            {new Date(voucher.expiry_date).toLocaleDateString('bg-BG', {
+                                                day: 'numeric',
+                                                month: 'long',
+                                                year: 'numeric'
+                                            })}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Addons Section */}
+                            {((voucher.addons && voucher.addons.length > 0)) && (
+                                <div className="flex flex-wrap gap-2 pt-2">
+                                    {voucher.addons?.map((addon, idx) => {
+                                        const AddonIcon = addonIcons[addon] || Package
+                                        return (
+                                            <Badge
+                                                key={idx}
+                                                className={`bg-slate-900 hover:bg-slate-800 text-[9px] font-black text-slate-300 border-2 ${theme.borderFaded} px-2.5 py-1.5 gap-2 rounded-xl h-auto shrink-0 shadow-lg`}
+                                            >
+                                                <AddonIcon className={`h-3 w-3 ${theme.text}`} />
+                                                {addon}
+                                            </Badge>
+                                        )
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Column 2: QR, ID & Status / Download */}
+                    <div className="flex flex-col h-full space-y-6">
+                        <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tighter leading-none lg:text-right">
+                            Валидация
+                        </h2>
+
+                        <div className={`relative w-full aspect-square rounded-2xl md:rounded-[2rem] overflow-hidden border-4 ${theme.border} ${theme.borderStyle} ${theme.shadow} bg-white ring-1 ring-white/5 flex items-center justify-center p-2`}>
+                            {qrDataUrl ? (
+                                <img src={qrDataUrl} alt="Voucher QR Code" className="w-full h-full object-contain" />
+                            ) : (
+                                <div className="w-full h-full bg-slate-100 rounded-2xl animate-pulse" />
+                            )}
+                        </div>
+
+                        <div className="space-y-4">
+                            {/* Voucher ID Copy - Styled to match dates/recipient */}
+                            <div
+                                onClick={handleCopyId}
+                                className={`p-4 rounded-2xl border-2 ${theme.borderFaded} ${theme.bgFaded} cursor-pointer hover:bg-white/5 transition-colors group w-full`}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className={`p-1.5 rounded-lg ${theme.bgFaded} ${theme.text}`}>
+                                        {copied ? (
+                                            <Check className="h-5 w-5 text-green-500" />
+                                        ) : (
+                                            <Copy className="h-5 w-5" />
+                                        )}
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-[9px] uppercase font-black text-slate-500 tracking-wider mb-0.5">ID на ваучер:</span>
+                                        <span className={`font-black tracking-tight uppercase ${theme.text} leading-tight font-mono `}>
+                                            {voucher.id.slice(0, 12).toUpperCase()}...
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Status Section - Moved here */}
                             <div className={`p-4 rounded-2xl border-2 ${displayStatus === 'active' ? 'border-main/30 bg-main/5' : 'border-red-500/30 bg-red-500/5'}`}>
                                 <div className="flex items-center gap-3">
                                     <div className={`p-1.5 rounded-lg ${displayStatus === 'active' ? 'bg-main/20 text-main' : 'bg-red-500/20 text-red-500'}`}>
@@ -190,100 +288,12 @@ export function VoucherCard({ voucher }: VoucherCardProps) {
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
 
-                    {/* Column 2: Date Header & Addons */}
-                    <div className="flex flex-col h-full lg:pt-14">
-                        <div className="space-y-8">
-                            {/* Date Section */}
-                            <div className="space-y-4">
-                                <h4 className={`font-black text-xl text-white uppercase tracking-tight`}>
-                                    {new Date(voucher.selected_date).toLocaleDateString('bg-BG', {
-                                        day: 'numeric',
-                                        month: 'long',
-                                        year: 'numeric'
-                                    })}
-                                </h4>
-                                <div className="flex items-center gap-2">
-                                    <Clock className={`h-4 w-4 ${theme.text}`} />
-                                    <span className="text-[10px] uppercase font-black text-slate-500 tracking-widest pl-1">Валидност на преживяването</span>
-                                </div>
-                                <div className="p-4 rounded-xl border border-white/5 bg-slate-900/50">
-                                    <div className="flex flex-col gap-1">
-                                        <span className="text-[10px] uppercase font-black text-slate-500 tracking-wider">Валиден до:</span>
-                                        <span className="text-sm font-black text-white">{new Date(voucher.expiry_date).toLocaleDateString('bg-BG')}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Addons Section */}
-                            {((voucher.addons && voucher.addons.length > 0)) && (
-                                <div className="space-y-4">
-                                    <span className="text-[10px] uppercase font-black text-slate-500 tracking-widest pl-1">Включени добавки</span>
-                                    <div className="flex flex-wrap gap-2.5">
-                                        {voucher.addons?.map((addon, idx) => {
-                                            const AddonIcon = addonIcons[addon] || Package
-                                            return (
-                                                <Badge
-                                                    key={idx}
-                                                    className={`bg-slate-900 hover:bg-slate-800 text-[10px] font-black text-slate-300 border-2 ${theme.borderFaded} px-3 py-1.5 gap-2 rounded-xl h-auto shrink-0 shadow-lg`}
-                                                >
-                                                    <AddonIcon className={`h-3.5 w-3.5 ${theme.text}`} />
-                                                    {addon}
-                                                </Badge>
-                                            )
-                                        })}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Column 3: QR & Actions */}
-                    <div className="flex flex-col h-full lg:items-end w-full lg:ml-auto">
-                        {/* QR Code Section */}
-                        <div className="w-full lg:w-fit space-y-6">
-                            <h4 className={`font-black text-xl text-white uppercase tracking-tight lg:text-right w-full`}>
-                                Валидация
-                            </h4>
-
-                            <div className={`relative rounded-[2rem] border-2 ${theme.borderFaded} bg-black/40 backdrop-blur-sm p-6 overflow-hidden shadow-2xl shadow-black/40 w-fit lg:ml-auto flex flex-col items-center gap-4`}>
-                                <div className="bg-white p-4 rounded-3xl shadow-2xl">
-                                    {qrDataUrl ? (
-                                        <img src={qrDataUrl} alt="Voucher QR Code" className="w-40 h-40 md:w-52 md:h-52" />
-                                    ) : (
-                                        <div className="w-40 h-40 md:w-52 md:h-52 bg-slate-100 rounded-2xl animate-pulse" />
-                                    )}
-                                </div>
-
-                                <div
-                                    onClick={handleCopyId}
-                                    className=" group flex items-center justify-between gap-3 px-4 py-2 rounded-xl bg-black/50 border border-white/5 cursor-pointer hover:bg-black transition-all active:scale-95"
-                                >
-                                    <div className="flex flex-col">
-                                        <span className="text-[8px] text-slate-600 font-black uppercase tracking-widest mb-0.5">ID на ваучер</span>
-                                        <span className="text-[10px] text-slate-300 font-mono tracking-wider">
-                                            {voucher.id.slice(0, 13).toUpperCase()}...
-                                        </span>
-                                    </div>
-                                    <div className={`p-1.5 rounded-lg ${copied ? 'bg-green-500/10' : 'bg-white/5 group-hover:bg-white/10'} transition-colors`}>
-                                        {copied ? (
-                                            <Check className="h-3 w-3 text-green-500" />
-                                        ) : (
-                                            <Copy className="h-3 w-3 text-slate-500 group-hover:text-white transition-colors" />
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Download Section - PUSHED TO BOTTOM */}
-                        <div className="mt-8 pt-8 w-full flex flex-col gap-3 lg:items-end border-t border-white/5 lg:border-none">
+                            {/* Download Action Section */}
                             <Button
                                 variant="default"
                                 asChild
-                                className={`w-full h-14 ${theme.bg} text-black hover:${theme.bg} font-black uppercase text-xs tracking-widest gap-2 relative group overflow-hidden shadow-xl`}
+                                className={`w-full h-16 rounded-2xl ${theme.bg} text-black hover:${theme.bg} font-black uppercase text-xs tracking-widest gap-2 relative group overflow-hidden shadow-xl`}
                             >
                                 <a href={`/api/vouchers/download/${voucher.id}`} download>
                                     <Download className="h-4 w-4" />
@@ -291,10 +301,6 @@ export function VoucherCard({ voucher }: VoucherCardProps) {
                                     <div className="absolute inset-x-0 bottom-0 h-1 bg-black/5"></div>
                                 </a>
                             </Button>
-
-                            <p className="text-[9px] text-slate-600 font-black uppercase tracking-widest mt-1 text-center lg:text-right">
-                                За принтиране, препоръчваме A5.
-                            </p>
                         </div>
                     </div>
                 </div>
