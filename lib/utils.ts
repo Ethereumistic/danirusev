@@ -11,26 +11,29 @@ export function cn(...inputs: ClassValue[]) {
 export function getSiteUrl() {
   // If we're on the client, window.location.origin is the absolute source of truth
   if (typeof window !== 'undefined') {
+    // If we're on localhost in the browser, it's fine to return localhost
     return window.location.origin.replace(/\/$/, '');
   }
 
-  // On the server, priority:
-  // 1. NEXT_PUBLIC_SITE_URL (only if it's not localhost when in production)
-  // 2. Fallback to production domain if in production
-  // 3. Fallback to localhost for development
-
+  // On the server, we must be extremely careful to avoid localhost:3000
+  // 1. Check NEXT_PUBLIC_SITE_URL
   const envUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_VERCEL_URL;
-  const isProd = process.env.NODE_ENV === 'production';
 
-  if (envUrl) {
-    // If we have an env var and it's not localhost, or if we're NOT in prod, use it
-    if (!envUrl.includes('localhost') || !isProd) {
-      return envUrl.replace(/\/$/, '');
-    }
+  if (envUrl && !envUrl.includes('localhost')) {
+    return envUrl.replace(/\/$/, '');
   }
 
-  return isProd ? 'https://danirusev.com' : 'http://localhost:3000';
+  // 2. Default to production domain
+  // We only allow localhost if we are EXPLICITLY in a local development environment
+  // and even then, we prefer the production domain for safety in Server Actions
+  const isDev = process.env.NODE_ENV === 'development';
+  if (isDev && envUrl?.includes('localhost')) {
+    return envUrl.replace(/\/$/, '');
+  }
+
+  return 'https://danirusev.com';
 }
+
 
 
 
