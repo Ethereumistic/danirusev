@@ -3,6 +3,8 @@
 import { createAdminClient } from '@/utils/supabase/admin'
 import { resend, emailTemplates } from '@/lib/resend'
 import { User } from '@supabase/supabase-js'
+import { getSiteUrl } from '@/lib/utils'
+
 
 export async function sendCustomConfirmationEmail(email: string, password: string, name: string, redirectTo?: string) {
     try {
@@ -26,8 +28,9 @@ export async function sendCustomConfirmationEmail(email: string, password: strin
             password,
             options: {
                 data: { name, role: 'customer' },
-                redirectTo: redirectTo || `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+                redirectTo: redirectTo || `${getSiteUrl()}/auth/callback`,
             },
+
         })
 
         if (error) throw error
@@ -54,13 +57,15 @@ export async function sendCustomPasswordResetEmail(email: string, redirectTo?: s
             type: 'recovery',
             email,
             options: {
-                redirectTo: redirectTo || `${process.env.NEXT_PUBLIC_SITE_URL}/reset-password`,
+                redirectTo: redirectTo || `${getSiteUrl()}/reset-password`,
             },
+
         })
 
         if (error) throw error
 
-        const resetUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/reset-password?token_hash=${data.properties.hashed_token}`
+        const resetUrl = `${getSiteUrl()}/reset-password?token_hash=${data.properties.hashed_token}`
+
 
         // Send email via Resend
         const template = emailTemplates.resetPassword(email, resetUrl)

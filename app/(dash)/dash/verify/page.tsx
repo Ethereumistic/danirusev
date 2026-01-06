@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { QrCode, ArrowLeft, ScanLine } from 'lucide-react'
 import Link from 'next/link'
+import { getSiteUrl } from '@/lib/utils'
+
 import { useEffect, useRef, useState } from 'react'
 import { Html5Qrcode } from 'html5-qrcode'
 import { useRouter } from 'next/navigation'
@@ -58,10 +60,9 @@ export default function VerifyPage() {
                         const url = new URL(decodedText)
                         const currentHost = window.location.host
 
-                        const siteUrlEnv = process.env.NEXT_PUBLIC_BASE_URL ||
-                            process.env.NEXT_PUBLIC_SITE_URL ||
-                            process.env.NEXT_PUBLIC_SERVER_URL
-                        const expectedHostFromEnv = siteUrlEnv ? new URL(siteUrlEnv).host : null
+                        const siteUrlEnv = getSiteUrl()
+                        const expectedHostFromEnv = new URL(siteUrlEnv).host
+
 
                         const isAuthorizedHost = url.host === currentHost || (expectedHostFromEnv && url.host === expectedHostFromEnv)
 

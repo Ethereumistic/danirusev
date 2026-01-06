@@ -6,23 +6,10 @@ import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/lib/stores/auth-store';
+import { getSiteUrl } from '@/lib/utils';
 
-// Get the site URL from environment variable with no fallback
-const getSiteUrl = () => {
-  if (typeof window === 'undefined') return ''; // Handle server-side
 
-  // Use environment variables if set
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_SERVER_URL;
-  if (siteUrl) return siteUrl;
 
-  // Fallback to location.origin in browser if no env var is set
-  // This is much safer than hardcoding localhost:3000
-  if (typeof window !== 'undefined') {
-    return window.location.origin;
-  }
-
-  return 'https://danirusev.com'; // Absolute fallback for safety
-};
 
 type AuthContextType = {
   user: User | null;

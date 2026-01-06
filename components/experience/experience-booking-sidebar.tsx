@@ -11,6 +11,8 @@ import { getThemeClasses, getImageUrl, type ThemeColor, getAddonIcon } from "./t
 import { PATTERN_COMPONENTS } from "@/components/experience/patterns"
 import { useCartStore } from "@/lib/stores/cart-store"
 import type { ExperienceProduct } from "@/types/payload-types"
+import { formatBGN } from "@/lib/utils"
+
 
 interface ExperienceBookingSidebarProps {
     experience: ExperienceProduct
@@ -276,17 +278,34 @@ export function ExperienceBookingSidebar({ experience }: ExperienceBookingSideba
                     {(hasPrice || selectedDurationItem) && (
                         <>
                             <Separator className="bg-slate-800" />
-                            <div className="flex items-center justify-between">
-                                <span className="text-lg font-bold text-white">Обща цена</span>
-                                <span className="text-3xl font-black text-white tracking-tighter">
-                                    {totalPrice}
-                                    <span className={`text-lg font-bold ml-1 ${theme.text}`}>
-                                        €
+                            <div className="flex flex-col space-y-1">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-lg font-bold text-white">Обща цена</span>
+                                    <span className="text-3xl font-black text-white tracking-tighter">
+                                        {totalPrice}
+                                        <span className={`text-lg font-bold ml-1 ${theme.text}`}>
+                                            €
+                                        </span>
                                     </span>
-                                </span>
+                                </div>
+
+                                {(() => {
+                                    const bgnPrice = formatBGN(totalPrice);
+                                    if (!bgnPrice) return null;
+
+                                    return (
+                                        <div className="flex justify-end">
+                                            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                                / <span className="text-slate-400">{bgnPrice} лв.</span>
+                                            </span>
+                                        </div>
+                                    );
+                                })()}
+
                             </div>
                         </>
                     )}
+
 
                     {/* Add to Cart Button or Contact Button */}
                     <Button

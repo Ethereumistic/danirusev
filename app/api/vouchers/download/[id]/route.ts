@@ -5,7 +5,8 @@ import QRCode from 'qrcode'
 import fs from 'fs'
 import path from 'path'
 import fontkit from '@pdf-lib/fontkit'
-import { getExperienceThemeColor, getThemeRGB } from '@/lib/utils'
+import { getExperienceThemeColor, getThemeRGB, getSiteUrl } from '@/lib/utils'
+
 
 interface DownloadRouteProps {
     params: Promise<{ id: string }>
@@ -68,10 +69,8 @@ export async function GET(request: NextRequest, { params }: DownloadRouteProps) 
 
         // Generate QR code with verification URL
         // Check multiple fallback env vars to be resilient
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
-            process.env.NEXT_PUBLIC_SITE_URL ||
-            process.env.NEXT_PUBLIC_SERVER_URL ||
-            (process.env.NODE_ENV === 'production' ? 'https://danirusev.com' : 'http://localhost:3000')
+        const baseUrl = getSiteUrl()
+
 
         const verifyUrl = `${baseUrl}/dash/verify/${voucherId}`
 

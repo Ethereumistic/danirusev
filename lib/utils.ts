@@ -6,10 +6,47 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * Extracts plain text from a rich text field
- * @param richText The rich text field from Payload
- * @returns A plain text string
+ * Resolves the site URL with proper fallbacks
  */
+export function getSiteUrl() {
+  // If we're on the client, window.location.origin is the absolute source of truth
+  if (typeof window !== 'undefined') {
+    return window.location.origin.replace(/\/$/, '');
+  }
+
+  // On the server, priority:
+  // 1. NEXT_PUBLIC_SITE_URL (only if it's not localhost when in production)
+  // 2. Fallback to production domain if in production
+  // 3. Fallback to localhost for development
+
+  const envUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_VERCEL_URL;
+  const isProd = process.env.NODE_ENV === 'production';
+
+  if (envUrl) {
+    // If we have an env var and it's not localhost, or if we're NOT in prod, use it
+    if (!envUrl.includes('localhost') || !isProd) {
+      return envUrl.replace(/\/$/, '');
+    }
+  }
+
+  return isProd ? 'https://danirusev.com' : 'http://localhost:3000';
+}
+
+
+
+/**
+ * Formats a price in BGN for dual currency display (Bulgarian Law transition)
+ * Automatically returns null after August 9th, 2026
+ */
+export function formatBGN(eurPrice: number): string | null {
+  const transitionEndDate = new Date('2026-08-09');
+  const today = new Date();
+
+  if (today > transitionEndDate) return null;
+
+  return (eurPrice * 1.95583).toFixed(2);
+}
+
 export function getTextFromRichText(richText: any): string {
   if (!richText || !Array.isArray(richText)) {
     return '';

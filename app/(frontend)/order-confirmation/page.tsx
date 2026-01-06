@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { Skeleton } from '@/components/ui/skeleton'
+import { formatBGN } from '@/lib/utils'
+
 
 interface OrderDetails {
   customerName: string
@@ -120,9 +122,21 @@ export default function OrderConfirmationPage() {
               <div className="bg-slate-950 rounded-lg p-4 border border-slate-800">
                 <div className="flex justify-between items-center">
                   <span className="text-slate-400 font-bold">Обща сума:</span>
-                  <span className="text-2xl font-black text-main">
-                    {(details.amount / 100).toFixed(2)} {details.currency.toUpperCase()}
-                  </span>
+                  <div className="text-right">
+                    <span className="text-2xl font-black text-main block">
+                      {(details.amount / 100).toFixed(2)} {details.currency.toUpperCase()}
+                    </span>
+                    {(() => {
+                      const bgnPrice = formatBGN(details.amount / 100);
+                      if (!bgnPrice) return null;
+                      return (
+                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                          / {bgnPrice} лв.
+                        </span>
+                      );
+                    })()}
+                  </div>
+
                 </div>
               </div>
             )}

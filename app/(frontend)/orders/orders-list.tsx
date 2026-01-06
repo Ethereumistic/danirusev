@@ -141,9 +141,9 @@ export function OrdersList({ orders }: OrdersListProps) {
                       order.status === 'shipped' ? 'Изпратена' :
                         order.status === 'delivered' ? 'Доставена' : order.status}
                 </Badge>
-                <div className="text-right">
+                <div className="text-right flex items-center gap-2">
                   <p className="text-2xl font-black text-main">{parseFloat(order.total_price).toFixed(2)}</p>
-                  <p className="text-xs font-bold text-slate-500">EUR</p>
+                  <p className="text-base font-bold text-slate-500">€</p>
                 </div>
               </div>
             </button>
@@ -367,7 +367,7 @@ export function OrdersList({ orders }: OrdersListProps) {
                                           <span className={`text-4xl lg:text-5xl font-black tracking-tighter ${theme.text}`}>
                                             {parseFloat(item.price).toFixed(2)}
                                           </span>
-                                          <span className="text-sm font-black text-slate-500">EUR</span>
+                                          <span className="text-base font-black text-slate-500">€</span>
                                         </div>
                                         <p className="text-xs font-black text-slate-600 uppercase tracking-widest mt-1">
                                           Количество: {item.quantity}

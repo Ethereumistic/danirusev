@@ -11,7 +11,8 @@ import { Input } from "@/components/ui/input"
 import Image from "next/image"
 import { Minus, Plus, Trash, MapPin, Gift, CalendarDays, Clock, ShoppingBag, Trophy, Disc, CarTaxiFront, Car, Gauge, PartyPopper, Flag } from "lucide-react"
 import Link from "next/link"
-import { getBorderColor, getTextColor, getBgColor, getBorderStyle, getDriftThemeClasses, getExperienceIcon, getAddonIcon } from "@/lib/utils"
+import { getBorderColor, getTextColor, getBgColor, getBorderStyle, getDriftThemeClasses, getExperienceIcon, getAddonIcon, formatBGN } from "@/lib/utils"
+
 import { Badge } from "@/components/ui/badge"
 
 export function Cart({ closeSheet }: { closeSheet: () => void }) {
@@ -85,12 +86,24 @@ export function Cart({ closeSheet }: { closeSheet: () => void }) {
                             </h3>
 
                             {/* Price */}
-                            <div className="flex items-center gap-2 mb-3">
-                              <span className={`text-2xl font-black ${getTextColor(item.themeColor)}`}>
-                                {getItemTotalPrice(item).toFixed(2)}
-                              </span>
-                              <span className="text-sm font-bold text-slate-400">€</span>
+                            <div className="flex flex-col mb-3">
+                              <div className="flex items-center gap-2">
+                                <span className={`text-2xl font-black ${getTextColor(item.themeColor)}`}>
+                                  {getItemTotalPrice(item).toFixed(2)}
+                                </span>
+                                <span className="text-sm font-bold text-slate-400">€</span>
+                              </div>
+                              {(() => {
+                                const bgnPrice = formatBGN(getItemTotalPrice(item));
+                                if (!bgnPrice) return null;
+                                return (
+                                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider -mt-1">
+                                    / <span className="text-slate-400">{bgnPrice} лв.</span>
+                                  </span>
+                                );
+                              })()}
                             </div>
+
 
                             {/* Quantity Controls */}
                             <div className="flex items-center gap-2">
@@ -259,10 +272,24 @@ export function Cart({ closeSheet }: { closeSheet: () => void }) {
                 <span className="text-xs text-slate-500">При плащане</span>
               </div>
               <Separator className="bg-slate-800 my-2" />
-              <div className="flex items-center justify-between">
-                <span className="text-lg font-black text-white uppercase">Общо</span>
-                <span className="text-2xl font-black text-main">{subtotal.toFixed(2)} €</span>
+              <div className="flex flex-col space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-lg font-black text-white uppercase">Общо</span>
+                  <span className="text-2xl font-black text-main">{subtotal.toFixed(2)} €</span>
+                </div>
+                {(() => {
+                  const bgnPrice = formatBGN(subtotal);
+                  if (!bgnPrice) return null;
+                  return (
+                    <div className="flex justify-end">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                        / <span className="text-slate-400">{bgnPrice} лв.</span>
+                      </span>
+                    </div>
+                  );
+                })()}
               </div>
+
             </div>
             <SheetFooter>
               <Button
