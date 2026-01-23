@@ -29,12 +29,14 @@ const cartItemSchema = z.object({
     experienceSlug: z.string().optional().nullable(),
     selectedLocation: z.string().nullable().optional(),
     selectedVoucher: z.string().nullable().optional(),
+    selectedDuration: z.string().nullable().optional(),
     voucherName: z.string().max(16).optional().nullable(),
     additionalItems: z.array(z.string()).optional().nullable(),
     // CMS experience stored addon data
     storedAddons: z.array(storedAddonSchema).optional().nullable(),
     storedLocationName: z.string().optional().nullable(),
     storedVoucherName: z.string().optional().nullable(),
+    storedDurationName: z.string().optional().nullable(),
     storedLocationUrl: z.string().optional().nullable(),
     selectedDate: z.string().optional().nullable(),
     storedSelectedDate: z.string().optional().nullable(),
@@ -114,13 +116,90 @@ export async function POST(request: NextRequest) {
         let totalAmount = 0
         const orderItems = []
 
-        for (const item of cartItems) {
-            const itemPrice = item.price || 0
-            const itemTotal = itemPrice * item.quantity
-            totalAmount += itemTotal
+        console.log('[DEBUG] Incoming manual order items:', JSON.stringify(cartItems, null, 2));
 
-            if (item.productType === 'physical' || !item.experienceSlug) {
-                // Physical product
+        // Separating numeric IDs and string identifiers (slugs or unconventional IDs)
+        const allIdentifiers = Array.from(new Set([
+            ...cartItems.map(item => item.id),
+            ...cartItems.filter(item => item.experienceSlug).map(item => item.experienceSlug!)
+        ]));
+
+        const numericIds = allIdentifiers.filter(id => /^\d+$/.test(String(id))).map(id => parseInt(String(id)));
+        const stringIdentifiers = allIdentifiers.filter(id => !/^\d+$/.test(String(id)));
+
+        const skus = Array.from(new Set(cartItems.filter(i => i.selectedVariant?.sku).map(i => i.selectedVariant!.sku!)));
+        const addonIds = Array.from(new Set([
+            ...cartItems.flatMap(i => i.additionalItems || []),
+            ...cartItems.filter(i => i.selectedDuration).map(i => i.selectedDuration!)
+        ]));
+
+        // Fetch products from Supabase using both IDs and Slugs
+        const queries = [];
+        if (numericIds.length > 0) {
+            queries.push(supabaseAdmin.from('products').select('id, price, product_type, _status, slug').in('id', numericIds));
+        }
+        if (stringIdentifiers.length > 0) {
+            queries.push(supabaseAdmin.from('products').select('id, price, product_type, _status, slug').in('slug', stringIdentifiers));
+        }
+
+        const results = await Promise.all(queries);
+        const dbProducts = results.flatMap(r => r.data || []);
+        const errors = results.filter(r => r.error).map(r => r.error);
+
+        if (errors.length > 0) {
+            console.error('Database error fetching products:', errors)
+            return NextResponse.json({ error: 'Failed to fetch products from database' }, { status: 500 })
+        }
+
+        // Create mapping by both ID (stringified) and Slug
+        const productMap = new Map();
+        dbProducts.forEach(p => {
+            productMap.set(String(p.id), p);
+            if (p.slug) productMap.set(p.slug, p);
+        });
+
+        // Fetch variants if needed
+        let variantMap = new Map();
+        if (skus.length > 0) {
+            const { data: dbVariants } = await supabaseAdmin
+                .from('products_variants')
+                .select('*')
+                .in('sku', skus);
+            if (dbVariants) variantMap = new Map(dbVariants.map(v => [v.sku, v]));
+        }
+
+        // Fetch addons if needed
+        let addonMap = new Map();
+        if (addonIds.length > 0) {
+            const { data: dbAddons } = await supabaseAdmin
+                .from('products_additional_items')
+                .select('*')
+                .in('id', addonIds);
+            if (dbAddons) addonMap = new Map(dbAddons.map(a => [a.id, a]));
+        }
+
+        for (const item of cartItems) {
+            const dbProduct = productMap.get(item.id) || (item.experienceSlug ? productMap.get(item.experienceSlug) : null);
+
+            if (!dbProduct || dbProduct._status !== 'published') {
+                console.error(`Product validation failed for item:`, item.id);
+                console.error(`Found DB product:`, dbProduct);
+                return NextResponse.json({ error: `Product not found or unavailable` }, { status: 400 });
+            }
+
+            let unitPrice = Number(dbProduct.price) || 0;
+
+            if (dbProduct.product_type === 'physical') {
+                const sku = item.selectedVariant?.sku;
+                if (sku) {
+                    const variant = variantMap.get(sku);
+                    if (variant) unitPrice += Number(variant.price_modifier) || 0;
+                }
+
+                const itemTotal = unitPrice * item.quantity;
+                totalAmount += itemTotal;
+
+                // Format variant options as string
                 const optionsStr = item.selectedVariant?.options
                     ? Object.entries(item.selectedVariant.options)
                         .map(([k, v]) => `${k}: ${v}`)
@@ -131,9 +210,9 @@ export async function POST(request: NextRequest) {
                     product_id: item.id,
                     title: item.title || 'Product',
                     quantity: item.quantity,
-                    price: itemPrice,
+                    price: unitPrice,
                     variant: optionsStr,
-                    sku: item.selectedVariant?.sku || '',
+                    sku: sku || '',
                     item_type: 'physical',
                     image_url: item.imageUrl || null,
                     location: null,
@@ -144,15 +223,44 @@ export async function POST(request: NextRequest) {
                 })
             } else {
                 // Experience
-                const addonNames = item.storedAddons
-                    ?.filter(addon => addon.type === 'standard')
-                    .map(addon => addon.name) || []
+                const selectedAddonIds = item.additionalItems || [];
+                const addonNames = [];
+
+                // Add standard/voucher addons
+                for (const addonId of selectedAddonIds) {
+                    const addon = addonMap.get(addonId);
+                    if (addon) {
+                        unitPrice += Number(addon.price) || 0;
+                        if (addon.type === 'standard' || addon.type === 'duration') {
+                            addonNames.push(addon.name);
+                        }
+                    }
+                }
+
+                // Add duration addon price if selected separately
+                if (item.selectedDuration) {
+                    const durationAddon = addonMap.get(item.selectedDuration);
+                    if (durationAddon) {
+                        unitPrice += Number(durationAddon.price) || 0;
+                        if (!addonNames.includes(durationAddon.name)) {
+                            addonNames.push(durationAddon.name);
+                        }
+                    }
+                }
+
+                // If we have a stored duration name that isn't already in addons, add it
+                if (item.storedDurationName && !addonNames.includes(item.storedDurationName)) {
+                    addonNames.push(item.storedDurationName)
+                }
+
+                const itemTotal = unitPrice * item.quantity
+                totalAmount += itemTotal
 
                 orderItems.push({
                     product_id: item.experienceSlug || item.id,
                     title: item.title || 'Experience',
                     quantity: item.quantity,
-                    price: itemPrice,
+                    price: unitPrice,
                     variant: '',
                     sku: '',
                     item_type: 'experience',

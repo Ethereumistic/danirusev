@@ -127,6 +127,7 @@ export function ExperienceBookingSidebar({ experience }: ExperienceBookingSideba
             additionalItems: selections.additionalItems,
             selectedLocation: selections.selectedLocation,
             selectedVoucher: selectedVoucherItem?.id || selectedVoucherItem?.name.toLowerCase().replace(/\s+/g, '-') || null,
+            selectedDuration: selections.selectedDuration,
             experienceSlug: experience.slug,
             imageUrl,
             themeColor,

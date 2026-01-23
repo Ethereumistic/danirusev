@@ -26,6 +26,7 @@ export interface CartItem {
   additionalItems?: string[]; // IDs of selected additional items
   selectedLocation?: string | null; // Selected location ID
   selectedVoucher?: string | null; // Selected voucher ID
+  selectedDuration?: string | null; // Selected duration ID
   experienceSlug?: string; // Slug for the experience
   imageUrl?: string; // Image URL for display
   themeColor?: ThemeColor; // Theme color for styling
