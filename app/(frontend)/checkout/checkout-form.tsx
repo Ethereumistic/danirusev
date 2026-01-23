@@ -14,9 +14,18 @@ import { useRouter } from 'next/navigation'
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import { loadStripe } from '@stripe/stripe-js'
 import Image from 'next/image'
-import { MapPin, Trash, Plus, Minus, Gift, CalendarDays, Clock, ShoppingBag, CarTaxiFront, Car, Gauge, PartyPopper, Flag } from 'lucide-react'
+import { MapPin, Trash, Plus, Minus, Gift, CalendarDays, Clock, ShoppingBag, CarTaxiFront, Car, Gauge, PartyPopper, Flag, ShieldCheck, FileText, ExternalLink, Shield } from 'lucide-react'
 import Link from 'next/link'
 import { getBorderColor, getTextColor, getBgColor, getBorderStyle, getDriftThemeClasses, getAddonIcon, formatBGN } from '@/lib/utils'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Checkbox } from "@/components/ui/checkbox"
 
 
 interface CheckoutFormProps {
@@ -103,6 +112,8 @@ export function CheckoutForm({ profile }: CheckoutFormProps) {
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [isLoadingPayment, setIsLoadingPayment] = useState(false)
   const [isSubmittingManual, setIsSubmittingManual] = useState(false)
+  const [showTermsModal, setShowTermsModal] = useState(false)
+  const [hasAgreedToTerms, setHasAgreedToTerms] = useState(false)
 
   // Determine if physical address is required
   const isPhysicalRequired = useMemo(() => {
@@ -197,6 +208,38 @@ export function CheckoutForm({ profile }: CheckoutFormProps) {
       toast.error(error instanceof Error ? error.message : 'Грешка при създаване на плащане')
     } finally {
       setIsLoadingPayment(false)
+    }
+  }
+
+  // Handle the logic when user clicks "Proceed to payment" or "Confirm Request"
+  const onProceedClick = () => {
+    // Validate personal info first
+    if (!fullName || !email || !phoneNumber) {
+      toast.error('Моля, попълнете основните данни')
+      return
+    }
+
+    if (isPhysicalRequired && (!address || !city || !postalCode || !country)) {
+      toast.error('Моля, попълнете адресните данни за доставка')
+      return
+    }
+
+    setShowTermsModal(true)
+  }
+
+  // Final step after agreeing to terms
+  const handleFinalAgreement = () => {
+    if (!hasAgreedToTerms) {
+      toast.error('Моля, потвърдете съгласието си с условията')
+      return
+    }
+
+    setShowTermsModal(false)
+
+    if (subtotal > 0) {
+      handleCreatePaymentIntent()
+    } else {
+      handleManualCheckout()
     }
   }
 
@@ -729,7 +772,7 @@ export function CheckoutForm({ profile }: CheckoutFormProps) {
                 {subtotal > 0 ? (
                   !clientSecret ? (
                     <Button
-                      onClick={handleCreatePaymentIntent}
+                      onClick={onProceedClick}
                       disabled={isLoadingPayment}
                       className="w-full h-12 bg-main text-black font-black uppercase tracking-wider hover:bg-main/90 transition-all hover:scale-[1.02]"
                     >
@@ -786,7 +829,7 @@ export function CheckoutForm({ profile }: CheckoutFormProps) {
                   )
                 ) : (
                   <Button
-                    onClick={handleManualCheckout}
+                    onClick={onProceedClick}
                     disabled={isSubmittingManual}
                     className="w-full h-12 bg-main text-black font-black uppercase tracking-wider hover:bg-main/90 transition-all hover:scale-[1.02]"
                   >
@@ -798,6 +841,80 @@ export function CheckoutForm({ profile }: CheckoutFormProps) {
           </div>
         </div>
       </div>
+
+      {/* Terms Agreement Modal */}
+      <Dialog open={showTermsModal} onOpenChange={setShowTermsModal}>
+        <DialogContent className="bg-slate-900 border-slate-800 max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black text-white flex items-center gap-2 uppercase tracking-tight italic">
+              <ShieldCheck className="w-6 h-6 text-main" />
+              Правни Условия
+            </DialogTitle>
+            <DialogDescription className="text-slate-400 font-medium leading-relaxed">
+              Преди да преминете към плащане, моля запознайте се и потвърдете съгласието си с нашите условия за ползване.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-3">
+              <Link
+                href="/terms"
+                target="_blank"
+                className="flex items-center justify-between p-3.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-main/50 transition-all group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 group-hover:border-main/30">
+                    <FileText className="w-4 h-4 text-slate-400 group-hover:text-main" />
+                  </div>
+                  <span className="text-sm font-black text-white uppercase tracking-tight italic">Общи Условия</span>
+                </div>
+                <ExternalLink className="w-4 h-4 text-slate-600 group-hover:text-slate-400" />
+              </Link>
+              <Link
+                href="/privacy"
+                target="_blank"
+                className="flex items-center justify-between p-3.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-main/50 transition-all group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-slate-900 border border-slate-800 group-hover:border-main/30">
+                    <Shield className="w-4 h-4 text-slate-400 group-hover:text-main" />
+                  </div>
+                  <span className="text-sm font-black text-white uppercase tracking-tight italic">Политика за поверителност</span>
+                </div>
+                <ExternalLink className="w-4 h-4 text-slate-600 group-hover:text-slate-400" />
+              </Link>
+            </div>
+
+            <div className="flex items-start space-x-3 p-4 rounded-xl bg-main/5 border border-main/10 mt-2 hover:bg-main/10 transition-colors cursor-pointer group" onClick={() => setHasAgreedToTerms(!hasAgreedToTerms)}>
+              <Checkbox
+                id="terms"
+                checked={hasAgreedToTerms}
+                onCheckedChange={(checked) => setHasAgreedToTerms(checked as boolean)}
+                className="mt-1 border-main data-[state=checked]:bg-main data-[state=checked]:text-black"
+                onClick={(e) => e.stopPropagation()} // Prevent double toggle
+              />
+              <div className="grid gap-1.5 leading-none">
+                <label
+                  htmlFor="terms"
+                  className="text-sm font-bold text-slate-200 leading-snug cursor-pointer select-none group-hover:text-white transition-colors"
+                >
+                  Прочетох и се съгласявам с Общите условия и Политиката за поверителност на Dani Rusev 11.
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="flex-col sm:flex-row gap-3">
+            <Button
+              onClick={handleFinalAgreement}
+              disabled={!hasAgreedToTerms}
+              className="w-full h-12 bg-main text-black font-black uppercase tracking-wider hover:bg-main/90 transition-all disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed shadow-[0_0_20px_-5px_rgba(208,246,26,0.3)]"
+            >
+              Потвърди и Продължи →
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

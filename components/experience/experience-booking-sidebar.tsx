@@ -319,11 +319,35 @@ export function ExperienceBookingSidebar({ experience }: ExperienceBookingSideba
                         </span>
                     </Button>
 
-                    <p className="text-[10px] text-center text-slate-500">
-                        * Плащането се извършва на място или по банков път.
-                    </p>
+                    <div className={`p-5 rounded-xl border-2 ${theme.border} ${theme.bgFaded} space-y-4 shadow-xl`}>
+                        <div className="flex items-center gap-2 justify-center">
+                            <LucideIcons.CreditCard className={`w-5 h-5 ${theme.text}`} />
+                            <span className="text-white font-black text-xs uppercase tracking-widest">
+                                Начин на плащане
+                            </span>
+                        </div>
+                        <div className="space-y-4">
+                            <p className="text-sm text-center text-white font-black uppercase italic tracking-tight">
+                                * Плащането се извършва <span className={`${theme.text}`}>ОНЛАЙН</span> *
+                            </p>
+
+                            <div className="flex flex-col items-center gap-2">
+                                <p className="text-[11px] text-center text-slate-400 font-bold uppercase tracking-wide">
+                                    За наложен платеж се обадете:
+                                </p>
+                                <a
+                                    href="tel:+359882726020"
+                                    className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-950 border-2 ${theme.border} text-white font-black text-sm hover:scale-105 transition-all shadow-lg`}
+                                >
+                                    <LucideIcons.Phone className={`w-4 h-4 ${theme.text}`} />
+                                    +359 88 272 6020
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
                 </CardContent>
             </Card>
-        </div>
+        </div >
     )
 }
