@@ -13,7 +13,7 @@ import { defaultMetadata } from '@/lib/seo'
 
 export const metadata: Metadata = {
   ...defaultMetadata,
-  title: 'Начало',
+  title: 'Dani Rusev 11 | Екстремни Дрифт и Рали Преживявания в България',
   description: 'Екстремни автомобилни преживявания в България. Дрифт, рали и каране на писта с професионални инструктори. Подарете незабравимо изживяване!',
   openGraph: {
     ...defaultMetadata.openGraph,

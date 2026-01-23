@@ -8,6 +8,9 @@ import * as LucideIcons from "lucide-react"
 // Data fetching
 import { getProductBySlug } from "@/lib/api/products"
 import type { ExperienceProduct } from "@/types/payload-types"
+import { Metadata } from "next"
+import { ExperienceSchema, BreadcrumbSchema } from "@/components/seo/structured-data"
+import { defaultMetadata } from "@/lib/seo"
 
 // Components
 import {
@@ -22,6 +25,37 @@ import {
 
 // Import the new component
 import { ExperienceScrollableTabs } from "@/components/experience/experience-scrollable-tabs"
+
+export async function generateMetadata({
+    params,
+}: {
+    params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+    const { slug } = await params
+    const product = await getProductBySlug(slug)
+
+    if (!product || product.productType !== 'experience') {
+        return defaultMetadata
+    }
+
+    const experience = product as ExperienceProduct
+    const title = `${experience.title} | Dani Rusev 11`
+    const description = experience.description || experience.subtitle || defaultMetadata.description
+
+    return {
+        ...defaultMetadata,
+        title,
+        description,
+        openGraph: {
+            ...defaultMetadata.openGraph,
+            title,
+            description,
+        },
+        alternates: {
+            canonical: `/experience/${slug}`,
+        },
+    }
+}
 
 // Helper function to get the correct icon component
 function getIconComponent(iconName?: string, themeColor?: ThemeColor) {
@@ -140,6 +174,15 @@ export default async function ExperienceDetailPage({
                     subtitle="Разгледайте и другите ни предложения"
                 />
             </React.Suspense>
+
+            {/* SEO Structured Data */}
+            <ExperienceSchema experience={experience} url={`${process.env.NEXT_PUBLIC_SERVER_URL}/experience/${slug}`} />
+            <BreadcrumbSchema
+                items={[
+                    { name: 'Начало', url: '/' },
+                    { name: experience.title, url: `/experience/${slug}` }
+                ]}
+            />
         </div>
     )
 }

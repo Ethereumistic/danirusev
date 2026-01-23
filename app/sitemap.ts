@@ -15,74 +15,50 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   })
 
-  // Get all categories
-  const { docs: categories } = await payload.find({
-    collection: 'categories' as any,
-    limit: 100,
-    select: {
-      slug: true,
-      updatedAt: true,
-    },
-  })
-
-  // Static pages
+  // 1. Static Public Pages
   const staticPages = [
     {
       url: baseUrl,
       lastModified: new Date(),
       changeFrequency: 'daily' as const,
-      priority: 1,
-    },
-    {
-      url: `${baseUrl}/xp`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 0.9,
+      priority: 1.0,
     },
     {
       url: `${baseUrl}/contact`,
       lastModified: new Date(),
       changeFrequency: 'monthly' as const,
-      priority: 0.5,
+      priority: 0.8,
     },
     {
-      url: `${baseUrl}/legal`,
+      url: `${baseUrl}/terms`,
       lastModified: new Date(),
       changeFrequency: 'yearly' as const,
-      priority: 0.3,
+      priority: 0.1,
     },
     {
-      url: `${baseUrl}/subscription`,
+      url: `${baseUrl}/privacy`,
       lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
-      priority: 0.6,
+      changeFrequency: 'yearly' as const,
+      priority: 0.1,
+    },
+    {
+      url: `${baseUrl}/cookies`,
+      lastModified: new Date(),
+      changeFrequency: 'yearly' as const,
+      priority: 0.1,
     },
   ]
 
-  // Product pages
-  const productPages = (products as any[]).map((product: any) => ({
-    url: `${baseUrl}/products/${product.slug}`,
-    lastModified: new Date(product.updatedAt),
-    changeFrequency: 'weekly' as const,
-    priority: 0.8,
-  }))
-
-  // Experience individual pages
+  // 2. Experience individual pages - HIGH PRIORITY
   const experienceProducts = (products as any[]).filter((product: any) => product.productType === 'experience')
   const experiencePages = experienceProducts.map((experience: any) => ({
-    url: `${baseUrl}/xp/${experience.slug}`,
+    url: `${baseUrl}/experience/${experience.slug}`,
     lastModified: new Date(experience.updatedAt),
     changeFrequency: 'weekly' as const,
-    priority: 0.7,
+    priority: 0.9,
   }))
 
-  // Category pages (if you have category pages)
-  const categoryPages = (categories as any[]).map((category: any) => ({
-    url: `${baseUrl}/categories/${category.slug}`,
-    lastModified: new Date(category.updatedAt),
-    changeFrequency: 'weekly' as const,
-    priority: 0.6,
-  }))
+  // Note: /vouchers, /shop, and /account are excluded as they require authentication or are in development
 
-  return [...staticPages, ...productPages, ...experiencePages, ...categoryPages]
+  return [...staticPages, ...experiencePages]
 }

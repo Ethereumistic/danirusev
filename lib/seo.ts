@@ -67,9 +67,7 @@ export const defaultMetadata: Metadata = {
     },
   },
   verification: {
-    // Add these when you have them
-    // google: 'google-site-verification-code',
-    // yandex: 'yandex-verification-code',
+    google: '', // Already verified via DNS? You can still add the tag ID here as backup.
   },
 }
 
