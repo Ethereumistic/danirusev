@@ -49,8 +49,8 @@ export function Footer() {
 
   const contactInfo = [
     { icon: Phone, text: '+359 88 272 6020', href: 'tel:+359882726020', label: 'Телефон' },
-    { icon: Mail, text: 'contact@danirusev.com', href: 'mailto:contact@danirusev.com', label: 'Имейл' },
-    { icon: MapPin, text: 'Автомобилен Пoлигон, гр. Трявна', href: 'https://maps.app.goo.gl/pPgQekKHASUHBxY59', label: 'Локация' },
+    { icon: Mail, text: 'ruseffracing@gmail.com', href: 'mailto:ruseffracing@gmail.com', label: 'Имейл' },
+    { icon: MapPin, text: 'Писта Крайници', href: 'https://maps.app.goo.gl/GNnmQDHcs9ZD2ShM9', label: 'Локация' },
   ];
 
   return (
@@ -176,17 +176,18 @@ export function Footer() {
             <span>Всички права запазени.</span>
           </div>
 
-          <div className="flex items-center gap-2 text-slate-500 text-[10px] font-black uppercase tracking-[0.2em]">
-            <span>Powered by</span>
-            <a
+          <div className="flex flex-col items-center gap-2">
+            <Link
               href="https://echoray.io"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-white hover:text-main transition-colors flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/5 hover:border-main/20"
+              className="group flex items-center gap-1.5 text-xs text-muted-foreground/60  transition-all duration-300"
             >
-              <Wifi className="w-4 h-4 rounded-full text-main animate-pulse" />
-              Echoray.io
-            </a>
+              Powered by <span className="font-bold flex items-center gap-1 tracking-tight text-foreground/80 transition-all">
+                <span className="opacity-0 group-hover:opacity-100 scale-0 group-hover:scale-100 group-hover:bg-blue-600 rounded-sm p-0.5 transition-all duration-400"><Wifi className="size-5 text-white" /></span>
+                <span className="-ml-6 font-black text-base group-hover:-ml-0 transition-all duration-300">Echoray.io</span>
+              </span>
+            </Link>
           </div>
         </div>
       </div>

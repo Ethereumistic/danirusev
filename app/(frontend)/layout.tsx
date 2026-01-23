@@ -8,6 +8,7 @@ import localFont from "next/font/local";
 import { Suspense } from "react";
 import { Footer } from "@/components/layout/footer";
 import { OrganizationSchema } from "@/components/seo/structured-data";
+import { FloatingContact } from "@/components/layout/floating-contact";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -86,6 +87,7 @@ export default async function RootLayout({
           </main>
           <Toaster />
           <Footer />
+          <FloatingContact />
         </AuthProvider>
       </body>
     </html>

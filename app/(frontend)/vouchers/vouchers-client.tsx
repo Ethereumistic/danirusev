@@ -111,7 +111,7 @@ export function VouchersClient({ vouchers }: VouchersClientProps) {
                                 Обади се сега
                             </a>
                             <a
-                                href="mailto:contact@danirusev.com"
+                                href="mailto:ruseffracing@gmail.com"
                                 className="w-full sm:w-auto inline-flex items-center justify-center gap-3 border-2 border-main/30 text-main hover:text-white hover:bg-main/10 font-black uppercase tracking-widest h-16 px-10 text-sm rounded-2xl transition-all hover:border-main active:scale-95"
                             >
                                 <Mail className="w-5 h-5" />

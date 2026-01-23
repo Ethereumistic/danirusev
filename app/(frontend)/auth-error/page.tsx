@@ -87,7 +87,7 @@ function AuthErrorContent() {
         transition={{ delay: 0.6 }}
         className="text-center mt-10 text-[10px] text-slate-600 font-black uppercase tracking-widest"
       >
-        Имате нужда от съдействие? <span className="text-slate-400">contact@danirusev.com</span>
+        Имате нужда от съдействие? <span className="text-slate-400">ruseffracing@gmail.com</span>
       </motion.p>
     </motion.div>
   );
