@@ -2,7 +2,7 @@
 
 import { useCartStore } from '@/lib/stores/cart-store'
 import { Profile } from '@/types/supabase'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect, useCallback } from 'react'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -11,8 +11,12 @@ import { Separator } from '@/components/ui/separator'
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
-import { loadStripe } from '@stripe/stripe-js'
+// myPOS SDK will be loaded via CDN
+declare global {
+  interface Window {
+    MyPOSEmbedded: any;
+  }
+}
 import Image from 'next/image'
 import { MapPin, Trash, Plus, Minus, Gift, CalendarDays, Clock, ShoppingBag, CarTaxiFront, Car, Gauge, PartyPopper, Flag, ShieldCheck, FileText, ExternalLink, Shield } from 'lucide-react'
 import Link from 'next/link'
@@ -32,68 +36,7 @@ interface CheckoutFormProps {
   profile: Profile | null
 }
 
-// Initialize Stripe outside the component
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
-// Payment Form Component (wrapped in Elements)
-function PaymentForm({
-  personalInfo,
-  onSuccess
-}: {
-  personalInfo: any
-  onSuccess: () => void
-}) {
-  const stripe = useStripe()
-  const elements = useElements()
-  const [isProcessing, setIsProcessing] = useState(false)
-  const router = useRouter()
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!stripe || !elements) {
-      return
-    }
-
-    setIsProcessing(true)
-
-    try {
-      const { error } = await stripe.confirmPayment({
-        elements,
-        confirmParams: {
-          return_url: `${window.location.origin}/order-confirmation`,
-        },
-      })
-
-      if (error) {
-        toast.error(error.message || 'Payment failed')
-        setIsProcessing(false)
-      } else {
-        // Payment succeeded, redirect will happen automatically
-        onSuccess()
-      }
-    } catch (err) {
-      toast.error('An unexpected error occurred')
-      setIsProcessing(false)
-    }
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="bg-slate-950 p-4 rounded-lg border border-slate-800">
-        <PaymentElement />
-      </div>
-
-      <Button
-        type="submit"
-        disabled={!stripe || isProcessing}
-        className="w-full h-12 bg-main text-black font-black uppercase tracking-wider hover:bg-main/90 transition-all hover:scale-[1.02]"
-      >
-        {isProcessing ? 'Обработване...' : 'Плати Сега →'}
-      </Button>
-    </form>
-  )
-}
 
 export function CheckoutForm({ profile }: CheckoutFormProps) {
   const router = useRouter()
@@ -109,11 +52,40 @@ export function CheckoutForm({ profile }: CheckoutFormProps) {
   const [country, setCountry] = useState(profile?.country ?? 'България')
 
   // Checkout logic states
-  const [clientSecret, setClientSecret] = useState<string | null>(null)
+  const [orderID, setOrderID] = useState<string | null>(null)
   const [isLoadingPayment, setIsLoadingPayment] = useState(false)
   const [isSubmittingManual, setIsSubmittingManual] = useState(false)
   const [showTermsModal, setShowTermsModal] = useState(false)
   const [hasAgreedToTerms, setHasAgreedToTerms] = useState(false)
+  const [showPaymentForm, setShowPaymentForm] = useState(false)
+
+  // Load myPOS SDK
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    // Check if already loaded
+    if (window.MyPOSEmbedded) return
+
+    // Load from CDN
+    const script = document.createElement('script')
+    script.src = 'https://developers.mypos.com/repository/mypos-embedded-sdk.js'
+    script.async = true
+    script.onload = () => {
+      console.log('myPOS SDK loaded')
+    }
+    script.onerror = () => {
+      console.error('Failed to load myPOS SDK')
+      toast.error('Failed to load payment system')
+    }
+    document.body.appendChild(script)
+
+    return () => {
+      // Cleanup
+      if (script.parentNode) {
+        script.parentNode.removeChild(script)
+      }
+    }
+  }, [])
 
   // Determine if physical address is required
   const isPhysicalRequired = useMemo(() => {
@@ -139,8 +111,64 @@ export function CheckoutForm({ profile }: CheckoutFormProps) {
     }, 0)
   }, [items])
 
-  // Create Payment Intent when ready to pay
-  const handleCreatePaymentIntent = async () => {
+  // Initialize myPOS payment
+  const initializeMyPOSPayment = useCallback(async (sessionOrderID: string) => {
+    if (!window.MyPOSEmbedded) {
+      toast.error('Payment system not ready. Please refresh.')
+      return
+    }
+
+    const paymentParams = {
+      sid: process.env.NEXT_PUBLIC_MYPOS_SID!,
+      ipcLanguage: 'en',
+      walletNumber: process.env.NEXT_PUBLIC_MYPOS_WALLET_NUMBER!,
+      amount: subtotal,
+      currency: 'EUR',
+      orderID: sessionOrderID,
+      urlNotify: `${window.location.origin}/api/webhooks/mypos`,
+      urlOk: `${window.location.origin}/order-confirmation?order_id=${sessionOrderID}`,
+      urlCancel: `${window.location.origin}/checkout`,
+      keyIndex: 1,
+      cartItems: items.map(item => ({
+        article: item.title,
+        quantity: item.quantity,
+        price: item.price,
+        currency: 'EUR',
+      })),
+    }
+
+    const callbackParams = {
+      isSandbox: process.env.NEXT_PUBLIC_MYPOS_IS_SANDBOX === 'true',
+      onSuccess: function (data: any) {
+        console.log('Payment successful:', data)
+        clearCart()
+        router.push(`/order-confirmation?order_id=${sessionOrderID}`)
+      },
+      onError: function (error: any) {
+        console.error('Payment error:', error)
+        toast.error('Payment failed. Please try again.')
+        setIsLoadingPayment(false)
+      },
+      onMessageReceived: function (messages: any) {
+        console.log('Payment messages:', messages)
+      },
+    }
+
+    try {
+      await window.MyPOSEmbedded.createPayment(
+        'mypos-embedded-checkout',
+        paymentParams,
+        callbackParams
+      )
+    } catch (error) {
+      console.error('Error initializing payment:', error)
+      toast.error('Failed to initialize payment')
+      setIsLoadingPayment(false)
+    }
+  }, [items, subtotal, clearCart, router])
+
+  // Create checkout session and initialize payment
+  const handleCreateCheckoutSession = async () => {
     // Validate personal info
     if (!fullName || !email || !phoneNumber) {
       toast.error('Моля, попълнете основните данни')
@@ -155,7 +183,7 @@ export function CheckoutForm({ profile }: CheckoutFormProps) {
     setIsLoadingPayment(true)
 
     try {
-      const response = await fetch('/api/create-payment-intent', {
+      const response = await fetch('/api/checkout/create-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -196,17 +224,23 @@ export function CheckoutForm({ profile }: CheckoutFormProps) {
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.error || 'Failed to create payment')
+        throw new Error(error.error || 'Failed to create checkout session')
       }
 
       const data = await response.json()
-      setClientSecret(data.clientSecret)
-      // Close personal info accordion to make room for Stripe element
+      setOrderID(data.orderID)
+
+      // Show payment form
+      setShowPaymentForm(true)
+      // Close personal info accordion to make room for payment
       setPersonalInfoOpen(undefined)
+
+      // Initialize myPOS payment
+      await initializeMyPOSPayment(data.orderID)
+
       toast.success('Готово за плащане')
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Грешка при създаване на плащане')
-    } finally {
       setIsLoadingPayment(false)
     }
   }
@@ -237,7 +271,7 @@ export function CheckoutForm({ profile }: CheckoutFormProps) {
     setShowTermsModal(false)
 
     if (subtotal > 0) {
-      handleCreatePaymentIntent()
+      handleCreateCheckoutSession()
     } else {
       handleManualCheckout()
     }
@@ -766,11 +800,11 @@ export function CheckoutForm({ profile }: CheckoutFormProps) {
             <Card className="bg-slate-900 border-slate-800">
               <CardHeader>
                 <CardTitle className="text-2xl font-black text-white uppercase">Плащане</CardTitle>
-                <p className="text-sm text-slate-400">Сигурно плащане чрез Stripe</p>
+                <p className="text-sm text-slate-400">Сигурно плащане чрез myPOS</p>
               </CardHeader>
               <CardContent>
                 {subtotal > 0 ? (
-                  !clientSecret ? (
+                  !showPaymentForm ? (
                     <Button
                       onClick={onProceedClick}
                       disabled={isLoadingPayment}
@@ -779,53 +813,20 @@ export function CheckoutForm({ profile }: CheckoutFormProps) {
                       {isLoadingPayment ? 'Подготовка...' : 'Продължи към плащане →'}
                     </Button>
                   ) : (
-                    <Elements
-                      stripe={stripePromise}
-                      options={{
-                        clientSecret,
-                        appearance: {
-                          theme: 'night',
-                          variables: {
-                            colorPrimary: '#fff', // Your main lime color
-                            colorBackground: '#020617', // bg-slate-950
-                            colorText: '#fff',
-                            colorDanger: '#ef4444',
-                            fontFamily: 'Inter, system-ui, sans-serif',
-                            spacingUnit: '4px',
-                            borderRadius: '12px',
-                          },
-                          rules: {
-                            '.Input': {
-                              backgroundColor: '#020617',
-                              border: '1px solid #1e293b', // slate-800
-                              transition: 'border 0.2s ease',
-                            },
-                            '.Input:focus': {
-                              border: '1px solid #D0F61A',
-                            },
-                            '.Label': {
-                              fontWeight: '700',
-                              textTransform: 'uppercase',
-                              fontSize: '11px',
-                              letterSpacing: '0.05em',
-                              color: '#94a3b8', // slate-400
-                            },
-                            '.Tab': {
-                              backgroundColor: '#020617', // slate-900
-                              border: '1px solid #1e293b',
-                            },
-                            '.Tab--selected': {
-                              border: '1px solid #D0F61A',
-                            }
-                          }
-                        }
-                      }}
-                    >
-                      <PaymentForm
-                        personalInfo={{ fullName, email, phoneNumber, address, city, postalCode, country }}
-                        onSuccess={clearCart}
+                    <div className="space-y-4">
+                      {/* myPOS Embedded Payment Form */}
+                      <div
+                        id="mypos-embedded-checkout"
+                        className="min-h-[620px] min-w-[320px] bg-slate-950 rounded-lg border border-slate-800"
                       />
-                    </Elements>
+
+                      <div className="flex items-center justify-center gap-2 text-sm text-slate-400">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                        </svg>
+                        <span>Secure payment powered by myPOS</span>
+                      </div>
+                    </div>
                   )
                 ) : (
                   <Button
