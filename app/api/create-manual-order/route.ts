@@ -274,11 +274,11 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        // 4. Create manual order ID (to satisfy idempotency or just distinguish)
-        const manualOrderId = `manual_${Date.now()}_${user.id.slice(0, 8)}`
+        // 4. Create a numeric manual transaction ID (similar to myPOS format)
+        const manualTxId = Date.now().toString()
 
         // 5. Call Database Function to create order
-        const { data: orderId, error: orderError } = await supabaseAdmin.rpc('create_order_from_webhook', {
+        const { data: orderPk, error: orderError } = await supabaseAdmin.rpc('create_order_from_webhook', {
             p_user_id: user.id,
             p_total_price: totalAmount,
             p_shipping_address_snapshot: {
@@ -290,7 +290,8 @@ export async function POST(request: NextRequest) {
                 country: personalInfo.country || '',
             },
             p_cart_items: orderItems,
-            p_payment_transaction_id: manualOrderId, // Use manual ID as transaction reference
+            p_payment_transaction_id: manualTxId, // Use numeric timestamp as transaction reference
+            p_order_id_ref: null, // Clear the reference for manual orders, keep it simple
         })
 
         if (orderError) {
@@ -317,7 +318,7 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({
             success: true,
-            orderId
+            orderId: orderPk.toString() // Returns '139' (the numeric ID)
         })
 
     } catch (error) {

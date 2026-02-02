@@ -126,7 +126,7 @@ export type ThemeColor = 'taxi' | 'rent' | 'mix' | 'event' | 'day' | 'main';
 export function getExperienceThemeColor(title: string): ThemeColor {
   const lowerTitle = title.toLowerCase()
   if (lowerTitle.includes('такси') || lowerTitle.includes('taxi')) return 'taxi'
-  if (lowerTitle.includes('наеми') || lowerTitle.includes('rent')) return 'rent'
+  if (lowerTitle.includes('наеми') || lowerTitle.includes('rent') || lowerTitle.includes('карай')) return 'rent'
   if (lowerTitle.includes('микс') || lowerTitle.includes('mix')) return 'mix'
   if (lowerTitle.includes('събитие') || lowerTitle.includes('event')) return 'event'
   if (lowerTitle.includes('ден') || lowerTitle.includes('day')) return 'day'
@@ -157,7 +157,7 @@ export function getExperienceIcon(themeColor: ThemeColor) {
     case 'mix': return Gauge
     case 'event': return PartyPopper
     case 'day': return Flag
-    default: return Shirt
+    default: return Gauge
   }
 }
 

@@ -11,11 +11,11 @@ export async function GET(request: NextRequest) {
     try {
         const supabase = await createClient()
 
-        // 3. Authenticate user
+        // 1. Authenticate user
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-        // 3. Get order_id from query params
+        // 2. Get order_id from query params
         const searchParams = request.nextUrl.searchParams
         const orderId = searchParams.get('order_id')
 
@@ -23,50 +23,57 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'Missing order_id' }, { status: 400 })
         }
 
-        // 4. Find the order by our new reference ID
-        // We first check the orders table directly for the order_id_ref
-        const { data: order, error: orderError } = await supabaseAdmin
-            .from('orders')
-            .select('*, items:order_items(*)')
-            .eq('order_id_ref', orderId)
-            .eq('user_id', user.id)
-            .single()
+        console.log(`[DETAILS_API] Secure Lookup for: ${orderId}`);
 
-        if (order) {
-            return NextResponse.json({
-                customerName: (order.shipping_address_snapshot as any).fullName || 'Customer',
-                amount: parseFloat(order.total_price) * 100, // Convert to cents for display
-                currency: 'EUR',
-                items: order.items || []
-            })
+        // STRATEGY 1: Use the 'get_all_orders_with_details' RPC which we KNOW has the 'orderId' column
+        // This is safe because we will filter by user.id in JS.
+        const { data: allOrders, error: rpcError } = await supabaseAdmin.rpc('get_all_orders_with_details')
+
+        if (!rpcError && allOrders) {
+            // Find the order that belongs to this user and matches the ID (numeric or string)
+            const order = allOrders.find((o: any) =>
+                o.userId === user.id && (
+                    o.id.toString() === orderId ||
+                    o.orderId === orderId
+                )
+            )
+
+            if (order) {
+                console.log(`[DETAILS_API] Order found via Admin RPC: ${order.id}`);
+                return NextResponse.json({
+                    customerName: order.customerName || 'Customer',
+                    amount: parseFloat(order.total) * 100,
+                    currency: 'EUR',
+                    items: order.orderItems || []
+                })
+            }
         }
 
-        // 5. Fallback: If order not created yet, check if checkout session exists
-        // (This handles the case where the user lands on confirmation page BEFORE webhook completes)
-        const { data: checkoutSessionArray } = await supabaseAdmin.rpc('get_checkout_session', {
-            p_order_id: orderId
-        })
+        // STRATEGY 2: Fallback to the user-specific RPC (might be missing order_id_ref until updated)
+        const { data: userOrders } = await supabase.rpc('get_user_orders_with_items')
+        if (userOrders) {
+            const order = userOrders.find((o: any) =>
+                o.id.toString() === orderId ||
+                o.payment_transaction_id === orderId ||
+                (o as any).order_id_ref === orderId
+            )
 
-        if (!checkoutSessionArray || checkoutSessionArray.length === 0) {
-            return NextResponse.json({ error: 'Order not found' }, { status: 404 })
+            if (order) {
+                console.log(`[DETAILS_API] Order found via User RPC: ${order.id}`);
+                return NextResponse.json({
+                    customerName: (order.shipping_address_snapshot as any).fullName || 'Customer',
+                    amount: parseFloat(order.total_price) * 100,
+                    currency: 'EUR',
+                    items: order.order_items || []
+                })
+            }
         }
 
-        const checkoutSession = checkoutSessionArray[0]
-
-        if (checkoutSession.user_id !== user.id) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
-        }
-
-        // Return details from checkout session for display while order is processing
-        return NextResponse.json({
-            customerName: checkoutSession.full_name || 'Customer',
-            amount: parseFloat(checkoutSession.total_amount) * 100,
-            currency: 'EUR',
-            items: checkoutSession.cart_items || []
-        })
+        console.log(`[DETAILS_API] Final 404 for: ${orderId}`);
+        return NextResponse.json({ error: 'Order not found' }, { status: 404 })
 
     } catch (error) {
-        console.error('Error fetching order details:', error)
+        console.error('[DETAILS_API] Global Error:', error)
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 }

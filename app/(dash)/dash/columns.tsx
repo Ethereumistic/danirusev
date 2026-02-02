@@ -29,6 +29,7 @@ import {
   getDriftThemeClasses,
   getExperienceIcon,
   getExperienceThumbnail,
+  getAddonIcon,
   type ThemeColor,
   cn
 } from '@/lib/utils'
@@ -146,11 +147,12 @@ export const columns: ColumnDef<Order>[] = [
         <div className="flex flex-col gap-2 max-w-[250px]">
           <div className="flex -space-x-2 overflow-hidden">
             {orderItems.slice(0, 4).map((item, i) => {
-              const themeColor = item.item_type === 'experience'
+              const isExperience = item.item_type?.toLowerCase() === 'experience'
+              const themeColor = isExperience
                 ? getExperienceThemeColor(item.title)
                 : 'main'
               const theme = getDriftThemeClasses(themeColor)
-              const ItemIcon = item.item_type === 'experience' ? getExperienceIcon(themeColor) : ShoppingBag
+              const ItemIcon = isExperience ? getExperienceIcon(themeColor) : ShoppingBag
 
               return (
                 <div
@@ -381,9 +383,10 @@ export function ExpandedOrderDetails({ order }: { order: Order }) {
               {/* Order Item Icons Rendering */}
               <div className="flex flex-wrap gap-2.5 mb-8">
                 {orderItems.map((item, i) => {
-                  const itemThemeColor = item.item_type === 'experience' ? getExperienceThemeColor(item.title) : 'main'
+                  const isExperience = item.item_type?.toLowerCase() === 'experience'
+                  const itemThemeColor = isExperience ? getExperienceThemeColor(item.title) : 'main'
                   const itemTheme = getDriftThemeClasses(itemThemeColor)
-                  const ItemIcon = item.item_type === 'experience' ? getExperienceIcon(itemThemeColor) : ShoppingBag
+                  const ItemIcon = isExperience ? getExperienceIcon(itemThemeColor) : ShoppingBag
 
                   return (
                     <div
@@ -394,7 +397,7 @@ export function ExpandedOrderDetails({ order }: { order: Order }) {
                       )}
                       title={item.title}
                     >
-                      <ItemIcon className="h-5.5 w-5.5 text-black" />
+                      <ItemIcon className="h-6 w-6 text-black" />
                       <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 bg-slate-950 text-white text-[8px] font-black px-2 py-1.5 rounded-lg opacity-0 group-hover/sum-item:opacity-100 transition-all duration-300 whitespace-nowrap border border-white/10 pointer-events-none z-50 shadow-2xl translate-y-2 group-hover/sum-item:translate-y-0">
                         {item.title}
                       </div>
@@ -409,7 +412,7 @@ export function ExpandedOrderDetails({ order }: { order: Order }) {
                   <div>
                     <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1.5">Обща сума</p>
                     <p className={cn("text-4xl font-black tracking-tighter italic", mainTheme.text)}>
-                      {order.total.toFixed(2)}
+                      {Number(order.total).toFixed(2)}
                       <span className="text-xs ml-1.5 not-italic opacity-40 uppercase tracking-widest font-bold">EUR</span>
                     </p>
                   </div>
@@ -487,11 +490,12 @@ export function ExpandedOrderDetails({ order }: { order: Order }) {
 
               <div className="flex flex-col gap-4">
                 {orderItems.map((item, index) => {
-                  const themeColor = item.item_type === 'experience'
+                  const isExperience = item.item_type?.toLowerCase() === 'experience'
+                  const themeColor = isExperience
                     ? getExperienceThemeColor(item.title)
                     : 'main'
                   const theme = getDriftThemeClasses(themeColor)
-                  const ItemIcon = item.item_type === 'experience' ? getExperienceIcon(themeColor) : ShoppingBag
+                  const ItemIcon = isExperience ? getExperienceIcon(themeColor) : ShoppingBag
 
                   return (
                     <div key={item.id || index} className={`group relative bg-slate-950 p-6 rounded-2xl border-2 ${theme.borderFaded} transition-all flex flex-col xl:flex-row gap-8 shadow-xl overflow-hidden`}>
@@ -506,7 +510,7 @@ export function ExpandedOrderDetails({ order }: { order: Order }) {
                             </h5>
                             <div className="flex flex-wrap items-center gap-3 text-xs font-black text-slate-500 mt-2">
                               <span className="px-2 py-0.5 bg-slate-800 rounded text-slate-300 tracking-widest">{item.quantity}x</span>
-                              <span className={`${theme.text} bg-white/5 px-2 py-0.5 rounded`}>{item.price.toFixed(2)} EUR</span>
+                              <span className={`${theme.text} bg-white/5 px-2 py-0.5 rounded`}>{Number(item.price).toFixed(2)} EUR</span>
                               {item.variant && <span className="text-slate-400">| {item.variant}</span>}
                             </div>
                           </div>
@@ -542,7 +546,7 @@ export function ExpandedOrderDetails({ order }: { order: Order }) {
                             {((item.addons && item.addons.length > 0) || item.voucher_type) && (
                               <div className="flex flex-wrap gap-2">
                                 {item.addons?.map((addon, aIdx) => {
-                                  const AddonIcon = addonIcons[addon] || Package
+                                  const AddonIcon = getAddonIcon(addon) || Package
                                   return (
                                     <Badge key={aIdx} className="bg-slate-900 hover:bg-slate-800 text-[10px] font-black text-slate-300 border border-white/5 px-3 py-1.5 gap-2 rounded-xl">
                                       <AddonIcon className={cn("h-3.5 w-3.5", theme.text)} />

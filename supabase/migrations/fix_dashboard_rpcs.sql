@@ -76,6 +76,7 @@ DROP FUNCTION IF EXISTS get_user_orders_with_items();
 CREATE OR REPLACE FUNCTION get_user_orders_with_items()
 RETURNS TABLE (
     id BIGINT,
+    order_id_ref TEXT, -- Added this
     created_at TIMESTAMPTZ,
     total_price NUMERIC,
     status TEXT,
@@ -90,6 +91,7 @@ BEGIN
     RETURN QUERY
     SELECT 
         o.id,
+        o.order_id_ref,
         o.created_at,
         o.total_price,
         o.status,
