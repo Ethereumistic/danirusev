@@ -3,7 +3,6 @@ import crypto from 'crypto';
 
 /**
  * myPOS Configuration
- * Get these values from your myPOS merchant dashboard
  */
 export const myPOSConfig = {
     sid: process.env.MYPOS_SID!,
@@ -13,214 +12,128 @@ export const myPOSConfig = {
     publicKey: process.env.MYPOS_PUBLIC_KEY!,
     isSandbox: process.env.NEXT_PUBLIC_MYPOS_IS_SANDBOX === 'true',
     currency: 'EUR',
-    ipcLanguage: 'en',
+    ipcLanguage: 'bg',
 };
 
 /**
- * Generate RSA-SHA256 signature for myPOS requests
- * @param data - Data string to sign (parameters concatenated with &)
- * @returns Base64 encoded signature
+ * Build concatenated data string for myPOS signing
+ * According to docs: Concatenate values with a dash (-) and then Base64 encode.
  */
-export function generateSignature(data: string): string {
-    try {
-        const sign = crypto.createSign('SHA256');
-        sign.update(data);
-        sign.end();
-        return sign.sign(myPOSConfig.privateKey, 'base64');
-    } catch (error) {
-        console.error('Error generating signature:', error);
-        throw new Error('Failed to generate signature');
-    }
+function buildConcatString(params: Record<string, any>, keys: string[]): string {
+    return keys.map(key => {
+        const val = params[key];
+        return (val !== undefined && val !== null) ? val.toString() : '';
+    }).join('-');
 }
 
 /**
- * Verify RSA-SHA256 signature from myPOS webhooks
- * @param data - Data string to verify
- * @param signature - Base64 encoded signature
- * @returns True if signature is valid
+ * Verify RSA-SHA256 signature
  */
 export function verifySignature(data: string, signature: string): boolean {
     try {
         const verify = crypto.createVerify('SHA256');
         verify.update(data);
-        verify.end();
         return verify.verify(myPOSConfig.publicKey, signature, 'base64');
     } catch (error) {
-        console.error('Error verifying signature:', error);
+        console.error('[MYPOS_SIGN] Error during verification:', error);
         return false;
     }
 }
 
 /**
- * Build data string for signature generation
- * Keys must be sorted alphabetically
- */
-export function buildDataString(params: Record<string, any>): string {
-    const sortedKeys = Object.keys(params).sort();
-    return sortedKeys
-        .map(key => `${key}=${params[key]}`)
-        .join('&');
-}
-
-/**
- * Cart item for myPOS payment
- */
-export interface MyPOSCartItem {
-    article: string;
-    quantity: number;
-    price: number;
-    currency: string;
-}
-
-/**
- * Payment parameters for myPOS Embedded SDK
- */
-export interface MyPOSPaymentParams {
-    sid: string;
-    ipcLanguage: string;
-    walletNumber: string;
-    amount: number;
-    currency: string;
-    orderID: string;
-    urlNotify: string;
-    urlOk: string;
-    urlCancel: string;
-    keyIndex: number;
-    cartItems: MyPOSCartItem[];
-    customerEmail?: string;
-    customerFirstNames?: string;
-    customerFamilyName?: string;
-    customerPhone?: string;
-    customerCountry?: string;
-    customerCity?: string;
-    customerZIPCode?: string;
-    customerAddress?: string;
-}
-
-/**
- * Callback parameters for myPOS Embedded SDK
- */
-export interface MyPOSCallbackParams {
-    isSandbox: boolean;
-    onSuccess: (data: any) => void;
-    onError: (error?: any) => void;
-    onMessageReceived?: (messages: any) => void;
-}
-
-/**
- * Webhook response from myPOS
- */
-export interface MyPOSWebhookData {
-    IPCmethod: string;
-    OrderID: string;
-    Amount: string;
-    Currency: string;
-    CustomerEmail?: string;
-    CustomerFirstNames?: string;
-    CustomerFamilyName?: string;
-    CustomerPhone?: string;
-    CustomerCountry?: string;
-    CustomerCity?: string;
-    CustomerZIPCode?: string;
-    CustomerAddress?: string;
-    TransactionStatus: string; // '1' = success, '2' = pending, '0' = failed
-    TransactionID: string;
-    CardType?: string;
-    CardLast4Digits?: string;
-    Signature: string;
-    [key: string]: string | undefined;
-}
-
-/**
- * Parse myPOS webhook form data
- */
-export function parseWebhookData(formData: FormData): MyPOSWebhookData {
-    const data: Record<string, string> = {};
-
-    Array.from(formData.entries()).forEach(([key, value]) => {
-        data[key] = value.toString();
-    });
-
-    return data as MyPOSWebhookData;
-}
-
-/**
  * Validate myPOS webhook
- * @returns Object with isValid and data/error
  */
 export function validateWebhook(webhookData: MyPOSWebhookData): {
     isValid: boolean;
     error?: string;
 } {
-    // Extract signature
-    const { Signature, ...dataWithoutSignature } = webhookData;
+    const { Signature, _orderedKeys, ...params } = webhookData as any;
 
     if (!Signature) {
         return { isValid: false, error: 'Missing signature' };
     }
 
-    // Build data string for verification
-    const dataString = buildDataString(dataWithoutSignature);
+    // myPOS Signature logic:
+    // 1. Concatenate all data (except Signature) with a dash "-"
+    // 2. Base64 encode the resulting string
+    // 3. Verify the signature against this Base64 string using RSA-SHA256
 
-    // Verify signature
-    const isValid = verifySignature(dataString, Signature);
+    // Strategy 1: Use the order received in POST request (Preferred)
+    if (_orderedKeys && _orderedKeys.length > 0) {
+        const raw = buildConcatString(params, _orderedKeys);
+        const base64 = Buffer.from(raw).toString('base64');
 
-    if (!isValid) {
-        return { isValid: false, error: 'Invalid signature' };
+        console.log(`[MYPOS_SIGN] Attempting strategy: Received Order`);
+        console.log(`[MYPOS_SIGN] Raw String: "${raw}"`);
+
+        if (verifySignature(base64, Signature)) {
+            console.log('✅ Signature valid via Received Order strategy');
+            return { isValid: true };
+        }
     }
 
-    // Check transaction status
-    if (webhookData.TransactionStatus !== '1') {
-        return {
-            isValid: true, // signature is valid, but payment failed
-            error: `Payment not successful. Status: ${webhookData.TransactionStatus}`
-        };
+    // Strategy 2: Official Field Order from Docs (Fallback)
+    const officialNotifyFields = [
+        'IPCmethod', 'SID', 'Amount', 'Currency', 'OrderID',
+        'IPC_Trnref', 'RequestDateTime', 'RequestSTAN',
+        'PaymentMethod', 'BillingDescriptor', 'PAN'
+    ];
+
+    // Filter out missing fields to avoid extra dashes
+    const existingOfficial = officialNotifyFields.filter(f => params[f] !== undefined);
+    const rawOfficial = buildConcatString(params, existingOfficial);
+    const base64Official = Buffer.from(rawOfficial).toString('base64');
+
+    console.log(`[MYPOS_SIGN] Attempting strategy: Official Sequence`);
+    if (verifySignature(base64Official, Signature)) {
+        console.log('✅ Signature valid via Official Sequence strategy');
+        return { isValid: true };
     }
 
-    return { isValid: true };
+    // Strategy 3: Try without dash (some old implementations/documents)
+    const rawNoDash = existingOfficial.map(f => params[f]).join('');
+    const base64NoDash = Buffer.from(rawNoDash).toString('base64');
+    if (verifySignature(base64NoDash, Signature)) {
+        console.log('✅ Signature valid via No-Dash strategy');
+        return { isValid: true };
+    }
+
+    return { isValid: false, error: 'Invalid signature. Handshake failed.' };
 }
 
-/**
- * Generate unique order ID
- */
+export interface MyPOSWebhookData {
+    IPCmethod: string;
+    OrderID: string;
+    Amount: string;
+    Currency: string;
+    Signature: string;
+    [key: string]: string | undefined;
+}
+
+export function parseWebhookData(formData: FormData): MyPOSWebhookData {
+    const data: Record<string, string> = {};
+    const keys: string[] = [];
+
+    // Important: capture the exact order of keys in the form data
+    for (const [key, value] of Array.from(formData.entries())) {
+        data[key] = value.toString();
+        if (key !== 'Signature') {
+            keys.push(key);
+        }
+    }
+
+    return { ...data, _orderedKeys: keys } as any;
+}
+
+// ... other utilities
+export function generateSignature(data: string): string {
+    const sign = crypto.createSign('SHA256');
+    sign.update(data);
+    return sign.sign(myPOSConfig.privateKey, 'base64');
+}
+
 export function generateOrderID(): string {
-    const timestamp = Date.now();
-    const random = Math.random().toString(36).substring(2, 11);
-    return `order_${timestamp}_${random}`;
+    return `order_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 }
-
-/**
- * Format cart items for myPOS
- * Converts your internal cart structure to myPOS format
- */
-export function formatCartItems(cartItems: any[]): MyPOSCartItem[] {
-    return cartItems.map(item => ({
-        article: item.title || item.name,
-        quantity: item.quantity,
-        price: item.price,
-        currency: 'EUR',
-    }));
-}
-
-/**
- * Calculate total amount from cart items
- */
-export function calculateTotal(cartItems: MyPOSCartItem[]): number {
-    return cartItems.reduce((total, item) => {
-        return total + (item.price * item.quantity);
-    }, 0);
-}
-
-/**
- * Test configuration (from myPOS documentation)
- */
-export const TEST_CONFIG = {
-    sid: '000000000000010',
-    walletNumber: '61938166610',
-    keyIndex: 1,
-    testCardNumber: '4006092001004',
-    testCVV: '111',
-    test3DSecurePassword: '111111',
-};
 
 export default myPOSConfig;
