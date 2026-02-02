@@ -33,33 +33,45 @@ const supabaseAdmin = createClient(
 export async function POST(request: NextRequest) {
     console.log('=== myPOS Webhook Received ===');
 
+
     try {
         // Parse form data from myPOS
         const formData = await request.formData();
         const webhookData = parseWebhookData(formData);
 
-        console.log('Webhook Data:', {
+        console.log('=== FULL myPOS Webhook Data ===');
+        console.log(JSON.stringify(webhookData, null, 2));
+
+        console.log('Webhook Summary:', {
             OrderID: webhookData.OrderID,
-            TransactionID: webhookData.TransactionID,
+            TransactionID: webhookData.TransactionID || webhookData.IPC_Trnref,
             Amount: webhookData.Amount,
             TransactionStatus: webhookData.TransactionStatus,
+            Signature: webhookData.Signature ? 'Present' : 'Missing',
         });
 
-        // Validate signature and transaction status
-        const validation = validateWebhook(webhookData);
+        // TEMPORARY: Skip signature validation for debugging
+        // TODO: Re-enable after we verify the webhook structure
+        const skipValidation = process.env.SKIP_WEBHOOK_VALIDATION === 'true';
 
-        if (!validation.isValid) {
-            console.error('Webhook validation failed:', validation.error);
+        if (!skipValidation) {
+            // Validate signature and transaction status
+            const validation = validateWebhook(webhookData);
 
-            // Still respond with OK to prevent myPOS from retrying
-            // but don't create the order
-            return new NextResponse('OK', { status: 200 });
+            if (!validation.isValid) {
+                console.error('❌ Webhook validation failed:', validation.error);
+
+                // Still respond with OK to prevent myPOS from retrying
+                // but don't create the order
+                return new NextResponse('OK', { status: 200 });
+            }
+        } else {
+            console.warn('⚠️ Signature validation SKIPPED (debugging mode)');
         }
 
         // Extract customer information
         const {
             OrderID,
-            TransactionID,
             Amount,
             Currency,
             CustomerEmail,
@@ -74,23 +86,25 @@ export async function POST(request: NextRequest) {
             CardLast4Digits,
         } = webhookData;
 
-        // Retrieve stored checkout data
-        const { data: checkoutData, error: fetchError } = await supabaseAdmin
-            .from('checkout_sessions')
-            .select('*')
-            .eq('order_id', OrderID)
-            .single();
+        // myPOS uses IPC_Trnref for the transaction ID in IPCPurchaseNotify
+        const TransactionID = webhookData.TransactionID || webhookData.IPC_Trnref || 'unknown';
 
-        if (fetchError || !checkoutData) {
+        // Retrieve stored checkout data using RPC
+        const { data: checkoutDataArray, error: fetchError } = await supabaseAdmin
+            .rpc('get_checkout_session', { p_order_id: OrderID });
+
+        if (fetchError || !checkoutDataArray || checkoutDataArray.length === 0) {
             console.error('No checkout data found for order:', OrderID, fetchError);
             return new NextResponse('OK', { status: 200 });
         }
+
+        const checkoutData = checkoutDataArray[0];
 
         // Check if order already exists (idempotency)
         const { data: existingOrder } = await supabaseAdmin
             .from('orders')
             .select('id')
-            .eq('stripe_payment_intent_id', TransactionID) // reusing this column for myPOS
+            .eq('payment_transaction_id', TransactionID) // Using generic column for myPOS
             .single();
 
         if (existingOrder) {
@@ -132,14 +146,18 @@ export async function POST(request: NextRequest) {
         console.log('[DEBUG] Mapped order items to send to RPC:', JSON.stringify(orderItems, null, 2));
 
         // Create order in database using RPC
+        // myPOS sends amount in decimal EUR format (e.g., "234.00")
+        const amountInEUR = parseFloat(Amount);
+
         const { data: orderId, error: orderError } = await supabaseAdmin.rpc(
             'create_order_from_webhook',
             {
                 p_user_id: checkoutData.user_id,
-                p_total_price: parseFloat(Amount),
+                p_total_price: amountInEUR, // Already in EUR
                 p_shipping_address_snapshot: shippingAddress,
                 p_cart_items: orderItems,
-                p_stripe_payment_intent_id: TransactionID, // myPOS transaction ID
+                p_payment_transaction_id: TransactionID, // myPOS transaction ID (e.g. 961209)
+                p_order_id_ref: OrderID, // Internal order ref (e.g. order_177...)
             }
         );
 

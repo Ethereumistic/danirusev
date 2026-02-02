@@ -286,24 +286,21 @@ export async function POST(request: NextRequest) {
         // 6. Generate unique order ID
         const orderID = generateOrderID();
 
-        // 7. Store checkout session
-        const { error: sessionError } = await supabaseAdmin
-            .from('checkout_sessions')
-            .insert({
-                order_id: orderID,
-                user_id: user.id,
-                email: personalInfo.email,
-                full_name: personalInfo.fullName,
-                phone_number: personalInfo.phoneNumber,
-                address: personalInfo.address,
-                city: personalInfo.city,
-                postal_code: personalInfo.postalCode,
-                country: personalInfo.country,
-                cart_items: validatedItems,
-                total_amount: totalAmount,
-                currency: 'EUR',
-                expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
-            });
+        // 7. Store checkout session using RPC (ecommerce schema not exposed via PostgREST)
+        const { error: sessionError } = await supabaseAdmin.rpc('create_checkout_session', {
+            p_order_id: orderID,
+            p_user_id: user.id,
+            p_email: personalInfo.email,
+            p_full_name: personalInfo.fullName,
+            p_phone_number: personalInfo.phoneNumber,
+            p_address: personalInfo.address || null,
+            p_city: personalInfo.city || null,
+            p_postal_code: personalInfo.postalCode || null,
+            p_country: personalInfo.country || 'България',
+            p_cart_items: validatedItems,
+            p_total_amount: totalAmount,
+            p_currency: 'EUR',
+        });
 
         if (sessionError) {
             console.error('Error creating checkout session:', sessionError);

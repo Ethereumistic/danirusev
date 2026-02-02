@@ -111,61 +111,88 @@ export function CheckoutForm({ profile }: CheckoutFormProps) {
     }, 0)
   }, [items])
 
-  // Initialize myPOS payment
-  const initializeMyPOSPayment = useCallback(async (sessionOrderID: string) => {
-    if (!window.MyPOSEmbedded) {
-      toast.error('Payment system not ready. Please refresh.')
+  // Initialize payment when showPaymentForm becomes true and orderID is set
+  useEffect(() => {
+    // Guard: Don't initialize if cart is empty (happens after clearCart on success)
+    if (items.length === 0) {
       return
     }
 
-    const paymentParams = {
-      sid: process.env.NEXT_PUBLIC_MYPOS_SID!,
-      ipcLanguage: 'en',
-      walletNumber: process.env.NEXT_PUBLIC_MYPOS_WALLET_NUMBER!,
-      amount: subtotal,
-      currency: 'EUR',
-      orderID: sessionOrderID,
-      urlNotify: `${window.location.origin}/api/webhooks/mypos`,
-      urlOk: `${window.location.origin}/order-confirmation?order_id=${sessionOrderID}`,
-      urlCancel: `${window.location.origin}/checkout`,
-      keyIndex: 1,
-      cartItems: items.map(item => ({
-        article: item.title,
-        quantity: item.quantity,
-        price: item.price,
-        currency: 'EUR',
-      })),
-    }
+    if (showPaymentForm && orderID) {
+      // Wait for DOM to render
+      const timer = setTimeout(() => {
+        if (!window.MyPOSEmbedded) {
+          toast.error('Payment system not ready. Please refresh.')
+          return
+        }
 
-    const callbackParams = {
-      isSandbox: process.env.NEXT_PUBLIC_MYPOS_IS_SANDBOX === 'true',
-      onSuccess: function (data: any) {
-        console.log('Payment successful:', data)
-        clearCart()
-        router.push(`/order-confirmation?order_id=${sessionOrderID}`)
-      },
-      onError: function (error: any) {
-        console.error('Payment error:', error)
-        toast.error('Payment failed. Please try again.')
-        setIsLoadingPayment(false)
-      },
-      onMessageReceived: function (messages: any) {
-        console.log('Payment messages:', messages)
-      },
-    }
+        // myPOS uses decimal EUR format (NOT cents like Stripe!)
+        // Example: 234.00 EUR (not 23400)
+        const amountInEUR = parseFloat(subtotal.toFixed(2))
 
-    try {
-      await window.MyPOSEmbedded.createPayment(
-        'mypos-embedded-checkout',
-        paymentParams,
-        callbackParams
-      )
-    } catch (error) {
-      console.error('Error initializing payment:', error)
-      toast.error('Failed to initialize payment')
-      setIsLoadingPayment(false)
+        // Use ngrok URL for webhooks in development if provided
+        const webhookBaseUrl = process.env.NEXT_PUBLIC_WEBHOOK_URL || window.location.origin
+        const isLocalhost = window.location.hostname === 'localhost'
+
+        const paymentParams = {
+          sid: process.env.NEXT_PUBLIC_MYPOS_SID!,
+          ipcLanguage: 'en',
+          walletNumber: process.env.NEXT_PUBLIC_MYPOS_WALLET_NUMBER!,
+          amount: amountInEUR, // myPOS uses decimal EUR!
+          currency: 'EUR',
+          orderID: orderID,
+          urlNotify: `${webhookBaseUrl}/api/webhooks/mypos`,
+          urlOk: isLocalhost
+            ? `${window.location.origin}/order-confirmation?order_id=${orderID}`
+            : `${webhookBaseUrl}/order-confirmation?order_id=${orderID}`,
+          urlCancel: `${window.location.origin}/checkout`,
+          keyIndex: 1,
+          cartItems: items.map(item => ({
+            article: item.title,
+            quantity: item.quantity,
+            price: parseFloat(item.price.toFixed(2)), // Decimal EUR
+            currency: 'EUR',
+          })),
+        }
+
+        const callbackParams = {
+          isSandbox: process.env.NEXT_PUBLIC_MYPOS_IS_SANDBOX === 'true',
+          onSuccess: function (data: any) {
+            console.log('✅ Payment successful:', data)
+            // Don't clear cart here - will be cleared after redirect
+            router.push(`/order-confirmation?order_id=${orderID}`)
+          },
+          onError: function (error: any) {
+            console.error('❌ Payment error:', error)
+            toast.error('Payment failed. Please try again.')
+            setIsLoadingPayment(false)
+          },
+          onMessageReceived: function (messages: any) {
+            console.log('📨 Payment messages:', messages)
+          },
+        }
+
+        console.log('🚀 Initializing myPOS payment with params:', {
+          ...paymentParams,
+          amountEUR: amountInEUR,
+          isSandbox: callbackParams.isSandbox,
+        })
+
+        window.MyPOSEmbedded.createPayment(
+          'mypos-embedded-checkout',
+          paymentParams,
+          callbackParams
+        ).catch((error: any) => {
+          console.error('💥 Error initializing payment:', error)
+          toast.error('Failed to initialize payment')
+          setIsLoadingPayment(false)
+        })
+      }, 100) // Small delay to ensure DOM is ready
+
+      return () => clearTimeout(timer)
     }
-  }, [items, subtotal, clearCart, router])
+  }, [showPaymentForm, orderID, subtotal, items, router])
+
 
   // Create checkout session and initialize payment
   const handleCreateCheckoutSession = async () => {
@@ -230,13 +257,10 @@ export function CheckoutForm({ profile }: CheckoutFormProps) {
       const data = await response.json()
       setOrderID(data.orderID)
 
-      // Show payment form
+      // Show payment form (payment will initialize automatically via useEffect)
       setShowPaymentForm(true)
       // Close personal info accordion to make room for payment
       setPersonalInfoOpen(undefined)
-
-      // Initialize myPOS payment
-      await initializeMyPOSPayment(data.orderID)
 
       toast.success('Готово за плащане')
     } catch (error) {

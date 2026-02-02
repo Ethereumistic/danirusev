@@ -1,7 +1,17 @@
--- Create checkout_sessions table in ECOMMERCE schema for storing temporary checkout data
--- This replaces the need for Redis or external caching
+-- Clean up old checkout_sessions from public schema (if exists)
+DROP TABLE IF EXISTS public.checkout_sessions CASCADE;
+DROP FUNCTION IF EXISTS public.delete_expired_checkout_sessions() CASCADE;
+DROP FUNCTION IF EXISTS public.cleanup_expired_sessions_trigger() CASCADE;
 
-CREATE TABLE IF NOT EXISTS ecommerce.checkout_sessions (
+-- Clean up from ecommerce schema (if exists)
+DROP TABLE IF EXISTS ecommerce.checkout_sessions CASCADE;
+DROP FUNCTION IF EXISTS ecommerce.delete_expired_checkout_sessions() CASCADE;
+DROP FUNCTION IF EXISTS ecommerce.cleanup_expired_sessions_trigger() CASCADE;
+DROP FUNCTION IF EXISTS create_checkout_session(TEXT, UUID, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, JSONB, DECIMAL, TEXT) CASCADE;
+DROP FUNCTION IF EXISTS get_checkout_session(TEXT) CASCADE;
+
+-- Now create everything fresh in ecommerce schema
+CREATE TABLE ecommerce.checkout_sessions (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   order_id TEXT NOT NULL UNIQUE,
   user_id UUID REFERENCES auth.users(id),
@@ -29,15 +39,15 @@ CREATE TABLE IF NOT EXISTS ecommerce.checkout_sessions (
 );
 
 -- Create index on order_id for fast lookups
-CREATE INDEX IF NOT EXISTS idx_checkout_sessions_order_id 
+CREATE INDEX idx_checkout_sessions_order_id 
 ON ecommerce.checkout_sessions(order_id);
 
 -- Create index on user_id
-CREATE INDEX IF NOT EXISTS idx_checkout_sessions_user_id 
+CREATE INDEX idx_checkout_sessions_user_id 
 ON ecommerce.checkout_sessions(user_id);
 
 -- Create index on expires_at for cleanup
-CREATE INDEX IF NOT EXISTS idx_checkout_sessions_expires_at 
+CREATE INDEX idx_checkout_sessions_expires_at 
 ON ecommerce.checkout_sessions(expires_at);
 
 -- Enable Row Level Security
@@ -54,7 +64,7 @@ ON ecommerce.checkout_sessions FOR ALL
 USING (auth.role() = 'service_role');
 
 -- Function to automatically delete expired sessions
-CREATE OR REPLACE FUNCTION ecommerce.delete_expired_checkout_sessions()
+CREATE FUNCTION ecommerce.delete_expired_checkout_sessions()
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -65,12 +75,8 @@ BEGIN
 END;
 $$;
 
--- Create a scheduled job to clean up expired sessions (if using pg_cron)
--- Run this every hour:
--- SELECT cron.schedule('cleanup-expired-sessions', '0 * * * *', 'SELECT ecommerce.delete_expired_checkout_sessions()');
-
--- Or create a trigger to delete on access (simpler approach)
-CREATE OR REPLACE FUNCTION ecommerce.cleanup_expired_sessions_trigger()
+-- Create a trigger to delete on access (simpler approach)
+CREATE FUNCTION ecommerce.cleanup_expired_sessions_trigger()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 AS $$
@@ -85,7 +91,7 @@ BEFORE INSERT ON ecommerce.checkout_sessions
 EXECUTE FUNCTION ecommerce.cleanup_expired_sessions_trigger();
 
 -- RPC function to create checkout sessions (needed because ecommerce schema not exposed via PostgREST)
-CREATE OR REPLACE FUNCTION create_checkout_session(
+CREATE FUNCTION create_checkout_session(
     p_order_id TEXT,
     p_user_id UUID,
     p_email TEXT,
@@ -118,7 +124,7 @@ END;
 $$;
 
 -- RPC function to get checkout session data (for webhook)
-CREATE OR REPLACE FUNCTION get_checkout_session(p_order_id TEXT)
+CREATE FUNCTION get_checkout_session(p_order_id TEXT)
 RETURNS TABLE (
     order_id TEXT,
     user_id UUID,
@@ -152,4 +158,3 @@ COMMENT ON TABLE ecommerce.checkout_sessions IS 'Temporary storage for checkout 
 COMMENT ON COLUMN ecommerce.checkout_sessions.order_id IS 'Unique order ID generated for this checkout session';
 COMMENT ON COLUMN ecommerce.checkout_sessions.expires_at IS 'Session expires 24 hours after creation';
 COMMENT ON COLUMN ecommerce.checkout_sessions.cart_items IS 'Validated cart items with prices from database';
-

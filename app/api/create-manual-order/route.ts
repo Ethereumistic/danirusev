@@ -290,7 +290,7 @@ export async function POST(request: NextRequest) {
                 country: personalInfo.country || '',
             },
             p_cart_items: orderItems,
-            p_stripe_payment_intent_id: manualOrderId, // Use manual ID as "payment intent"
+            p_payment_transaction_id: manualOrderId, // Use manual ID as transaction reference
         })
 
         if (orderError) {

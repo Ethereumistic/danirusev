@@ -16,6 +16,20 @@ export async function POST(request: NextRequest) {
         // Determine the final date to use
         const finalDate = confirmOnly ? null : selectedDate
 
+        // Update order_items.selected_date if a new date is provided
+        // This ensures the customer sees the confirmed date on their orders page
+        if (selectedDate && orderItemId) {
+            const { error: updateDateError } = await supabase.rpc('update_order_item_date', {
+                p_order_item_id: parseInt(orderItemId),
+                p_selected_date: selectedDate
+            })
+
+            if (updateDateError) {
+                console.error('Error updating order item date:', updateDateError)
+                // Continue anyway - this is not critical
+            }
+        }
+
         // Call RPC function to update date and status
         const { data, error } = await supabase.rpc('confirm_order_date', {
             p_order_id: parseInt(orderId),

@@ -54,6 +54,7 @@ export type OrderItem = {
 
 // This type is updated to include the new fields from our RPC function
 export type Order = {
+  id: number
   orderId: string
   userId: string | null
   customerEmail: string | null
@@ -238,7 +239,7 @@ export const columns: ColumnDef<Order>[] = [
         if (!confirm('Сигурни ли сте, че искате да изтриете тази поръчка?')) {
           return
         }
-        toast.promise(deleteOrder(order.orderId), {
+        toast.promise(deleteOrder(order.id.toString()), {
           loading: 'Изтриване...',
           success: 'Поръчката е изтрита.',
           error: 'Грешка при изтриване.',
@@ -246,7 +247,7 @@ export const columns: ColumnDef<Order>[] = [
       }
 
       const handleStatusUpdate = async (status: 'approved' | 'shipped' | 'delivered' | 'pending') => {
-        toast.promise(updateOrderStatus(order.orderId, status), {
+        toast.promise(updateOrderStatus(order.id.toString(), status), {
           loading: `Промяна на статус...`,
           success: `Статусът е обновен.`,
           error: 'Грешка при обновяване.',
@@ -421,7 +422,7 @@ export function ExpandedOrderDetails({ order }: { order: Order }) {
                     const StatusIcon = config.icon
 
                     const handleStatusUpdate = async (newStatus: string) => {
-                      toast.promise(updateOrderStatus(order.orderId, newStatus as any), {
+                      toast.promise(updateOrderStatus(order.id.toString(), newStatus as any), {
                         loading: `Промяна на статус към ${statusConfig[newStatus]?.label}...`,
                         success: `Статусът е обновен на ${statusConfig[newStatus]?.label}.`,
                         error: 'Грешка при обновяване.',
@@ -589,7 +590,7 @@ export function ExpandedOrderDetails({ order }: { order: Order }) {
                         <div className="flex items-center justify-center border-t xl:border-t-0 xl:border-l border-white/5 pt-8 xl:pt-0 xl:pl-8 min-w-fit">
                           <ExperienceInlineManagement
                             item={item}
-                            orderId={order.orderId}
+                            orderId={order.id.toString()}
                             userId={order.userId}
                             theme={theme}
                           />
