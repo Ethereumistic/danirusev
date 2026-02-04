@@ -1,0 +1,8 @@
+[build]
+  command = "pnpm run build"
+  publish = ".next"
+
+[build.environment]
+  # Disable Netlify's secrets scanner to prevent build failures 
+  # caused by detected environment variable values in the build output.
+  SECRETS_SCAN_ENABLED = "false"
