@@ -1,11 +1,13 @@
 'use client'
 
 import * as React from "react"
+import { useTransition } from "react"
 import Image from "next/image"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
-import { Clock, MapPin, ArrowUpRight, Gauge, CarTaxiFront, Car } from "lucide-react"
+import { Clock, MapPin, ArrowUpRight, Gauge, CarTaxiFront, Car, Loader2 } from "lucide-react"
 import * as LucideIcons from "lucide-react"
 import { getThemeClasses, getImageUrl, type ThemeColor } from "./types"
 import type { ExperienceProduct } from "@/types/payload-types"
@@ -30,6 +32,8 @@ export function ExperienceCard({
     const themeColor = (experience.visuals?.themeColor || 'main') as ThemeColor
     const IconComponent = getIconComponent(experience.visuals?.iconName)
     const theme = getThemeClasses(themeColor)
+    const router = useRouter()
+    const [isPending, startTransition] = useTransition()
 
     // Get first image from gallery
     const firstImage = experience.gallery?.[0]
@@ -60,10 +64,17 @@ export function ExperienceCard({
                     themeColor === 'day' ? 'border-solid hover:border-dotted' :
                         'border-solid'
 
+    const handleClick = (e: React.MouseEvent) => {
+        e.preventDefault()
+        startTransition(() => {
+            router.push(`${linkPrefix}/${experience.slug}`)
+        })
+    }
+
     return (
-        <Link href={`${linkPrefix}/${experience.slug}`} className="block">
-            <div
-                className={`group relative h-[550px] max-w-[450px] mx-auto rounded-2xl overflow-hidden border hover:border-3 bg-slate-900 transition-all duration-300 hover:scale-[1.01] hover:z-50 transform-gpu ${borderStyleClass} ${theme.border}`}
+        <div
+            onClick={handleClick}
+            className={`group relative h-[550px] max-w-[450px] mx-auto rounded-2xl overflow-hidden border hover:border-3 bg-slate-900 transition-all duration-300 hover:scale-[1.01] hover:z-50 transform-gpu cursor-pointer ${borderStyleClass} ${theme.border} ${isPending ? 'opacity-70' : ''}`}
             >
                 {/* Price Badge */}
                 <div className={`absolute top-4 right-4 z-30 bg-slate-950/90 backdrop-blur-md border border-slate-700/50 ${theme.text} ${theme.shadow} font-black text-xl px-4 py-2 rounded-lg`}>
@@ -142,16 +153,20 @@ export function ExperienceCard({
                         </div>
                     </div>
 
-                    {/* CTA Button */}
                     <Button
                         className={`w-full cursor-pointer font-extrabold uppercase tracking-wider h-14 text-lg rounded-xl group relative overflow-hidden transition-all ${theme.bg} ${theme.hover} text-black`}
                     >
                         <span className="relative z-10 flex items-center justify-center gap-2">
-                            Виж Повече <ArrowUpRight className="w-5 h-5" />
+                            {isPending ? (
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                            ) : (
+                                <>
+                                    Виж Повече <ArrowUpRight className="w-5 h-5" />
+                                </>
+                            )}
                         </span>
                     </Button>
                 </div>
             </div>
-        </Link>
     )
 }

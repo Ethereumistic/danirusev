@@ -9,6 +9,7 @@ export * from './types'
 // Components
 export { ExperienceCard } from './experience-card'
 export { ExperienceCardSkeleton, ExperienceSectionSkeleton } from './experience-card-skeleton'
+export { ExperienceDetailSkeleton, ExperienceGallerySkeleton, ExperienceStatsGridSkeleton, ExperienceQuoteSkeleton, ExperienceTabsSkeleton, ExperienceBookingSkeleton } from './experience-detail-skeleton'
 export { ExperienceSection } from './experience-section'
 export { ExperienceSectionWrapper } from './experience-section-wrapper'
 export { ExperienceGallery } from './experience-gallery'
