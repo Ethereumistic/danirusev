@@ -83,6 +83,7 @@ export function ExperienceCard({
                         src={imageUrl}
                         alt={experience.title}
                         fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                         className="object-cover transition-transform duration-700 group-hover:scale-110"
                     />
                     {/* Gradient Overlay */}
@@ -143,7 +144,7 @@ export function ExperienceCard({
 
                     {/* CTA Button */}
                     <Button
-                        className={`w-full font-extrabold uppercase tracking-wider h-14 text-lg rounded-xl group relative overflow-hidden transition-all ${theme.bg} ${theme.hover} text-black`}
+                        className={`w-full cursor-pointer font-extrabold uppercase tracking-wider h-14 text-lg rounded-xl group relative overflow-hidden transition-all ${theme.bg} ${theme.hover} text-black`}
                     >
                         <span className="relative z-10 flex items-center justify-center gap-2">
                             Виж Повече <ArrowUpRight className="w-5 h-5" />

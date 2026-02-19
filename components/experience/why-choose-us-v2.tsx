@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
     Carousel,
@@ -95,7 +95,37 @@ const FEATURES: FeatureBlock[] = [
     },
 ];
 
-function FeatureCarousel({ images, title }: { images: string[]; title: string }) {
+function LazyCarousel({ images, title }: { images: string[]; title: string }) {
+    const [shouldLoad, setShouldLoad] = useState(false);
+    const ref = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    setShouldLoad(true);
+                    observer.disconnect();
+                }
+            },
+            { rootMargin: "200px" }
+        );
+
+        if (ref.current) observer.observe(ref.current);
+        return () => observer.disconnect();
+    }, []);
+
+    return (
+        <div ref={ref} className="relative aspect-[4/3] rounded-2xl overflow-hidden">
+            {shouldLoad ? (
+                <FeatureCarouselInner images={images} title={title} />
+            ) : (
+                <div className="absolute inset-0 bg-slate-800 animate-pulse" />
+            )}
+        </div>
+    );
+}
+
+function FeatureCarouselInner({ images, title }: { images: string[]; title: string }) {
     const [api, setApi] = useState<CarouselApi>();
     const [current, setCurrent] = useState(0);
 
@@ -126,6 +156,7 @@ function FeatureCarousel({ images, title }: { images: string[]; title: string })
                                     src={image}
                                     alt={`${title} - ${idx + 1}`}
                                     fill
+                                    sizes="(max-width: 768px) 100vw, 50vw"
                                     className="object-cover"
                                 />
                                 {/* Gradient overlay */}
@@ -173,7 +204,7 @@ function FeatureSection({ feature, index }: { feature: FeatureBlock; index: numb
                     transition={{ duration: 0.6 }}
                     className="relative w-full lg:w-1/2"
                 >
-                    <FeatureCarousel images={feature.images} title={feature.title} />
+                    <LazyCarousel images={feature.images} title={feature.title} />
 
                 </motion.div>
 

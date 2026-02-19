@@ -7,7 +7,7 @@ import { TestimonialsSkeleton } from '@/components/landing/testimonials-skeleton
 import { WhyChooseUsV2 } from '@/components/experience/why-choose-us-v2'
 import { ExperienceSectionWrapper, ExperienceSectionSkeleton } from '@/components/experience'
 import { PromoBannersList } from '@/components/landing/promo-banners-list'
-import { AboutSection } from '@/components/landing/about-section'
+import { AboutSectionWrapper } from '@/components/landing/about-section-wrapper'
 
 import { defaultMetadata } from '@/lib/seo'
 
@@ -45,7 +45,7 @@ export default function Home() {
         <TestimonialsWrapper />
       </Suspense>
 
-      <AboutSection />
+      <AboutSectionWrapper />
 
       {/* CMS-driven promo banners - wrapped in Suspense to prevent blocking */}
       <Suspense fallback={null}>

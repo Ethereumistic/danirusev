@@ -91,22 +91,23 @@ const BadgeContent = ({ badge }: { badge: any }) => (
     </>
 );
 
-export function AboutSection() {
+export function AboutSection({ initialVideos }: { initialVideos?: YouTubeVideo[] }) {
     const [api, setApi] = React.useState<any>();
     const [current, setCurrent] = React.useState(0);
     const [bioApi, setBioApi] = React.useState<any>();
     const [bioCurrent, setBioCurrent] = React.useState(0);
     const [ytApi, setYtApi] = React.useState<any>();
     const [ytCurrent, setYtCurrent] = React.useState(0);
-    const [youtubeVideos, setYoutubeVideos] = React.useState<YouTubeVideo[]>([]);
+    const [youtubeVideos, setYoutubeVideos] = React.useState<YouTubeVideo[]>(initialVideos || []);
 
     React.useEffect(() => {
+        if (initialVideos && initialVideos.length > 0) return;
         const fetchVideos = async () => {
             const videos = await getLatestYouTubeVideos('@danirusev11', 11);
             if (videos.length > 0) setYoutubeVideos(videos);
         };
         fetchVideos();
-    }, []);
+    }, [initialVideos]);
 
     const plugin = React.useRef(
         Autoplay({ delay: 4000, stopOnInteraction: true })
@@ -224,6 +225,7 @@ export function AboutSection() {
                                                         src={image.url}
                                                         alt={image.alt}
                                                         fill
+                                                        sizes="(max-width: 1024px) 100vw, 50vw"
                                                         className="object-cover"
                                                         priority={index === 0}
                                                     />
@@ -297,6 +299,7 @@ export function AboutSection() {
                                                                 src={video.thumbnail}
                                                                 alt={video.title}
                                                                 fill
+                                                                sizes="(max-width: 1024px) 100vw, 50vw"
                                                                 className="object-cover transition-transform duration-700 group-hover/yt:scale-105"
                                                             />
 
