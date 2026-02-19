@@ -141,7 +141,8 @@ function FeatureCarouselInner({ images, title }: { images: string[]; title: stri
                                         fill
                                         sizes="(max-width: 768px) 100vw, 50vw"
                                         className="object-cover"
-                                        priority={idx === 0}
+                                        priority={idx < 3}
+                                        loading={idx < 3 ? "eager" : "lazy"}
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent" />
                                 </div>
