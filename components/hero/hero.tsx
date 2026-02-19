@@ -2,46 +2,66 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import {
-  Flame,
-  Trophy,
-  Timer,
-  Star,
-  ShieldCheck,
-  Hourglass
-} from 'lucide-react';
-import { useRef } from 'react';
+import { Flame } from 'lucide-react';
+import { useRef, useState, useEffect } from 'react';
+import Image from 'next/image';
 
 const Hero = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [videoLoaded, setVideoLoaded] = useState(false);
+
+  // Preload video after LCP image is ready
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.load();
+    }
+  }, []);
+
   return (
-    <section className="relative min-h-screen  flex items-center justify-center overflow-hidden mt-[-4rem]">
-      {/* Background Video/Image */}
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden mt-[-4rem]">
+      {/* Background - IMAGE FIRST for LCP, video loads after */}
       <div className="absolute inset-0 z-0 bg-slate-950">
+        {/* LCP Image - loads immediately */}
+        <Image
+          src="/hero-poster.webp"
+          alt="Dani Rusev Drift Experience"
+          fill
+          priority
+          fetchPriority="high"
+          sizes="100vw"
+          className={`object-cover transition-opacity duration-700 ${videoLoaded ? 'opacity-0' : 'opacity-100'}`}
+          onLoad={() => {
+            // Start video loading after image is displayed
+            if (videoRef.current) {
+              videoRef.current.play().catch(() => { });
+            }
+          }}
+        />
+
+        {/* Video loads in background, swaps when ready */}
         <video
           ref={videoRef}
           autoPlay
           loop
           muted
           playsInline
-          preload="metadata"
-          className="absolute top-0 left-0 w-full h-full object-cover"
+          preload="none" // Don't preload until image is ready
+          onLoadedData={() => setVideoLoaded(true)}
+          className={`absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-700 ${videoLoaded ? 'opacity-100' : 'opacity-0'}`}
+          style={{ transform: 'translateZ(0)' }}
         >
           <source
             src="https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets@main/opt/hero/hero.mp4"
             type="video/mp4"
           />
-          Браузърът не поддържа видео.
         </video>
+
         {/* Overlay for better text readability */}
-        <div className="absolute inset-0 bg-slate-950/20 z-20" />
+        <div className="absolute inset-0 bg-slate-950/20 z-10" />
       </div>
 
       {/* Hero Content */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 py-20 text-center ">
-
-
-
+      <div className="relative z-20 max-w-7xl mx-auto px-4 py-20 text-center">
         {/* Main Headline */}
         <motion.h1
           initial={{ opacity: 0, y: 30 }}
@@ -64,8 +84,7 @@ const Hero = () => {
           transition={{ duration: 0.8, delay: 0.2 }}
           className="text-xl md:text-2xl text-slate-300 mb-10 max-w-3xl mx-auto leading-relaxed"
         >
-          Професионални дрифт сесии с <span className="text-main font-bold">Дани Русев</span> —
-          твоят път към майсторството над волана.
+          Професионални дрифт сесии с <span className="text-main font-bold">Дани Русев</span> — твоят път към майсторството над волана.
         </motion.p>
 
         {/* CTA Buttons */}
@@ -88,13 +107,11 @@ const Hero = () => {
             </span>
           </Button>
         </motion.div>
-
-
       </div>
 
       {/* Scroll indicator */}
       <motion.div
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10"
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20"
         animate={{ y: [0, 10, 0] }}
         transition={{ duration: 2, repeat: Infinity }}
       >
@@ -103,8 +120,7 @@ const Hero = () => {
         </div>
       </motion.div>
 
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-950/30 via-slate-950/60 to-slate-950" />
-
+      <div className="absolute inset-0 bg-gradient-to-b from-slate-950/30 via-slate-950/60 to-slate-950 pointer-events-none" />
     </section>
   );
 };
