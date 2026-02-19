@@ -42,6 +42,7 @@ const nextConfig: NextConfig = {
               "connect-src 'self' https://developers.mypos.com https://mypos.com https://*.mypos.com https://*.supabase.co wss://*.supabase.co",
               "frame-src 'self' https://mypos.com https://www.google.com",
               "frame-ancestors 'self'",
+              "media-src 'self' https://cdn.jsdelivr.net",
             ].join('; '),
           },
         ],

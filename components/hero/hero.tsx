@@ -10,26 +10,27 @@ import {
   ShieldCheck,
   Hourglass
 } from 'lucide-react';
+import { useRef } from 'react';
 
 const Hero = () => {
+  const videoRef = useRef<HTMLVideoElement>(null);
   return (
     <section className="relative min-h-screen  flex items-center justify-center overflow-hidden mt-[-4rem]">
       {/* Background Video/Image */}
       <div className="absolute inset-0 z-0 bg-slate-950">
         <video
+          ref={videoRef}
           autoPlay
           loop
           muted
           playsInline
-          preload="auto"
-          disablePictureInPicture
-          disableRemotePlayback
-          aria-hidden="true"
-          className="absolute top-0 left-0 w-full h-full object-cover z-10"
+          preload="metadata"
+          className="absolute top-0 left-0 w-full h-full object-cover"
         >
-          {/* <source src="/hero.mp4" type="video/mp4" /> */}
-          <source src="/hero-optimized.webm" type="video/webm" />
-          <source src="/hero-optimized.mp4" type="video/mp4" />
+          <source
+            src="https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets@main/opt/hero/hero.mp4"
+            type="video/mp4"
+          />
           Браузърът не поддържа видео.
         </video>
         {/* Overlay for better text readability */}
