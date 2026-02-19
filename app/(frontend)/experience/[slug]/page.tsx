@@ -1,8 +1,7 @@
 import * as React from "react"
 import { notFound } from "next/navigation"
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Quote, Gauge, Car, CarTaxiFront } from "lucide-react"
+import { Quote, Gauge, Car, CarTaxiFront } from "lucide-react"
 import * as LucideIcons from "lucide-react"
 
 // Data fetching
@@ -22,6 +21,7 @@ import {
     getThemeClasses,
     type ThemeColor
 } from "@/components/experience"
+import { BackButton } from "@/components/experience/back-button"
 
 // Import the new component
 import { ExperienceScrollableTabs } from "@/components/experience/experience-scrollable-tabs"
@@ -90,15 +90,7 @@ export default async function ExperienceDetailPage({
         <div className="min-h-screen bg-slate-950 pb-12 pt-4 md:pt-8">
             {/* Back Button */}
             <div className="max-w-7xl mx-auto px-4 mb-6">
-                <Link href="/#drift-experiences">
-                    <Button
-                        variant="ghost"
-                        className="text-slate-400 hover:text-white group"
-                    >
-                        <ArrowLeft className="mr-2 h-5 w-5 group-hover:-translate-x-1 transition-transform" />
-                        Назад към преживявания
-                    </Button>
-                </Link>
+                <BackButton />
             </div>
 
             <div className="max-w-6xl mx-auto px-4">

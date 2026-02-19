@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
     Carousel,
@@ -96,31 +96,9 @@ const FEATURES: FeatureBlock[] = [
 ];
 
 function LazyCarousel({ images, title }: { images: string[]; title: string }) {
-    const [shouldLoad, setShouldLoad] = useState(false);
-    const ref = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                if (entry.isIntersecting) {
-                    setShouldLoad(true);
-                    observer.disconnect();
-                }
-            },
-            { rootMargin: "200px" }
-        );
-
-        if (ref.current) observer.observe(ref.current);
-        return () => observer.disconnect();
-    }, []);
-
     return (
-        <div ref={ref} className="relative aspect-[4/3] rounded-2xl overflow-hidden">
-            {shouldLoad ? (
-                <FeatureCarouselInner images={images} title={title} />
-            ) : (
-                <div className="absolute inset-0 bg-slate-800 animate-pulse" />
-            )}
+        <div className="relative aspect-[4/3] rounded-2xl overflow-hidden">
+            <FeatureCarouselInner images={images} title={title} />
         </div>
     );
 }
@@ -158,8 +136,8 @@ function FeatureCarouselInner({ images, title }: { images: string[]; title: stri
                                     fill
                                     sizes="(max-width: 768px) 100vw, 50vw"
                                     className="object-cover"
+                                    priority={idx === 0}
                                 />
-                                {/* Gradient overlay */}
                                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent" />
                             </div>
                         </CarouselItem>
@@ -170,14 +148,14 @@ function FeatureCarouselInner({ images, title }: { images: string[]; title: stri
             </Carousel>
 
             {/* Dots indicator */}
-            <div className="flex justify-center gap-2 mt-4">
+            <div className="flex justify-center gap-2 mt-4 px-4">
                 {images.map((_, idx) => (
                     <button
                         key={idx}
                         onClick={() => api?.scrollTo(idx)}
-                        className={`w-2 h-2 rounded-full transition-all ${idx === current
-                            ? "bg-main w-6"
-                            : "bg-slate-600 hover:bg-slate-500"
+                        className={`h-2.5 rounded-full transition-all duration-300 ${idx === current
+                            ? "bg-main w-8"
+                            : "bg-slate-500 hover:bg-slate-400 w-2.5"
                             }`}
                         aria-label={`Go to slide ${idx + 1}`}
                     />

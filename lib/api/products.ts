@@ -1,11 +1,11 @@
 import { getPayload } from 'payload'
 import configPromise from '@/payload.config'
+import { unstable_cache } from 'next/cache'
 
-/**
- * Get all products from Payload CMS
- * Optionally filter by product type
- */
-export async function getProducts(productType?: 'physical' | 'experience') {
+const EXPERIENCES_CACHE_TAG = 'experiences'
+const PRODUCTS_CACHE_TAG = 'products'
+
+const getProductsInternal = async (productType?: 'physical' | 'experience') => {
     const payload = await getPayload({ config: configPromise })
 
     const result = await payload.find({
@@ -18,16 +18,13 @@ export async function getProducts(productType?: 'physical' | 'experience') {
             }
             : undefined,
         limit: 100,
-        depth: 2, // Include related media and categories
+        depth: 2,
     })
 
     return result.docs
 }
 
-/**
- * Get a single product by slug
- */
-export async function getProductBySlug(slug: string) {
+const getProductBySlugInternal = async (slug: string) => {
     const payload = await getPayload({ config: configPromise })
 
     const result = await payload.find({
@@ -42,6 +39,28 @@ export async function getProductBySlug(slug: string) {
     })
 
     return result.docs[0] || null
+}
+
+export const getProducts = (productType?: 'physical' | 'experience') => {
+    return unstable_cache(
+        () => getProductsInternal(productType),
+        [productType ? `products-${productType}` : 'products-all'],
+        {
+            tags: [PRODUCTS_CACHE_TAG, productType ? `products-${productType}` : 'products-all'],
+            revalidate: 300,
+        }
+    )()
+}
+
+export const getProductBySlug = (slug: string) => {
+    return unstable_cache(
+        () => getProductBySlugInternal(slug),
+        [`product-${slug}`],
+        {
+            tags: [PRODUCTS_CACHE_TAG, `product-${slug}`],
+            revalidate: 300,
+        }
+    )()
 }
 
 /**
