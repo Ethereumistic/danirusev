@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { motion, Variants, AnimatePresence } from 'framer-motion';
-import { Trophy, Youtube, PersonStanding, ExternalLink, MoreVertical, Play, Clapperboard } from 'lucide-react';
+import { Trophy, Youtube, PersonStanding, ExternalLink, MoreVertical, Play, Clapperboard, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -44,7 +44,7 @@ const staggerContainer: Variants = {
 
 const BIO_IMAGES = [
     {
-        url: "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/about/driver1.jpg",
+        url: "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/opt/about/driver1.webp",
         alt: "Дани Русев рали пилот",
         badge: {
             icon: Trophy,
@@ -54,13 +54,23 @@ const BIO_IMAGES = [
         }
     },
     {
-        url: "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/about/dr-team.png",
+        url: "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/opt/about/dr-team.webp",
         alt: "Екипа на Дани Русев",
         badge: {
             icon: PersonStanding,
             color: "bg-main",
             title: "Екипът на Дани Русев",
             subtitle: "Съвместно усилие"
+        }
+    },
+    {
+        url: "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/opt/about/DR11_Shirts.webp",
+        alt: "Заклети Фенове",
+        badge: {
+            icon: Star,
+            color: "bg-rent",
+            title: "Заклети Фенове",
+            subtitle: "Вечна подкрепа"
         }
     }
 ];
