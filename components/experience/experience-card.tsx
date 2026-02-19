@@ -74,7 +74,7 @@ export function ExperienceCard({
     return (
         <div
             onClick={handleClick}
-            className={`group relative h-[550px] max-w-[450px] mx-auto rounded-2xl overflow-hidden border hover:border-3 bg-slate-900 transition-all duration-300 hover:scale-[1.01] hover:z-50 transform-gpu cursor-pointer ${borderStyleClass} ${theme.border} ${isPending ? 'opacity-70' : ''}`}
+            className={`group relative w-full max-w-[450px] mx-auto h-[550px] rounded-2xl overflow-hidden border hover:border-3 bg-slate-900 transition-all duration-300 hover:scale-[1.01] hover:z-50 transform-gpu cursor-pointer ${borderStyleClass} ${theme.border} ${isPending ? 'opacity-70 cursor-wait' : ''}`}
             >
                 {/* Price Badge */}
                 <div className={`absolute top-4 right-4 z-30 bg-slate-950/90 backdrop-blur-md border border-slate-700/50 ${theme.text} ${theme.shadow} font-black text-xl px-4 py-2 rounded-lg`}>
