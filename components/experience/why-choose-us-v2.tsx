@@ -96,11 +96,7 @@ const FEATURES: FeatureBlock[] = [
 ];
 
 function LazyCarousel({ images, title }: { images: string[]; title: string }) {
-    return (
-        <div className="relative aspect-[4/3] rounded-2xl overflow-hidden">
-            <FeatureCarouselInner images={images} title={title} />
-        </div>
-    );
+    return <FeatureCarouselInner images={images} title={title} />;
 }
 
 function FeatureCarouselInner({ images, title }: { images: string[]; title: string }) {
@@ -110,44 +106,53 @@ function FeatureCarouselInner({ images, title }: { images: string[]; title: stri
     useEffect(() => {
         if (!api) return;
 
-        setCurrent(api.selectedScrollSnap());
-        api.on("select", () => {
+        const onSelect = () => {
             setCurrent(api.selectedScrollSnap());
-        });
+        };
+
+        api.on("select", onSelect);
+        api.on("reInit", onSelect);
+        onSelect();
+
+        return () => {
+            api.off("select", onSelect);
+            api.off("reInit", onSelect);
+        };
     }, [api]);
 
     return (
         <div className="relative">
-            <Carousel
-                setApi={setApi}
-                opts={{
-                    align: "start",
-                    loop: true,
-                }}
-                className="w-full"
-            >
-                <CarouselContent>
-                    {images.map((image, idx) => (
-                        <CarouselItem key={idx}>
-                            <div className="relative aspect-[4/3] rounded-2xl overflow-hidden">
-                                <Image
-                                    src={image}
-                                    alt={`${title} - ${idx + 1}`}
-                                    fill
-                                    sizes="(max-width: 768px) 100vw, 50vw"
-                                    className="object-cover"
-                                    priority={idx === 0}
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent" />
-                            </div>
-                        </CarouselItem>
-                    ))}
-                </CarouselContent>
-                <CarouselPrevious className="left-4 bg-slate-900/80 hover:bg-slate-800 border-slate-700 hover:border-main/50 text-white" />
-                <CarouselNext className="right-4 bg-slate-900/80 hover:bg-slate-800 border-slate-700 hover:border-main/50 text-white" />
-            </Carousel>
+            <div className="relative aspect-[4/3] rounded-2xl overflow-hidden">
+                <Carousel
+                    setApi={setApi}
+                    opts={{
+                        align: "center",
+                        loop: true,
+                    }}
+                    className="w-full"
+                >
+                    <CarouselContent>
+                        {images.map((image, idx) => (
+                            <CarouselItem key={idx}>
+                                <div className="relative aspect-[4/3]">
+                                    <Image
+                                        src={image}
+                                        alt={`${title} - ${idx + 1}`}
+                                        fill
+                                        sizes="(max-width: 768px) 100vw, 50vw"
+                                        className="object-cover"
+                                        priority={idx === 0}
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent" />
+                                </div>
+                            </CarouselItem>
+                        ))}
+                    </CarouselContent>
+                    <CarouselPrevious className="left-4 bg-slate-900/80 hover:bg-slate-800 border-slate-700 hover:border-main/50 text-white z-10" />
+                    <CarouselNext className="right-4 bg-slate-900/80 hover:bg-slate-800 border-slate-700 hover:border-main/50 text-white z-10" />
+                </Carousel>
+            </div>
 
-            {/* Dots indicator */}
             <div className="flex justify-center gap-2 mt-4 px-4">
                 {images.map((_, idx) => (
                     <button
