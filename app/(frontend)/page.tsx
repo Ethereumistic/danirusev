@@ -1,13 +1,11 @@
 import { Suspense } from 'react'
+import dynamic from 'next/dynamic'
 import Hero from '@/components/hero/hero'
 import { Metadata } from 'next'
-import { HowItWorks } from '@/components/landing/how-it-works'
-import { TestimonialsWrapper } from '@/components/landing/testimonials-wrapper'
 import { TestimonialsSkeleton } from '@/components/landing/testimonials-skeleton'
-import { WhyChooseUsV2 } from '@/components/experience/why-choose-us-v2'
-import { ExperienceSectionWrapper, ExperienceSectionSkeleton } from '@/components/experience'
-import { PromoBannersList } from '@/components/landing/promo-banners-list'
-import { AboutSectionWrapper } from '@/components/landing/about-section-wrapper'
+import { ExperienceSectionSkeleton } from '@/components/experience'
+import { WhyChooseUsV2Skeleton } from '@/components/experience/why-choose-us-skeleton'
+import { HowItWorksSkeleton } from '@/components/landing/how-it-works-skeleton'
 
 import { defaultMetadata } from '@/lib/seo'
 
@@ -25,29 +23,61 @@ export const metadata: Metadata = {
   },
 }
 
+const WhyChooseUsV2 = dynamic(
+  () => import('@/components/experience/why-choose-us-v2').then((mod) => mod.WhyChooseUsV2),
+  { ssr: true }
+)
+
+const ExperienceSectionWrapper = dynamic(
+  () => import('@/components/experience/experience-section-wrapper').then((mod) => mod.ExperienceSectionWrapper),
+  { ssr: true }
+)
+
+const HowItWorks = dynamic(
+  () => import('@/components/landing/how-it-works').then((mod) => mod.HowItWorks),
+  { ssr: true }
+)
+
+const TestimonialsWrapper = dynamic(
+  () => import('@/components/landing/testimonials-wrapper').then((mod) => mod.TestimonialsWrapper),
+  { ssr: true }
+)
+
+const AboutSectionWrapper = dynamic(
+  () => import('@/components/landing/about-section-wrapper').then((mod) => mod.AboutSectionWrapper),
+  { ssr: true }
+)
+
+const PromoBannersList = dynamic(
+  () => import('@/components/landing/promo-banners-list').then((mod) => mod.PromoBannersList),
+  { ssr: true }
+)
 
 export default function Home() {
   return (
     <main className="min-h-screen ">
-      {/* Hero with rotating quotes */}
       <Hero />
 
-      <WhyChooseUsV2 />
-
+      <Suspense fallback={<WhyChooseUsV2Skeleton />}>
+        <WhyChooseUsV2 />
+      </Suspense>
 
       <Suspense fallback={<ExperienceSectionSkeleton />}>
         <ExperienceSectionWrapper linkPrefix="/experience" />
       </Suspense>
 
-      <HowItWorks />
+      <Suspense fallback={<HowItWorksSkeleton />}>
+        <HowItWorks />
+      </Suspense>
 
       <Suspense fallback={<TestimonialsSkeleton />}>
         <TestimonialsWrapper />
       </Suspense>
 
-      <AboutSectionWrapper />
+      <Suspense fallback={null}>
+        <AboutSectionWrapper />
+      </Suspense>
 
-      {/* CMS-driven promo banners - wrapped in Suspense to prevent blocking */}
       <Suspense fallback={null}>
         <PromoBannersList />
       </Suspense>
@@ -55,4 +85,3 @@ export default function Home() {
     </main>
   )
 }
-

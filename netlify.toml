@@ -4,6 +4,10 @@
 
 [build.environment]
   SECRETS_SCAN_ENABLED = "false"
+  # ADDED: Ensure Node 20 for Next.js 15
+  NODE_VERSION = "20"
+  # ADDED: pnpm optimization
+  NPM_FLAGS = "--store-dir=.pnpm-store"
 
 [[headers]]
   for = "/*.mp4"
@@ -35,3 +39,32 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
+[[headers]]
+  for = "/_next/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/_next/image*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+
+[build.processing]
+  skip_processing = false
+[build.processing.css]
+  bundle = true
+  minify = true
+[build.processing.js]
+  bundle = true
+  minify = true
+[build.processing.html]
+  pretty_urls = true
+[build.processing.images]
+  compress = true
