@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
     Carousel,
@@ -11,7 +11,7 @@ import {
     CarouselPrevious,
     type CarouselApi,
 } from "@/components/ui/carousel";
-import { Flame, Shield, Video, ChevronRight, Zap, Users, Award, Trophy, Hourglass, Star, ShieldCheck } from "lucide-react";
+import { Shield, Video, ChevronRight, Zap, Award } from "lucide-react";
 import Image from "next/image";
 
 interface FeatureBlock {
@@ -37,7 +37,6 @@ const FEATURES: FeatureBlock[] = [
             { value: "400+", label: "к.с. мощност" },
             { value: "100%", label: "дрифт готови" },
         ],
-        // TODO: Replace with actual car images when provided
         images: [
             "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/opt/whyus/power/4.webp",
             "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/opt/whyus/power/bmw.webp",
@@ -95,34 +94,89 @@ const FEATURES: FeatureBlock[] = [
     },
 ];
 
-function LazyCarousel({ images, title }: { images: string[]; title: string }) {
-    return <FeatureCarouselInner images={images} title={title} />;
+// Hidden preloader component - forces iOS to decode images
+function ImagePreloader({ images }: { images: string[] }) {
+    return (
+        <div
+            aria-hidden="true"
+            className="sr-only"
+            style={{
+                position: 'absolute',
+                width: 0,
+                height: 0,
+                overflow: 'hidden',
+                pointerEvents: 'none',
+                opacity: 0
+            }}
+        >
+            {images.map((src, idx) => (
+                <Image
+                    key={`preload-${idx}`}
+                    src={src}
+                    alt=""
+                    width={400}
+                    height={300}
+                    priority={idx < 6}
+                    loading="eager"
+                />
+            ))}
+        </div>
+    );
 }
 
-function FeatureCarouselInner({ images, title }: { images: string[]; title: string }) {
+function OptimizedCarousel({ images, title }: { images: string[]; title: string }) {
     const [api, setApi] = useState<CarouselApi>();
     const [current, setCurrent] = useState(0);
+    // Track which images should be fully loaded (current ± 2)
+    const [loadedRange, setLoadedRange] = useState({ start: 0, end: 2 });
+    const containerRef = useRef<HTMLDivElement>(null);
 
+    // Update loaded range when slide changes
     useEffect(() => {
         if (!api) return;
 
-        const onSelect = () => {
-            setCurrent(api.selectedScrollSnap());
+        const handleSelect = () => {
+            const selected = api.selectedScrollSnap();
+            setCurrent(selected);
+
+            // Keep current, next 2, and previous 1 loaded for smooth bidirectional scrolling
+            const start = Math.max(0, selected - 1);
+            const end = Math.min(images.length - 1, selected + 2);
+            setLoadedRange({ start, end });
         };
 
-        api.on("select", onSelect);
-        api.on("reInit", onSelect);
-        onSelect();
+        api.on("select", handleSelect);
+        api.on("reInit", handleSelect);
+
+        // Initial call
+        handleSelect();
 
         return () => {
-            api.off("select", onSelect);
-            api.off("reInit", onSelect);
+            api.off("select", handleSelect);
+            api.off("reInit", handleSelect);
         };
-    }, [api]);
+    }, [api, images.length]);
+
+    // Prefetch on hover of navigation buttons
+    const handleNavHover = useCallback(() => {
+        if (!api) return;
+        const selected = api.selectedScrollSnap();
+        setLoadedRange(prev => ({
+            start: prev.start,
+            end: Math.min(images.length - 1, selected + 3)
+        }));
+    }, [api, images.length]);
+
+    const isInLoadedRange = (idx: number) => {
+        return idx >= loadedRange.start && idx <= loadedRange.end;
+    };
 
     return (
-        <div className="relative">
-            <div className="relative aspect-[4/3] rounded-2xl overflow-hidden">
+        <div ref={containerRef} className="relative">
+            {/* Hidden preloader - critical for iOS */}
+            <ImagePreloader images={images} />
+
+            <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-slate-900">
                 <Carousel
                     setApi={setApi}
                     opts={{
@@ -132,36 +186,61 @@ function FeatureCarouselInner({ images, title }: { images: string[]; title: stri
                     className="w-full"
                 >
                     <CarouselContent>
-                        {images.map((image, idx) => (
-                            <CarouselItem key={idx}>
-                                <div className="relative aspect-[4/3]">
-                                    <Image
-                                        src={image}
-                                        alt={`${title} - ${idx + 1}`}
-                                        fill
-                                        sizes="(max-width: 768px) 100vw, 50vw"
-                                        className="object-cover"
-                                        priority={idx < 3}
-                                        loading={idx < 3 ? "eager" : "lazy"}
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent" />
-                                </div>
-                            </CarouselItem>
-                        ))}
+                        {images.map((image, idx) => {
+                            const shouldLoad = isInLoadedRange(idx);
+
+                            return (
+                                <CarouselItem key={idx}>
+                                    <div
+                                        className="relative aspect-[4/3] will-change-transform"
+                                        style={{
+                                            transform: 'translateZ(0)',
+                                            backfaceVisibility: 'hidden',
+                                        }}
+                                    >
+                                        {shouldLoad ? (
+                                            <Image
+                                                src={image}
+                                                alt={`${title} - ${idx + 1}`}
+                                                fill
+                                                sizes="(max-width: 768px) 100vw, 50vw"
+                                                className="object-cover"
+                                                // Force eager loading for images in range
+                                                loading="eager"
+                                                // Sync decoding prevents flash on iOS
+                                                decoding="sync"
+                                                priority={idx < 3}
+                                            />
+                                        ) : (
+                                            // Skeleton placeholder while not in range
+                                            <div className="absolute inset-0 bg-slate-800 animate-pulse" />
+                                        )}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent" />
+                                    </div>
+                                </CarouselItem>
+                            );
+                        })}
                     </CarouselContent>
-                    <CarouselPrevious className="left-4 bg-slate-900/80 hover:bg-slate-800 border-slate-700 hover:border-main/50 text-white z-10" />
-                    <CarouselNext className="right-4 bg-slate-900/80 hover:bg-slate-800 border-slate-700 hover:border-main/50 text-white z-10" />
+
+                    {/* Navigation with prefetch on hover */}
+                    <div onMouseEnter={handleNavHover}>
+                        <CarouselPrevious className="left-4 bg-slate-900/80 hover:bg-slate-800 border-slate-700 hover:border-main/50 text-white z-10" />
+                    </div>
+                    <div onMouseEnter={handleNavHover}>
+                        <CarouselNext className="right-4 bg-slate-900/80 hover:bg-slate-800 border-slate-700 hover:border-main/50 text-white z-10" />
+                    </div>
                 </Carousel>
             </div>
 
+            {/* Dots indicator */}
             <div className="flex justify-center gap-2 mt-4 px-4">
                 {images.map((_, idx) => (
                     <button
                         key={idx}
                         onClick={() => api?.scrollTo(idx)}
                         className={`h-2.5 rounded-full transition-all duration-300 ${idx === current
-                            ? "bg-main w-8"
-                            : "bg-slate-500 hover:bg-slate-400 w-2.5"
+                                ? "bg-main w-8"
+                                : "bg-slate-500 hover:bg-slate-400 w-2.5"
                             }`}
                         aria-label={`Go to slide ${idx + 1}`}
                     />
@@ -188,8 +267,7 @@ function FeatureSection({ feature, index }: { feature: FeatureBlock; index: numb
                     transition={{ duration: 0.6 }}
                     className="relative w-full lg:w-1/2"
                 >
-                    <LazyCarousel images={feature.images} title={feature.title} />
-
+                    <OptimizedCarousel images={feature.images} title={feature.title} />
                 </motion.div>
 
                 {/* Content Side */}
@@ -295,54 +373,11 @@ export function WhyChooseUsV2() {
                     >
                         Четири неща, които ни правят различни от всички останали
                     </motion.p>
-
-                    {/* Trust indicators */}
-                    {/* <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.6, delay: 0.3 }}
-                        className="flex flex-wrap justify-center gap-8 mt-12"
-                    >
-                        {[
-                            { icon: Users, text: "Много доволни клиенти" },
-                            { icon: Award, text: "Проф. инструктор" },
-                            { icon: Flame, text: "Гарантиран адреналин" },
-                        ].map((item, idx) => (
-                            <div
-                                key={idx}
-                                className="flex items-center gap-2 text-slate-400"
-                            >
-                                <item.icon className="w-5 h-5 text-main" />
-                                <span className="text-sm font-medium">{item.text}</span>
-                            </div>
-                        ))}
-                    </motion.div> */}
-                    {/* Social Proof Stats */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, delay: 0.4 }}
-                        className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto pt-8"
-                    >
-                        {[
-                            { icon: Trophy, value: "СУПЕР", label: "Доволни Клиенти" },
-                            { icon: Hourglass, value: "+15 г.", label: "Мотор Спорт" },
-                            { icon: Star, value: "ТОП", label: "Рейтинг" },
-                            { icon: ShieldCheck, value: "МАКС", label: "Безопасност" },
-                        ].map((stat, idx) => (
-                            <div key={idx} className="bg-slate-900/50 backdrop-blur-md border border-slate-800 rounded-xl p-4">
-                                <stat.icon className="w-6 h-6 text-main mb-2 mx-auto" />
-                                <div className="text-3xl font-black text-white mb-1">{stat.value}</div>
-                                <div className="text-sm text-slate-400 uppercase tracking-wide">{stat.label}</div>
-                            </div>
-                        ))}
-                    </motion.div>
                 </div>
             </div>
 
             {/* Feature Blocks */}
-            <div className="relative  -mt-8">
+            <div className="relative -mt-8">
                 {FEATURES.map((feature, index) => (
                     <FeatureSection key={feature.id} feature={feature} index={index} />
                 ))}
