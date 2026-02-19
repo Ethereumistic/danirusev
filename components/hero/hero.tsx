@@ -27,8 +27,10 @@ const Hero = () => {
           aria-hidden="true"
           className="absolute top-0 left-0 w-full h-full object-cover z-10"
         >
-          <source src="/hero.mp4" type="video/mp4" />
-          Your browser does not support the video tag.
+          {/* <source src="/hero.mp4" type="video/mp4" /> */}
+          <source src="/hero-optimized.webm" type="video/webm" />
+          <source src="/hero-optimized.mp4" type="video/mp4" />
+          Браузърът не поддържа видео.
         </video>
         {/* Overlay for better text readability */}
         <div className="absolute inset-0 bg-slate-950/20 z-20" />
