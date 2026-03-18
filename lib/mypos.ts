@@ -133,7 +133,8 @@ export function generateSignature(data: string): string {
 }
 
 export function generateOrderID(): string {
-    return `order_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+    // DR- + 13 chars of unique base36 string = 16 chars total (Safe for myPOS 20-char limit)
+    return `DR-${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
 }
 
 export default myPOSConfig;

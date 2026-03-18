@@ -128,17 +128,20 @@ export function CheckoutForm({ profile }: CheckoutFormProps) {
 
         // myPOS uses decimal EUR format (NOT cents like Stripe!)
         // Example: 234.00 EUR (not 23400)
-        const amountInEUR = parseFloat(subtotal.toFixed(2))
+        const amountInEUR = subtotal.toFixed(2)
 
-        // Use ngrok URL for webhooks in development if provided
-        const webhookBaseUrl = process.env.NEXT_PUBLIC_WEBHOOK_URL || window.location.origin
+        // Use ngrok URL for webhooks in development, but force production domain if on Danirusev.com
+        const isDanirusevDomain = window.location.hostname === 'danirusev.com'
+        const webhookBaseUrl = isDanirusevDomain 
+          ? 'https://danirusev.com' 
+          : (process.env.NEXT_PUBLIC_WEBHOOK_URL || window.location.origin)
         const isLocalhost = window.location.hostname === 'localhost'
 
         const paymentParams = {
           sid: process.env.NEXT_PUBLIC_MYPOS_SID!,
           ipcLanguage: 'en',
           walletNumber: process.env.NEXT_PUBLIC_MYPOS_WALLET_NUMBER!,
-          amount: amountInEUR, // myPOS uses decimal EUR!
+          amount: amountInEUR, // myPOS requires decimal string!
           currency: 'EUR',
           orderID: orderID,
           urlNotify: `${webhookBaseUrl}/api/webhooks/mypos`,
@@ -146,11 +149,12 @@ export function CheckoutForm({ profile }: CheckoutFormProps) {
             ? `${window.location.origin}/order-confirmation?order_id=${orderID}`
             : `${webhookBaseUrl}/order-confirmation?order_id=${orderID}`,
           urlCancel: `${window.location.origin}/checkout`,
-          keyIndex: 1,
+          keyIndex: parseInt(process.env.NEXT_PUBLIC_MYPOS_KEY_INDEX || '1'),
+          customerEmail: email, // This might be required for some verification
           cartItems: items.map(item => ({
             article: item.title,
             quantity: item.quantity,
-            price: parseFloat(item.price.toFixed(2)), // Decimal EUR
+            price: item.price.toFixed(2), // myPOS requires decimal string!
             currency: 'EUR',
           })),
         }
