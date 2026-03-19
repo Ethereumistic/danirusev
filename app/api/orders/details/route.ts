@@ -11,9 +11,8 @@ export async function GET(request: NextRequest) {
     try {
         const supabase = await createClient()
 
-        // 1. Authenticate user
+        // 1. Authenticate user (optional for guest orders)
         const { data: { user } } = await supabase.auth.getUser()
-        if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
         // 2. Get order_id from query params
         const searchParams = request.nextUrl.searchParams
@@ -32,10 +31,8 @@ export async function GET(request: NextRequest) {
         if (!rpcError && allOrders) {
             // Find the order that belongs to this user and matches the ID (numeric or string)
             const order = allOrders.find((o: any) =>
-                o.userId === user.id && (
-                    o.id.toString() === orderId ||
-                    o.orderId === orderId
-                )
+                (o.id.toString() === orderId || o.orderId === orderId) &&
+                (o.userId === null || o.userId === user?.id)
             )
 
             if (order) {
@@ -50,12 +47,14 @@ export async function GET(request: NextRequest) {
         }
 
         // STRATEGY 2: Fallback to the user-specific RPC (might be missing order_id_ref until updated)
-        const { data: userOrders } = await supabase.rpc('get_user_orders_with_items')
+        const { data: userOrders } = await supabaseAdmin.rpc('get_all_orders_with_details')
         if (userOrders) {
             const order = userOrders.find((o: any) =>
-                o.id.toString() === orderId ||
-                o.payment_transaction_id === orderId ||
-                (o as any).order_id_ref === orderId
+                (o.id.toString() === orderId ||
+                 o.payment_transaction_id === orderId ||
+                 (o as any).order_id_ref === orderId ||
+                 o.orderId === orderId) && 
+                (o.userId === null || o.userId === user?.id)
             )
 
             if (order) {

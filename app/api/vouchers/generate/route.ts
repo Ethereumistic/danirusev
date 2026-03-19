@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
             location
         } = body
 
-        if (!orderItemId || !userId || !productSlug || !selectedDate) {
+        if (!orderItemId || !productSlug || !selectedDate) {
             return NextResponse.json({
                 error: 'Missing required fields'
             }, { status: 400 })
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
         // Create voucher record in database (PDF will be generated on-demand when downloaded)
         const { data: voucherId, error: createError } = await supabase.rpc('create_voucher', {
             p_order_item_id: orderItemId,
-            p_user_id: userId,
+            p_user_id: userId || null,
             p_product_slug: productSlug,
             p_selected_date: selectedDate,
             p_addons: addons,

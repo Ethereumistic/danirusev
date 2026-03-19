@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
         }
 
         // If this is an experience order, generate voucher
-        if (orderItem && orderItem.item_type === 'experience' && userId) {
+        if (orderItem && orderItem.item_type === 'experience') {
             try {
                 // Get the date - use provided selectedDate or the one from orderItem
                 const voucherDate = selectedDate || orderItem.selected_date
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
                 // Call the database function directly instead of fetching our own API
                 const { data: voucherId, error: voucherError } = await supabase.rpc('create_voucher', {
                     p_order_item_id: parseInt(orderItemId),
-                    p_user_id: userId,
+                    p_user_id: userId || null,
                     p_product_slug: orderItem.product_id,
                     p_selected_date: voucherDate,
                     p_addons: orderItem.addons,
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
                                         year: 'numeric'
                                     }),
                                     expiryDate: new Date(info.expiry_date).toLocaleDateString('bg-BG'),
-                                    voucherUrl: `${baseUrl}/vouchers#voucher-${voucherId}`
+                                    voucherUrl: userId ? `${baseUrl}/vouchers#voucher-${voucherId}` : `${baseUrl}/api/vouchers/download/${voucherId}`
                                 })
                             )
 

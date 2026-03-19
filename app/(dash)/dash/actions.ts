@@ -81,18 +81,19 @@ export async function confirmOrderDate(params: {
   }
 
   // If this is an experience order, generate voucher
-  if (orderItem && orderItem.item_type === 'experience' && userId) {
+  if (orderItem && orderItem.item_type === 'experience') {
     const voucherDate = selectedDate || orderItem.selected_date
 
     // Use standard client to call RPC bridge in public schema
     const { data: voucherId, error: voucherError } = await supabase.rpc('create_voucher', {
       p_order_item_id: orderItemId,
-      p_user_id: userId,
+      p_user_id: userId || null,
       p_product_slug: orderItem.product_id,
       p_selected_date: voucherDate,
       p_addons: orderItem.addons,
       p_voucher_recipient_name: orderItem.voucher_recipient_name,
-      p_location: orderItem.location
+      p_location: orderItem.location,
+      p_voucher_type: orderItem.voucher_type
     })
 
     if (voucherError) {
@@ -122,7 +123,7 @@ export async function confirmOrderDate(params: {
                 year: 'numeric'
               }),
               expiryDate: new Date(info.expiry_date).toLocaleDateString('bg-BG'),
-              voucherUrl: `${baseUrl}/vouchers#voucher-${voucherId}`
+              voucherUrl: userId ? `${baseUrl}/vouchers#voucher-${voucherId}` : `${baseUrl}/api/vouchers/download/${voucherId}`
             })
           )
 
