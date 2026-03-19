@@ -77,15 +77,9 @@ export async function POST(request: NextRequest) {
     try {
         const supabase = await createClient();
 
-        // 1. Authenticate the user
+        // 1. Authenticate the user (optional for guest checkout)
         const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) {
-            return NextResponse.json(
-                { error: 'User not authenticated' },
-                { status: 401 }
-            );
-        }
+        const userId = user?.id || null;
 
         // 2. Parse and validate request body
         const body = await request.json();
@@ -289,7 +283,7 @@ export async function POST(request: NextRequest) {
         // 7. Store checkout session using RPC (ecommerce schema not exposed via PostgREST)
         const { error: sessionError } = await supabaseAdmin.rpc('create_checkout_session', {
             p_order_id: orderID,
-            p_user_id: user.id,
+            p_user_id: userId,
             p_email: personalInfo.email,
             p_full_name: personalInfo.fullName,
             p_phone_number: personalInfo.phoneNumber,

@@ -73,15 +73,9 @@ export async function POST(request: NextRequest) {
     try {
         const supabase = await createClient()
 
-        // 1. Authenticate the user
+        // 1. Authenticate the user (optional for guest checkout)
         const { data: { user } } = await supabase.auth.getUser()
-
-        if (!user) {
-            return NextResponse.json(
-                { error: 'User not authenticated' },
-                { status: 401 }
-            )
-        }
+        const userId = user?.id || null;
 
         // 2. Parse and validate request body
         const body = await request.json()
@@ -279,7 +273,7 @@ export async function POST(request: NextRequest) {
 
         // 5. Call Database Function to create order
         const { data: orderPk, error: orderError } = await supabaseAdmin.rpc('create_order_from_webhook', {
-            p_user_id: user.id,
+            p_user_id: userId,
             p_total_price: totalAmount,
             p_shipping_address_snapshot: {
                 ...personalInfo,
@@ -299,21 +293,23 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Failed to create order' }, { status: 500 })
         }
 
-        // 6. Update Profile
-        const { error: profileError } = await supabaseAdmin.rpc('update_profile_from_checkout', {
-            p_user_id: user.id,
-            p_full_name: personalInfo.fullName,
-            p_phone_number: personalInfo.phoneNumber,
-            p_address: personalInfo.address || '',
-            p_city: personalInfo.city || '',
-            p_postal_code: personalInfo.postalCode || '',
-            p_country: personalInfo.country || '',
-            p_email: personalInfo.email,
-        })
+        // 6. Update Profile (Only for authenticated users)
+        if (userId) {
+            const { error: profileError } = await supabaseAdmin.rpc('update_profile_from_checkout', {
+                p_user_id: userId,
+                p_full_name: personalInfo.fullName,
+                p_phone_number: personalInfo.phoneNumber,
+                p_address: personalInfo.address || '',
+                p_city: personalInfo.city || '',
+                p_postal_code: personalInfo.postalCode || '',
+                p_country: personalInfo.country || '',
+                p_email: personalInfo.email,
+            })
 
-        if (profileError) {
-            console.error('Error updating profile:', profileError)
-            // Still proceed since order was created
+            if (profileError) {
+                console.error('Error updating profile:', profileError)
+                // Still proceed since order was created
+            }
         }
 
         return NextResponse.json({

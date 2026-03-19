@@ -17,11 +17,8 @@ export async function GET(request: NextRequest, { params }: DownloadRouteProps) 
         const { id: voucherId } = await params
         const supabase = await createClient()
 
-        // Verify user is authenticated
+        // Get user for authentication check
         const { data: { user } } = await supabase.auth.getUser()
-        if (!user) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-        }
 
         // Get voucher details
         const { data: vouchers, error } = await supabase.rpc('get_voucher_by_id', {
@@ -34,10 +31,12 @@ export async function GET(request: NextRequest, { params }: DownloadRouteProps) 
 
         const voucher = vouchers[0]
 
-        // SECURITY: Verify the voucher belongs to the current user
-        if (voucher.user_id !== user.id) {
-            console.warn(`[Security] User ${user.id} attempted to download voucher ${voucherId} belonging to user ${voucher.user_id}`)
-            return NextResponse.json({ error: 'ЗАБРАНЕНО: Този ваучер не принадлежи на Вас!' }, { status: 403 })
+        // SECURITY: Verify the voucher belongs to the current user (if not a guest checkout voucher)
+        if (voucher.user_id !== null) {
+            if (!user || voucher.user_id !== user.id) {
+                console.warn(`[Security] User ${user?.id || 'guest'} attempted to download voucher ${voucherId} belonging to user ${voucher.user_id}`)
+                return NextResponse.json({ error: 'ЗАБРАНЕНО: Този ваучер не принадлежи на Вас!' }, { status: 403 })
+            }
         }
 
         // Determine which PDF template to use
