@@ -6,64 +6,87 @@ export interface YouTubeVideo {
     thumbnail: string;
     authorName: string;
     url: string;
+    isShort?: boolean;
 }
 
-export async function getLatestYouTubeVideos(channelHandle: string = '@danirusev11', limit: number = 6): Promise<YouTubeVideo[]> {
+// Resolved channel ID for @danirusev11
+// Obtained via: POST https://www.youtube.com/youtubei/v1/navigation/resolve_url
+// with body: {"context":{"client":{"clientName":"WEB","clientVersion":"2.20231021.00.00"}},"url":"https://www.youtube.com/@danirusev11"}
+// The browseEndpoint.browseId in the response contains the channel ID.
+const CHANNEL_ID = 'UCHpWLLhe8r_xnRk4LdwBJpQ';
+
+export async function getLatestYouTubeVideos(
+    channelHandle: string = '@danirusev11',
+    limit: number = 6
+): Promise<YouTubeVideo[]> {
     try {
-        // Fetching the /videos tab directly ensures we only get regular horizontal videos
-        const url = `https://www.youtube.com/${channelHandle}/videos`;
-        const response = await fetch(url, {
-            next: { revalidate: 3600 },
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-            }
+        // Use YouTube's public RSS feed – stable, official, no scraping needed.
+        // The RSS feed is always at: https://www.youtube.com/feeds/videos.xml?channel_id=<CHANNEL_ID>
+        // It returns the latest 15 uploads (including Shorts).
+        const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`;
+
+        const response = await fetch(rssUrl, {
+            next: { revalidate: 3600 }, // Revalidate every hour
         });
 
-        if (!response.ok) throw new Error('Failed to fetch YouTube videos page');
-
-        const html = await response.text();
-
-        // Extract ytInitialData JSON from the HTML
-        const dataMatch = html.match(/var ytInitialData = (\{.*?\});<\/script>/);
-        if (!dataMatch) {
-            console.error('Could not find ytInitialData in YouTube HTML');
-            return [];
+        if (!response.ok) {
+            throw new Error(`RSS feed returned ${response.status}`);
         }
 
-        const data = JSON.parse(dataMatch[1]);
+        const xml = await response.text();
 
-        // Navigate through the nested structure to find video items
-        // contents -> twoColumnBrowseResultsRenderer -> tabs -> tabRenderer -> content -> richGridRenderer -> contents
-        const tabs = data.contents?.twoColumnBrowseResultsRenderer?.tabs;
-        if (!tabs) return [];
-
-        const videosTab = tabs.find((tab: any) =>
-            tab.tabRenderer?.title === "Videos" ||
-            tab.tabRenderer?.content?.richGridRenderer
-        );
-
-        const contents = videosTab?.tabRenderer?.content?.richGridRenderer?.contents;
-        if (!contents) return [];
-
+        // Parse video entries from the Atom XML feed
         const videos: YouTubeVideo[] = [];
+        const entryRegex = /<entry>([\s\S]*?)<\/entry>/g;
+        let match: RegExpExecArray | null;
 
-        for (const item of contents) {
-            const video = item.richItemRenderer?.content?.videoRenderer;
-            if (video && video.videoId) {
-                videos.push({
-                    title: video.title.runs[0].text,
-                    videoId: video.videoId,
-                    thumbnail: `https://i1.ytimg.com/vi/${video.videoId}/maxresdefault.jpg`,
-                    authorName: 'Dani Rusev',
-                    url: `https://www.youtube.com/watch?v=${video.videoId}`
-                });
-            }
+        while ((match = entryRegex.exec(xml)) !== null) {
+            const entry = match[1];
+
+            // Extract videoId
+            const videoIdMatch = entry.match(/<yt:videoId>([^<]+)<\/yt:videoId>/);
+            if (!videoIdMatch) continue;
+            const videoId = videoIdMatch[1].trim();
+
+            // Extract title
+            const titleMatch = entry.match(/<media:title>([^<]+)<\/media:title>/);
+            const title = titleMatch ? decodeXmlEntities(titleMatch[1].trim()) : '';
+
+            // Extract the video URL from the <link rel="alternate" href="..."/>
+            const urlMatch = entry.match(/<link rel="alternate" href="([^"]+)"/);
+            const url = urlMatch ? urlMatch[1].trim() : `https://www.youtube.com/watch?v=${videoId}`;
+
+            // Detect if it's a Short (Shorts have /shorts/ in their URL)
+            const isShort = url.includes('/shorts/');
+
+            // Use maxresdefault thumbnail, fall back to hqdefault
+            const thumbnail = `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`;
+
+            videos.push({
+                title,
+                videoId,
+                thumbnail,
+                authorName: 'Dani Rusev',
+                url: isShort ? `https://www.youtube.com/watch?v=${videoId}` : url,
+                isShort,
+            });
+
             if (videos.length >= limit) break;
         }
 
         return videos;
     } catch (error) {
-        console.error('Error fetching YouTube videos:', error);
+        console.error('Error fetching YouTube videos via RSS:', error);
         return [];
     }
+}
+
+function decodeXmlEntities(str: string): string {
+    return str
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&apos;/g, "'")
+        .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(parseInt(code, 10)));
 }
