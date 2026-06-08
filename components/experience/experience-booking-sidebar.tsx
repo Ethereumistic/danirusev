@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from "react"
-import { ShoppingCart, Trophy, MapPin, ExternalLink, Clock } from "lucide-react"
+import { ShoppingCart, Trophy, MapPin, ExternalLink, Clock, PhoneCall, Copy, Check } from "lucide-react"
 import * as LucideIcons from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
@@ -12,16 +12,65 @@ import { PATTERN_COMPONENTS } from "@/components/experience/patterns"
 import { useCartStore } from "@/lib/stores/cart-store"
 import type { ExperienceProduct } from "@/types/payload-types"
 import { formatBGN } from "@/lib/utils"
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+} from "@/components/ui/dialog"
 
+function CopyButton({ number }: { number: string }) {
+    const [copied, setCopied] = React.useState(false)
+
+    const handleCopy = async () => {
+        try {
+            await navigator.clipboard.writeText(number)
+            setCopied(true)
+            setTimeout(() => setCopied(false), 2000)
+        } catch {
+            // Fallback for older mobile browsers
+            const el = document.createElement('textarea')
+            el.value = number
+            el.setAttribute('readonly', '')
+            el.style.position = 'absolute'
+            el.style.left = '-9999px'
+            document.body.appendChild(el)
+            el.select()
+            document.execCommand('copy')
+            document.body.removeChild(el)
+            setCopied(true)
+            setTimeout(() => setCopied(false), 2000)
+        }
+    }
+
+    return (
+        <button
+            onClick={handleCopy}
+            aria-label="Копирай номера"
+            className="flex items-center justify-center w-14 h-full min-h-[60px] rounded-xl bg-slate-800 border border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white transition-all shrink-0"
+        >
+            {copied ? (
+                <Check className="w-5 h-5 text-green-400" />
+            ) : (
+                <Copy className="w-5 h-5" />
+            )}
+        </button>
+    )
+}
 
 interface ExperienceBookingSidebarProps {
     experience: ExperienceProduct
 }
 
 export function ExperienceBookingSidebar({ experience }: ExperienceBookingSidebarProps) {
+    const onlineCheckoutEnabled = process.env.NEXT_PUBLIC_ONLINE_CHECKOUT !== 'false'
     const themeColor = (experience.visuals?.themeColor || 'main') as ThemeColor
     const theme = getThemeClasses(themeColor)
     const pattern = experience.visuals?.pattern || 'none'
+
+    // Kill-switch dialog state
+    const [offlineDialogOpen, setOfflineDialogOpen] = React.useState(false)
 
     // Read selections from Zustand store
     const { driftSelections, updateDriftSelections, addItem } = useCartStore()
@@ -308,10 +357,38 @@ export function ExperienceBookingSidebar({ experience }: ExperienceBookingSideba
                     )}
 
 
-                    {/* Add to Cart Button or Contact Button */}
+                    {/* Kill-switch Dialog */}
+                    <Dialog open={offlineDialogOpen} onOpenChange={setOfflineDialogOpen}>
+                        <DialogContent className="bg-slate-900 border border-slate-700 text-white max-w-sm sm:max-w-md w-[calc(100%-2rem)] rounded-2xl p-8">
+                            <DialogHeader className="flex flex-col items-center gap-4 text-center">
+                                <div className="p-4 bg-slate-800 rounded-full">
+                                    <PhoneCall className="w-10 h-10 text-amber-400" />
+                                </div>
+                                <DialogTitle className="text-2xl sm:text-3xl font-black leading-tight text-white">
+                                    Моля обадете се на телефон:
+                                </DialogTitle>
+                                <DialogDescription className="text-sm sm:text-base text-slate-400 font-medium">
+                                    Временно онлайн резервациите не работят.
+                                </DialogDescription>
+                                <div className="flex items-center gap-2 w-full">
+                                    <a
+                                        href="tel:+359882726020"
+                                        className="flex-1 inline-flex items-center text-nowrap justify-center gap-3 px-6 py-4 rounded-xl bg-mix text-black font-black text-xl sm:text-2xl hover:bg-amber-300 transition-all hover:scale-105 shadow-lg shadow-amber-400/20"
+                                    >
+                                        <PhoneCall className="w-6 h-6 shrink-0" />
+                                        +359 882726020
+                                    </a>
+                                    <CopyButton number="+359882726020" />
+                                </div>
+                            </DialogHeader>
+                        </DialogContent>
+                    </Dialog>
+
+                    {/* Add to Cart Button */}
                     <Button
-                        onClick={handleAddToCart}
-                        className={`w-full h-14 text-lg font-black uppercase tracking-wider transition-all hover:scale-[1.02] ${theme.bg} ${theme.hover} text-black`}
+                        variant="default"
+                        onClick={onlineCheckoutEnabled ? handleAddToCart : () => setOfflineDialogOpen(true)}
+                        className="w-full h-14 text-lg font-black uppercase tracking-wider transition-all hover:scale-[1.02]"
                     >
                         <span className="flex items-center gap-2">
                             <ShoppingCart className="w-5 h-5" />
