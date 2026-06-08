@@ -38,14 +38,15 @@ const FEATURES: FeatureBlock[] = [
             { value: "100%", label: "дрифт готови" },
         ],
         images: [
+            "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/new_photos/front-img.jpg",
             "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/opt/whyus/power/4.webp",
             "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/opt/whyus/power/bmw.webp",
             "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/opt/whyus/power/2.webp",
             "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/opt/whyus/power/suzuki3.webp",
             "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/opt/whyus/power/SUZUKI_BACK.webp",
-            "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/opt/whyus/power/3.webp",
-            "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/opt/whyus/power/12.webp",
-            "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/opt/whyus/power/8.webp",
+            // "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/opt/whyus/power/3.webp",
+            // "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/opt/whyus/power/12.webp",
+            // "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/opt/whyus/power/8.webp",
         ],
         icon: Zap,
     },
@@ -60,10 +61,11 @@ const FEATURES: FeatureBlock[] = [
             { value: "1:1", label: "инструктор" },
         ],
         images: [
+            "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/new_photos/interior.jpg",
             "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/opt/whyus/safety/3.webp",
             "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/opt/whyus/safety/2.webp",
             "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/opt/whyus/safety/1.webp",
-            "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/opt/whyus/safety/4.webp",
+            // "https://cdn.jsdelivr.net/gh/Ethereumistic/danirusev-assets/opt/whyus/safety/4.webp",
         ],
         icon: Shield,
         reversed: true,
@@ -239,8 +241,8 @@ function OptimizedCarousel({ images, title }: { images: string[]; title: string 
                         key={idx}
                         onClick={() => api?.scrollTo(idx)}
                         className={`h-2.5 rounded-full transition-all duration-300 ${idx === current
-                                ? "bg-main w-8"
-                                : "bg-slate-500 hover:bg-slate-400 w-2.5"
+                            ? "bg-main w-8"
+                            : "bg-slate-500 hover:bg-slate-400 w-2.5"
                             }`}
                         aria-label={`Go to slide ${idx + 1}`}
                     />
